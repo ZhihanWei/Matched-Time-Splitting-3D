@@ -1,0 +1,24 @@
+xl = -3.99
+xr = 3.99
+yl = -1.99
+yr = 1.99
+zl = -3.99
+zr = 3.99
+
+nx = 160
+ny = 160
+nz = 160
+
+t_start = 0
+t_finish = 10000
+t_step = 10
+
+surface = H
+equation = 5
+
+beta_inside = 1
+beta_outside = 10
+
+TOL_ITYPE = 0
+
+accuracy = 2
