@@ -8,11 +8,9 @@
  ti   : current time
  beta : vector of 2 double values represent beta^{-} and beta^{+}
  ******************************************************************/
-Eq_6::Eq_6(Doub_I ti, Beta beta)
+Eq_6::Eq_6(Doub_I ti, Beta& in_beta):beta(in_beta)
 {
     t = ti;
-    beta_minus = beta.in;
-    beta_plus = beta.out;
 }
 
 /****************************************************
@@ -70,7 +68,7 @@ double Eq_6::Inner_f(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = -beta_minus*10*(-6+4*(x*x+y*y+z*z))*exp(-x*x)*exp(-y*y)*exp(-z*z)-exp(a+t);
+    temp = -beta.Inside(x,y,z)*10*(-6+4*(x*x+y*y+z*z))*exp(-x*x)*exp(-y*y)*exp(-z*z)-exp(a+t);
     
     return temp;
 }
@@ -90,7 +88,7 @@ double Eq_6::Outer_f(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = -beta_plus*5*(-6+4*(x*x+y*y+z*z))*exp(-x*x)*exp(-y*y)*exp(-z*z)+exp(a+t);
+    temp = -beta.Outside(x,y,z)*5*(-6+4*(x*x+y*y+z*z))*exp(-x*x)*exp(-y*y)*exp(-z*z)+exp(a+t);
     
     return temp;
 }
@@ -211,6 +209,65 @@ double Eq_6::Outer_duz(Doub_I x, Doub_I y, Doub_I z) const
     double temp;
     
     temp = -2*5*z*exp(-x*x)*exp(-y*y)*exp(-z*z);
+    
+    return temp;
+}
+/***************************************************************
+ Analytical jump [beta_u] in x-direction
+ 
+ INPUT
+ x : x coordinate of given point
+ y : y coordinate of given point
+ z : z coordinate of given point
+ 
+ OUTPUT
+ analutical of jump [beta_u_x]
+ ***************************************************************/
+double Eq_6::Jump_betau_x(Doub_I x, Doub_I y, Doub_I z) const
+{
+    double temp;
+    
+    temp = beta.Inside(x,y,z)*Outer_dux(x,y,z) - beta.Outside(x,y,z)*Inner_dux(x,y,z);
+    
+    return temp;
+}
+
+/***************************************************************
+ Analytical jump [beta_u] in y-direction
+ 
+ INPUT
+ x : x coordinate of given point
+ y : y coordinate of given point
+ z : z coordinate of given point
+ 
+ OUTPUT
+ analutical of jump [beta_u_y]
+ ***************************************************************/
+double Eq_6::Jump_betau_y(Doub_I x, Doub_I y, Doub_I z) const
+{
+    double temp;
+    
+    temp = beta.Inside(x,y,z)*Outer_duy(x,y,z) - beta.Outside(x,y,z)*Inner_duy(x,y,z);
+    
+    return temp;
+}
+
+/***************************************************************
+ Analytical jump [beta_u] in z-direction
+ 
+ INPUT
+ x : x coordinate of given point
+ y : y coordinate of given point
+ z : z coordinate of given point
+ 
+ OUTPUT
+ analutical of jump [beta_u_z]
+ ***************************************************************/
+double Eq_6::Jump_betau_z(Doub_I x, Doub_I y, Doub_I z) const
+{
+    double temp;
+    
+    temp = beta.Inside(x,y,z)*Outer_duz(x,y,z) - beta.Outside(x,y,z)*Inner_duz(x,y,z);
     
     return temp;
 }

@@ -15,17 +15,17 @@ private:
         e_nx,e_ny,e_nz,
         e_beta_inside,e_beta_outside,
         e_surface,e_equation,
-        e_accuracy
+        e_accuracy, e_beta
     };
     
     double TOL_ITYPE;                       //TOL_ITYPE is the multiplication of dx/dy/dz
-    double beta_inside,beta_outside;
     double xl,xr,yl,yr,zl,zr;
     double t_start,t_finish,t_step;
     int nx,ny,nz;
     char surface;
     int equation;
     int accuracy;
+    int beta;
     
     Prt_name Translation(const string& in_string);
 public:
@@ -35,11 +35,11 @@ public:
     
     VecDoub Get_Domain() const;
     VecInt Get_Size() const;
-    Beta Get_Beta() const;
     VecDoub Get_Time() const;
     char Get_Surface() const;
-    int Get_Equation() const;
+    int Get_Beta() const;
     int Get_Accuracy() const;
+    int Get_Equation() const;
     double Get_Tol() const;
 };
 #endif

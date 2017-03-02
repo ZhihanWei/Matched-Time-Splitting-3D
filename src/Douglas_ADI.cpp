@@ -12,7 +12,7 @@
  time     : vector of 3 double values represent beginning time, finishing time and time step
  accuracy : accuracy of scheme
  *******************************************************************************************/
-Douglas_ADI::Douglas_ADI(Intersections& inter, Mesh& mesh, Beta in_beta, VecDoub_I time, Int_I accuracy)
+Douglas_ADI::Douglas_ADI(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time, Int_I accuracy)
 {
     int indx;
     
@@ -31,9 +31,6 @@ Douglas_ADI::Douglas_ADI(Intersections& inter, Mesh& mesh, Beta in_beta, VecDoub
     zi = &mesh.zi[0];
     indicator = &mesh.mesh_value[0];
     
-    beta.in = in_beta.in;
-    beta.out = in_beta.out;
-    
     //Initialize beta for all grid nodes
     vib.resize(nx);
     for(int ix = 0; ix < nx; ix++)
@@ -48,12 +45,12 @@ Douglas_ADI::Douglas_ADI(Intersections& inter, Mesh& mesh, Beta in_beta, VecDoub
                 //Outside
                 if(indicator[indx] == 1)
                 {
-                    vib[ix][iy][iz] = beta.out;
+                    vib[ix][iy][iz] = beta.Outside(xi[ix],yi[iy],zi[iz]);
                 }
                 //Inside
                 else if(indicator[indx] == -1)
                 {
-                    vib[ix][iy][iz] = beta.in;
+                    vib[ix][iy][iz] = beta.Inside(xi[ix],yi[iy],zi[iz]);
                 }
                 else
                 {
@@ -124,7 +121,7 @@ Douglas_ADI::Douglas_ADI(Intersections& inter, Mesh& mesh, Beta in_beta, VecDoub
  OUTPUT
  uh : three-dimensional solution at current time step to next time step
  **********************************************************************************************************/
-void Douglas_ADI::Solve_4th(Equation& eq, Intersections& inter, CubicDoub& uh)
+void Douglas_ADI::Solve_4th(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& beta)
 {
     int ip, stlength, oneside_n, nr;
     int ix, iy, iz;
@@ -134,7 +131,7 @@ void Douglas_ADI::Solve_4th(Equation& eq, Intersections& inter, CubicDoub& uh)
     MatrixDoub lhs_row;
     Intersection_Data data;
     
-    inter.Refresh_Jump(eq,uh);
+    inter.Refresh_Jump(eq,uh,beta);
     Src_4th(eq,inter,uh);
     
     stlength = 5;                                   //length finite difference scheme
@@ -1482,7 +1479,7 @@ void Douglas_ADI::Src_4th(Equation& eq, Intersections& inter, CubicDoub& uh)
  OUTPUT
  uh : three-dimensional solution at current time step to next time step
  ********************************************************************************/
-void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh)
+void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& beta)
 {
     int ip;
     int ix, iy, iz;
@@ -1492,7 +1489,7 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh)
     MatrixDoub irr_row, cor_row;
     Intersection_Data data, datal, datar;
     
-    inter.Refresh_Jump(eq,uh);
+    inter.Refresh_Jump(eq,uh,beta);
     Src_2nd(eq,inter,uh);
     
     wtypel.resize(3);

@@ -8,11 +8,9 @@
  ti   : current time
  beta : vector of 2 double values represent beta^{-} and beta^{+}
  ******************************************************************/
-Eq_1::Eq_1(Doub_I ti, Beta beta)
+Eq_1::Eq_1(Doub_I ti, Beta& in_beta):beta(in_beta)
 {
     t = ti;
-    beta_minus = beta.in;
-    beta_plus = beta.out;
 }
 
 /****************************************************
@@ -211,6 +209,65 @@ double Eq_1::Outer_duz(Doub_I x, Doub_I y, Doub_I z) const
     double temp;
     
     temp = 0;
+    
+    return temp;
+}
+/***************************************************************
+ Analytical jump [beta_u] in x-direction
+ 
+ INPUT
+ x : x coordinate of given point
+ y : y coordinate of given point
+ z : z coordinate of given point
+ 
+ OUTPUT
+ analutical of jump [beta_u_x]
+ ***************************************************************/
+double Eq_1::Jump_betau_x(Doub_I x, Doub_I y, Doub_I z) const
+{
+    double temp;
+    
+    temp = beta.Inside(x,y,z)*Outer_dux(x,y,z) - beta.Outside(x,y,z)*Inner_dux(x,y,z);
+    
+    return temp;
+}
+
+/***************************************************************
+ Analytical jump [beta_u] in y-direction
+ 
+ INPUT
+ x : x coordinate of given point
+ y : y coordinate of given point
+ z : z coordinate of given point
+ 
+ OUTPUT
+ analutical of jump [beta_u_y]
+ ***************************************************************/
+double Eq_1::Jump_betau_y(Doub_I x, Doub_I y, Doub_I z) const
+{
+    double temp;
+    
+    temp = beta.Inside(x,y,z)*Outer_duy(x,y,z) - beta.Outside(x,y,z)*Inner_duy(x,y,z);
+    
+    return temp;
+}
+
+/***************************************************************
+ Analytical jump [beta_u] in z-direction
+ 
+ INPUT
+ x : x coordinate of given point
+ y : y coordinate of given point
+ z : z coordinate of given point
+ 
+ OUTPUT
+ analutical of jump [beta_u_z]
+ ***************************************************************/
+double Eq_1::Jump_betau_z(Doub_I x, Doub_I y, Doub_I z) const
+{
+    double temp;
+    
+    temp = beta.Inside(x,y,z)*Outer_duz(x,y,z) - beta.Outside(x,y,z)*Inner_duz(x,y,z);
     
     return temp;
 }

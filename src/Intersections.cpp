@@ -4,7 +4,6 @@
 #include <iomanip>
 #include <ctime>
 #include "Intersections.h"
-#include "Equation.h"
 #include "LU.h"
 
 using namespace std;
@@ -15,15 +14,12 @@ using namespace std;
  INPUT
  ex          : cartesian surface object
  mesh        : mesh object (at least contains: nx, dx, grids location xi[n] and grid indicator mesh_value[i])
- in_beta     : vector of 2 double values represent beta^{-} and beta^{+}
+ beta        : diffusion coefficient object representing beta^{-} and beta^{+}
  TOL_ITYPE   : tolerance of itype
  accuracy    : accuracy of scheme order
  **************************************************************************************************************/
-Intersections::Intersections(Surface_Cartesian& ex, Mesh& mesh, Beta in_beta, Doub_I TOL_ITYPE, Int_I in_accuracy, ofstream& out_file)
+Intersections::Intersections(Surface_Cartesian& ex, Mesh& mesh, Beta& beta, Doub_I TOL_ITYPE, Int_I in_accuracy, ofstream& out_file)
 {
-    beta.in = in_beta.in;
-    beta.out = in_beta.out;
-    
     tol_type = TOL_ITYPE;
     
     nx = mesh.nx;
@@ -40,9 +36,9 @@ Intersections::Intersections(Surface_Cartesian& ex, Mesh& mesh, Beta in_beta, Do
     
     accuracy = in_accuracy;
     
-    Setup_Intersections(ex,out_file);
+    Setup_Intersections(ex,beta,out_file);
     
-    Setup_MIB();
+    Setup_MIB(beta);
 }
 
 /**********************************************************
@@ -71,7 +67,7 @@ int Intersections::To1d(Int_I ix, Int_I iy, Int_I iz)
  INPUT
  ex : cartesian surface object
  **********************************************************/
-void Intersections::Setup_Intersections(Surface_Cartesian& ex, ofstream& out_file)
+void Intersections::Setup_Intersections(Surface_Cartesian& ex, Beta& beta, ofstream& out_file)
 {
     int ifp,indx,indx1,indx2,indx3,indx4;
     Intersection_Data inter_node,inter_node_left,inter_node_right;
@@ -111,7 +107,7 @@ void Intersections::Setup_Intersections(Surface_Cartesian& ex, ofstream& out_fil
                         
                         ifp += 1;
                         inter_node.ID = ifp;
-                        Getdata_irr_z(ix,iy,iz,ex,inter_node);
+                        Getdata_irr_z(ix,iy,iz,ex,inter_node,beta);
                         
                         ifpz[ix][iy].push_back(inter_node);
                         
@@ -133,7 +129,7 @@ void Intersections::Setup_Intersections(Surface_Cartesian& ex, ofstream& out_fil
                             inter_node_left.ID = -ifp;
                             ifp += 1;
                             inter_node_right.ID = -ifp;
-                            Getdata_cor_z(ix,iy,iz,ex,inter_node_left,inter_node_right);
+                            Getdata_cor_z(ix,iy,iz,ex,inter_node_left,inter_node_right,beta);
                             
                             ifpz[ix][iy].push_back(inter_node_left);
                             ifpz[ix][iy].push_back(inter_node_right);
@@ -189,7 +185,7 @@ void Intersections::Setup_Intersections(Surface_Cartesian& ex, ofstream& out_fil
                         }
                         ifp += 1;
                         inter_node.ID = ifp;
-                        Getdata_irr_y(ix,iy,iz,ex,inter_node);
+                        Getdata_irr_y(ix,iy,iz,ex,inter_node,beta);
                         
                         ifpy[ix][iz].push_back(inter_node);
                         
@@ -212,7 +208,7 @@ void Intersections::Setup_Intersections(Surface_Cartesian& ex, ofstream& out_fil
                             ifp += 1;
                             inter_node_right.ID = -ifp;
                             
-                            Getdata_cor_y(ix,iy,iz,ex,inter_node_left,inter_node_right);
+                            Getdata_cor_y(ix,iy,iz,ex,inter_node_left,inter_node_right,beta);
                             
                             ifpy[ix][iz].push_back(inter_node_left);
                             ifpy[ix][iz].push_back(inter_node_right);
@@ -268,7 +264,7 @@ void Intersections::Setup_Intersections(Surface_Cartesian& ex, ofstream& out_fil
                         }
                         ifp += 1;
                         inter_node.ID = ifp;
-                        Getdata_irr_x(ix,iy,iz,ex,inter_node);
+                        Getdata_irr_x(ix,iy,iz,ex,inter_node,beta);
                         
                         ifpx[iy][iz].push_back(inter_node);
                         
@@ -290,7 +286,7 @@ void Intersections::Setup_Intersections(Surface_Cartesian& ex, ofstream& out_fil
                             inter_node_left.ID = -ifp;
                             ifp += 1;
                             inter_node_right.ID = -ifp;
-                            Getdata_cor_x(ix,iy,iz,ex,inter_node_left,inter_node_right);
+                            Getdata_cor_x(ix,iy,iz,ex,inter_node_left,inter_node_right,beta);
                             
                             ifpx[iy][iz].push_back(inter_node_left);
                             ifpx[iy][iz].push_back(inter_node_right);
@@ -321,11 +317,11 @@ void Intersections::Setup_Intersections(Surface_Cartesian& ex, ofstream& out_fil
  INPUT
  ix         : index of grid node on x-axis
  iy         : index of grid node on y-axis
- iz         : index of grid node on z-axis
+ iz         : index of closest left grid node on z-axis
  ex         : cartesian surface object
  inter_node : intersection node need to be initialized
  *************************************************************************************************/
-void Intersections::Getdata_irr_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node)
+void Intersections::Getdata_irr_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node, Beta& beta)
 {
     inter_node.dir = 'z';
     
@@ -336,6 +332,15 @@ void Intersections::Getdata_irr_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node.err.errr[i] = 0;
         inter_node.err.errl[i] = 0;
     }
+    
+    inter_node.diffcoef.inside.resize(accuracy*2);
+    inter_node.diffcoef.outside.resize(accuracy*2);
+    for(int i = 0; i < accuracy*2; i++)
+    {
+        inter_node.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy],zi[iz-accuracy/2+i]);
+        inter_node.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy],zi[iz-accuracy/2+i]);
+    }
+    
     inter_node.coord.x_value = xi[ix];
     inter_node.coord.y_value = yi[iy];
     inter_node.coord.z_value = ex.Gamma_z(xi[ix],yi[iy],zi[iz],zi[iz+1]);
@@ -344,8 +349,6 @@ void Intersections::Getdata_irr_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node.line.indx2 = iy;
     
     inter_node.left_loc = iz;
-    
-    inter_node.beta = beta;
     
     inter_node.gamma = inter_node.coord.z_value - zi[iz];
     
@@ -368,12 +371,12 @@ void Intersections::Getdata_irr_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
  
  INPUT
  ix         : index of grid node on x-axis
- iy         : index of grid node on y-axis
+ iy         : index of closest left grid node on y-axis
  iz         : index of grid node on z-axis
  ex         : cartesian surface object
  inter_node : intersection node need to be initialized
  *************************************************************************************************/
-void Intersections::Getdata_irr_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node)
+void Intersections::Getdata_irr_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node, Beta& beta)
 {
     inter_node.dir = 'y';
     
@@ -385,6 +388,14 @@ void Intersections::Getdata_irr_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node.err.errl[i] = 0;
     }
     
+    inter_node.diffcoef.inside.resize(accuracy*2);
+    inter_node.diffcoef.outside.resize(accuracy*2);
+    for(int i = 0; i < accuracy*2; i++)
+    {
+        inter_node.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy-accuracy/2+i],zi[iz]);
+        inter_node.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy-accuracy/2+i],zi[iz]);
+    }
+    
     inter_node.coord.x_value = xi[ix];
     inter_node.coord.y_value = ex.Gamma_y(xi[ix],yi[iy],yi[iy+1],zi[iz]);
     inter_node.coord.z_value = zi[iz];
@@ -393,8 +404,6 @@ void Intersections::Getdata_irr_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node.line.indx2 = iz;
     
     inter_node.left_loc = iy;
-    
-    inter_node.beta = beta;
     
     inter_node.gamma = inter_node.coord.y_value - yi[iy];
     
@@ -416,13 +425,13 @@ void Intersections::Getdata_irr_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
  Initialize irregular interface node on yz plane in x-direction without MIB weights and error
  
  INPUT
- ix         : index of grid node on x-axis
+ ix         : index of closest left grid node on x-axis
  iy         : index of grid node on y-axis
  iz         : index of grid node on z-axis
  ex         : cartesian surface object
  inter_node : intersection node need to be initialized
  *************************************************************************************************/
-void Intersections::Getdata_irr_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node)
+void Intersections::Getdata_irr_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node, Beta& beta)
 {
     inter_node.dir = 'x';
     
@@ -434,6 +443,14 @@ void Intersections::Getdata_irr_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node.err.errl[i] = 0;
     }
     
+    inter_node.diffcoef.inside.resize(accuracy*2);
+    inter_node.diffcoef.outside.resize(accuracy*2);
+    for(int i = 0; i < accuracy*2; i++)
+    {
+        inter_node.diffcoef.inside[i] = beta.Inside(xi[ix-accuracy/2+i],yi[iy],zi[iz]);
+        inter_node.diffcoef.outside[i] = beta.Outside(xi[ix-accuracy/2+i],yi[iy],zi[iz]);
+    }
+    
     inter_node.coord.x_value = ex.Gamma_x(xi[ix],xi[ix+1],yi[iy],zi[iz]);
     inter_node.coord.y_value = yi[iy];
     inter_node.coord.z_value = zi[iz];
@@ -442,8 +459,6 @@ void Intersections::Getdata_irr_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node.line.indx2 = iz;
     
     inter_node.left_loc = ix;
-    
-    inter_node.beta = beta;
     
     inter_node.gamma = inter_node.coord.x_value - xi[ix];
     
@@ -467,12 +482,12 @@ void Intersections::Getdata_irr_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
  INPUT
  ix               : index of grid node on x-axis
  iy               : index of grid node on y-axis
- iz               : index of grid node on z-axis
+ iz               : index of closest left grid node on z-axis
  ex               : cartesian surface object
  inter_node_left  : intersection node need to be initialized
  inter_node_right : right intersection node need to be initialized
  *************************************************************************************************/
-void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node_left, Intersection_Data& inter_node_right)
+void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node_left, Intersection_Data& inter_node_right, Beta& beta)
 {
     //Left corner interface
     inter_node_left.dir = 'z';
@@ -485,6 +500,15 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_left.err.errl[i] = 0;
     }
     
+    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
+    inter_node_left.diffcoef.inside.resize(5);
+    inter_node_left.diffcoef.outside.resize(5);
+    for(int i = 0; i < 5; i++)
+    {
+        inter_node_left.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy],zi[iz-1+i]);
+        inter_node_left.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy],zi[iz-1+i]);
+    }
+    
     inter_node_left.coord.x_value = xi[ix];
     inter_node_left.coord.y_value = yi[iy];
     inter_node_left.coord.z_value = ex.Gamma_z(xi[ix],yi[iy],zi[iz],zi[iz+1]);
@@ -493,8 +517,6 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_left.line.indx2 = iy;
     
     inter_node_left.left_loc = iz;
-    
-    inter_node_left.beta = beta;
     
     inter_node_left.gamma = inter_node_left.coord.z_value - zi[iz];
     
@@ -522,6 +544,15 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_right.err.errl[i] = 0;
     }
     
+    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
+    inter_node_right.diffcoef.inside.resize(5);
+    inter_node_right.diffcoef.outside.resize(5);
+    for(int i = 0; i < 5; i++)
+    {
+        inter_node_right.diffcoef.inside[i] = beta.Outside(xi[ix],yi[iy],zi[iz-2+i]);
+        inter_node_right.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy],zi[iz-2+i]);
+    }
+    
     inter_node_right.coord.x_value = xi[ix];
     inter_node_right.coord.y_value = yi[iy];
     inter_node_right.coord.z_value = ex.Gamma_z(xi[ix],yi[iy],zi[iz+1],zi[iz+2]);
@@ -530,8 +561,6 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_right.line.indx2 = iy;
     
     inter_node_right.left_loc = iz+1;
-    
-    inter_node_right.beta = beta;
     
     inter_node_right.gamma = inter_node_right.coord.z_value - zi[iz+1];
     
@@ -554,13 +583,13 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
  
  INPUT
  ix               : index of grid node on x-axis
- iy               : index of grid node on y-axis
+ iy               : index of closest left grid node on y-axis
  iz               : index of grid node on z-axis
  ex               : cartesian surface object
  inter_node_left  : intersection node need to be initialized
  inter_node_right : right intersection node need to be initialized
  *************************************************************************************************/
-void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node_left, Intersection_Data& inter_node_right)
+void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node_left, Intersection_Data& inter_node_right, Beta& beta)
 {
     //Left corner interface
     inter_node_left.dir = 'y';
@@ -573,6 +602,15 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_left.err.errl[i] = 0;
     }
     
+    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
+    inter_node_left.diffcoef.inside.resize(5);
+    inter_node_left.diffcoef.outside.resize(5);
+    for(int i = 0; i < 5; i++)
+    {
+        inter_node_left.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy-1+i],zi[iz]);
+        inter_node_left.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy-1+i],zi[iz]);
+    }
+    
     inter_node_left.coord.x_value = xi[ix];
     inter_node_left.coord.y_value = ex.Gamma_y(xi[ix],yi[iy],yi[iy+1],zi[iz]);
     inter_node_left.coord.z_value = zi[iz];
@@ -581,8 +619,6 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_left.line.indx2 = iz;
     
     inter_node_left.left_loc = iy;
-    
-    inter_node_left.beta = beta;
     
     inter_node_left.gamma = inter_node_left.coord.y_value - yi[iy];
     
@@ -610,6 +646,15 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_right.err.errl[i] = 0;
     }
     
+    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
+    inter_node_right.diffcoef.inside.resize(5);
+    inter_node_right.diffcoef.outside.resize(5);
+    for(int i = 0; i < 5; i++)
+    {
+        inter_node_right.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy-2+i],zi[iz]);
+        inter_node_right.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy-2+i],zi[iz]);
+    }
+    
     inter_node_right.coord.x_value = xi[ix];
     inter_node_right.coord.y_value = ex.Gamma_y(xi[ix],yi[iy+1],yi[iy+2],zi[iz]);
     inter_node_right.coord.z_value = zi[iz];
@@ -618,8 +663,6 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_right.line.indx2 = iz;
     
     inter_node_right.left_loc = iy+1;
-    
-    inter_node_right.beta = beta;
     
     inter_node_right.gamma = inter_node_right.coord.y_value - yi[iy+1];
     
@@ -641,14 +684,14 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
  Initialize corner interface nodes on yz plane in x-direction without MIB weights and error
  
  INPUT
- ix               : index of grid node on x-axis
+ ix               : index of closest left grid node on x-axis
  iy               : index of grid node on y-axis
  iz               : index of grid node on z-axis
  ex               : cartesian surface object
  inter_node_left  : intersection node need to be initialized
  inter_node_right : right intersection node need to be initialized
  *************************************************************************************************/
-void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node_left, Intersection_Data& inter_node_right)
+void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesian& ex, Intersection_Data& inter_node_left, Intersection_Data& inter_node_right, Beta& beta)
 {
     //Left corner interface
     inter_node_left.dir = 'x';
@@ -661,6 +704,15 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_left.err.errl[i] = 0;
     }
     
+    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
+    inter_node_left.diffcoef.inside.resize(5);
+    inter_node_left.diffcoef.outside.resize(5);
+    for(int i = 0; i < 5; i++)
+    {
+        inter_node_left.diffcoef.inside[i] = beta.Inside(xi[ix-1+i],yi[iy],zi[iz]);
+        inter_node_left.diffcoef.outside[i] = beta.Outside(xi[ix-1+i],yi[iy],zi[iz]);
+    }
+    
     inter_node_left.coord.x_value = ex.Gamma_x(xi[ix],xi[ix+1],yi[iy],zi[iz]);
     inter_node_left.coord.y_value = yi[iy];
     inter_node_left.coord.z_value = zi[iz];
@@ -669,8 +721,6 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_left.line.indx2 = iz;
     
     inter_node_left.left_loc = ix;
-    
-    inter_node_left.beta = beta;
     
     inter_node_left.gamma = inter_node_left.coord.x_value - xi[ix];
     
@@ -698,6 +748,15 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_right.err.errl[i] = 0;
     }
     
+    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
+    inter_node_right.diffcoef.inside.resize(5);
+    inter_node_right.diffcoef.outside.resize(5);
+    for(int i = 0; i < 5; i++)
+    {
+        inter_node_right.diffcoef.inside[i] = beta.Inside(xi[ix-2+i],yi[iy],zi[iz]);
+        inter_node_right.diffcoef.outside[i] = beta.Outside(xi[ix-2+i],yi[iy],zi[iz]);
+    }
+    
     inter_node_right.coord.x_value = ex.Gamma_x(xi[ix+1],xi[ix+2],yi[iy],zi[iz]);
     inter_node_right.coord.y_value = yi[iy];
     inter_node_right.coord.z_value = zi[iz];
@@ -706,8 +765,6 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_right.line.indx2 = iz;
     
     inter_node_right.left_loc = ix+1;
-    
-    inter_node_right.beta = beta;
     
     inter_node_right.gamma = inter_node_right.coord.x_value - xi[ix+1];
     
@@ -728,7 +785,7 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
 /*************************************************************************************************
  Initialize intersection nodes(both irregular and corner) calculated fictitious points' weights
  *************************************************************************************************/
-void Intersections::Setup_MIB()
+void Intersections::Setup_MIB(Beta& beta)
 {
     Intersection_Data inter_node;
     int ip;
@@ -743,12 +800,12 @@ void Intersections::Setup_MIB()
             {
                 if(ifpz[ix][iy][ip].ID > 0)
                 {
-                    Irregular_MIB(ifpz[ix][iy][ip], dz);
+                    Irregular_MIB(ifpz[ix][iy][ip],beta,dz);
                     ip += 1;
                 }
                 else if(ifpz[ix][iy][ip].ID < 0)
                 {
-                    Corner_MIB_2nd(ifpz[ix][iy][ip],ifpz[ix][iy][ip+1], dz);
+                    Corner_MIB_2nd(ifpz[ix][iy][ip],ifpz[ix][iy][ip+1],beta,dz);
                     ip += 2;
                 }
                 else
@@ -770,12 +827,12 @@ void Intersections::Setup_MIB()
             {
                 if(ifpy[ix][iz][ip].ID > 0)
                 {
-                    Irregular_MIB(ifpy[ix][iz][ip], dy);
+                    Irregular_MIB(ifpy[ix][iz][ip],beta,dy);
                     ip += 1;
                 }
                 else if(ifpy[ix][iz][ip].ID < 0)
                 {
-                    Corner_MIB_2nd(ifpy[ix][iz][ip],ifpy[ix][iz][ip+1], dy);
+                    Corner_MIB_2nd(ifpy[ix][iz][ip],ifpy[ix][iz][ip+1],beta,dy);
                     ip += 2;
                 }
                 else
@@ -797,12 +854,12 @@ void Intersections::Setup_MIB()
             {
                 if(ifpx[iy][iz][ip].ID > 0)
                 {
-                    Irregular_MIB(ifpx[iy][iz][ip], dx);
+                    Irregular_MIB(ifpx[iy][iz][ip],beta,dx);
                     ip += 1;
                 }
                 else if(ifpx[iy][iz][ip].ID < 0)
                 {
-                    Corner_MIB_2nd(ifpx[iy][iz][ip],ifpx[iy][iz][ip+1], dx);
+                    Corner_MIB_2nd(ifpx[iy][iz][ip],ifpx[iy][iz][ip+1],beta,dx);
                     ip += 2;
                 }
                 else
@@ -822,14 +879,14 @@ void Intersections::Setup_MIB()
  inter_node : intersection node struct
  dv         : grid mesh size at given direction
  ***************************************************************************/
-void Intersections::Irregular_MIB(Intersection_Data& inter_node, Doub_I dv)
+void Intersections::Irregular_MIB(Intersection_Data& inter_node, Beta& beta, Doub_I dv)
 {
     VecDoub x;
     int onefp_unknowns,stlength,fpno;
     
     onefp_unknowns = accuracy*2+2;                  //numbers of unknowns for one fictitious points
     stlength = accuracy+1;                          //length of FD stencil
-    fpno = accuracy/2;                              //numbers of fictitious points at current intersection with given accuracy
+    fpno = accuracy/2;                              //numbers of fictitious points on oneside at current intersection given accuracy
     
     x.resize(2*onefp_unknowns);
     
@@ -848,7 +905,7 @@ void Intersections::Irregular_MIB(Intersection_Data& inter_node, Doub_I dv)
             x[j] = 0;
         }
         
-        Irregular_MIB_Recursive(inter_node,dv,onefp_unknowns,stlength,x);
+        Irregular_MIB_Recursive(inter_node,beta,dv,onefp_unknowns,stlength,x);
         
         for(int j = 0; j < onefp_unknowns; j++)
         {
@@ -872,12 +929,12 @@ void Intersections::Irregular_MIB(Intersection_Data& inter_node, Doub_I dv)
  OUTPUT
  x : vector of weights for a pair of fictitious points
  ****************************************************************************************/
-void Intersections::Irregular_MIB_Recursive(Intersection_Data& inter_node, Doub_I dv, Int_I onefp_unknowns, Int_I stlength, VecDoub_O& x)
+void Intersections::Irregular_MIB_Recursive(Intersection_Data& inter_node, Beta& beta, Doub_I dv, Int_I onefp_unknowns, Int_I stlength, VecDoub_O& x)
 {
     MatrixDoub A,weil,weir;
+    VecDoub coefl,coefr;                              //diffusion coefficients copied from intersection information
     VecDoub B;
     int order;
-    double coefl,coefr;
     int dev_order,total_unknowns,oneside_pts;
     
     total_unknowns = 2*onefp_unknowns;                //total unknowns need to be solved
@@ -945,42 +1002,52 @@ void Intersections::Irregular_MIB_Recursive(Intersection_Data& inter_node, Doub_
     
     //First order: BETA^{-}*U_{x} ^{-} = BETA^{+}*U_{x}^{+} - [BETA U_{x}]
     order = 1;
+    
+    coefr.resize((int)inter_node.diffcoef.inside.size());
+    coefl.resize((int)inter_node.diffcoef.outside.size());
+    
     if(abs(inter_node.ID)%2 == 0)                   //"-" => "+", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], F = G - [BETA U_{X}]
     {
-        coefr = inter_node.beta.in;
-        coefl = inter_node.beta.out;
+        for(int i = 0; i < (int)inter_node.diffcoef.inside.size(); i++)
+        {
+            coefr[i] = inter_node.diffcoef.inside[i];
+            coefl[i] = inter_node.diffcoef.outside[i];
+        }
     }
     else                                           //"+" => "-", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], G + [BETA U_{X}] = F
     {
-        coefr = inter_node.beta.out;
-        coefl = inter_node.beta.in;
+        for(int i = 0; i < (int)inter_node.diffcoef.inside.size(); i++)
+        {
+            coefr[i] = inter_node.diffcoef.outside[i];
+            coefl[i] = inter_node.diffcoef.inside[i];
+        }
     }
     //All real points weight
     for(int i = 0; i < oneside_pts; i++)
     {
-        B[onefp_unknowns+i] += -weir[order][i]*coefr;                                         //Right FP
-        B[onefp_unknowns+oneside_pts+i] += weil[order][stlength-oneside_pts+i]*coefl;         //Left FP
+        B[onefp_unknowns+i] += -weir[order][i]*coefr[i];                                                           //Right FP
+        B[onefp_unknowns+oneside_pts+i] += weil[order][stlength-oneside_pts+i]*coefl[oneside_pts+i];               //Left FP
     }
     //All calculated fictitious points weight
     for(int i = 0; i < stlength-oneside_pts-1; i++)
     {
         for(int j = 0; j < onefp_unknowns; j++)
         {
-            B[onefp_unknowns+j] += -weir[order][oneside_pts+i]*coefr*inter_node.wei.weir[i][j];
-            B[onefp_unknowns+j] += weil[order][stlength-oneside_pts-1-i]*coefl*inter_node.wei.weil[i][j];
+            B[onefp_unknowns+j] += -weir[order][oneside_pts+i]*coefr[oneside_pts+i]*inter_node.wei.weir[i][j];                                //Right FP
+            B[onefp_unknowns+j] += weil[order][stlength-oneside_pts-1-i]*coefl[stlength-oneside_pts-1-i]*inter_node.wei.weil[i][j];           //Left FP
         }
     }
     //Two fictitious points weight
     for(int i = 0; i < onefp_unknowns; i++)
     {
-        A[onefp_unknowns+i][i] = -weil[order][0]*coefl;                                       //Left FP
-        A[onefp_unknowns+i][onefp_unknowns+i] = weir[order][stlength-1]*coefr;                //Right FP
+        A[onefp_unknowns+i][onefp_unknowns+i] = weir[order][stlength-1]*coefr[stlength-1];                //Right FP
+        A[onefp_unknowns+i][i] = -weil[order][0]*coefl[accuracy*2-stlength];                              //Left FP
     }
     if(abs(inter_node.ID)%2 == 0)                   //"-" => "+", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], F = G - [BETA U_{X}]
     {
         B[total_unknowns-1] += -1;
     }
-    else                                       //"+" => "-", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], G + [BETA U_{X}] = F
+    else                                            //"+" => "-", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], G + [BETA U_{X}] = F
     {
         B[total_unknowns-1] += 1;
     }
@@ -1017,7 +1084,7 @@ void Intersections::Irregular_MIB_Recursive(Intersection_Data& inter_node, Doub_
 }
 
 /***************************************************************************************************************
- Calculating irregular weights for MIB scheme(with retreated type)
+ Calculating irregular weights for MIB scheme
  
  INPUT
  gamma : distance between intersection node with its left neighbor grid point
@@ -1102,12 +1169,12 @@ void Intersections::Get_irr_weights(Doub_I gamma, Doub_I dv, Int_I oneside_pts, 
  inter_node_right : right intersection node
  dv               : grid mesh size
  ******************************************************************************/
-void Intersections::Corner_MIB_2nd(Intersection_Data& inter_node_left, Intersection_Data& inter_node_right, Doub_I dv)
+void Intersections::Corner_MIB_2nd(Intersection_Data& inter_node_left, Intersection_Data& inter_node_right, Beta& beta, Doub_I dv)
 {
     MatrixDoub A, left_wei_out, left_wei_in, right_wei_out, right_wei_in;
+    VecDoub coef_out, coef_in;
     VecDoub B, x;
     int order;
-    double coef_out, coef_in;
     int fictitouspts_no, oneside_unknowns, total_unknowns, dev_order, stlength;
     
     fictitouspts_no = 4;                                 //total numbers of fictitious points
@@ -1171,32 +1238,51 @@ void Intersections::Corner_MIB_2nd(Intersection_Data& inter_node_left, Intersect
     
     //First order: BETA^{-}*U_{x} ^{-} = BETA^{+}*U_{x}^{+} - [BETA U_{x}]
     order = 1;
+    
+    coef_in.resize((int)inter_node_left.diffcoef.inside.size());
+    coef_out.resize((int)inter_node_left.diffcoef.inside.size());
+    
     if(abs(inter_node_left.ID)%2 == 0)              //"-" => "+" => "-"
     {
-        coef_out = inter_node_left.beta.in;
-        coef_in = inter_node_left.beta.out;
+        for(int i = 0; i < (int)inter_node_left.diffcoef.inside.size(); i++)
+        {
+            coef_in[i] = inter_node_left.diffcoef.outside[i];
+            coef_out[i] = inter_node_left.diffcoef.inside[i];
+        }
     }
-    else                                       //"+" => "-" => "+"
+    else                                           //"+" => "-" => "+"
     {
-        coef_out = inter_node_left.beta.out;
-        coef_in = inter_node_left.beta.in;
+        for(int i = 0; i < (int)inter_node_left.diffcoef.inside.size(); i++)
+        {
+            coef_in[i] = inter_node_left.diffcoef.inside[i];
+            coef_out[i] = inter_node_left.diffcoef.outside[i];
+        }
     }
-    B[oneside_unknowns+0] = -left_wei_out[order][0] * coef_out;             //GP at ix-1
-    B[oneside_unknowns+1] = -left_wei_out[order][1] * coef_out;             //GP at ix
-    B[oneside_unknowns+2] =  left_wei_in[order][1] * coef_in;               //GP at ix+1
-    B[oneside_unknowns+3] = -left_wei_out[order][3] * coef_out;             //GP at ix+2
+    
+    B[oneside_unknowns+0] = -left_wei_out[order][0]*coef_out[0];             //GP at ix-1
+    B[oneside_unknowns+1] = -left_wei_out[order][1]*coef_out[1];             //GP at ix
+    B[oneside_unknowns+2] =  left_wei_in[order][1]*coef_in[2];               //GP at ix+1
+    B[oneside_unknowns+3] = -left_wei_out[order][3]*coef_out[3];             //GP at ix+2
     for(int i = 0; i < oneside_unknowns; i++)
     {
-        A[oneside_unknowns+i][i] = -left_wei_in[order][0] * coef_in;                       //1st FP, at ix
-        A[oneside_unknowns+i][oneside_unknowns+i] = left_wei_out[order][2] * coef_out;     //2nd FP, at ix+1
-        A[oneside_unknowns+i][oneside_unknowns*2+i] = -left_wei_in[order][2] * coef_in;    //3rd FP, at ix+2
-        A[oneside_unknowns+i][oneside_unknowns*3+i] = -left_wei_in[order][3] * coef_in;    //4th FP, at ix-1 or ix+3
+        A[oneside_unknowns+i][i] = -left_wei_in[order][0]*coef_in[1];                       //1st FP, at ix
+        A[oneside_unknowns+i][oneside_unknowns+i] = left_wei_out[order][2]*coef_out[2];     //2nd FP, at ix+1
+        A[oneside_unknowns+i][oneside_unknowns*2+i] = -left_wei_in[order][2]*coef_in[3];    //3rd FP, at ix+2
+        //4th FP, at ix-1 or ix+3
+        if((dv-inter_node_left.gamma) > inter_node_right.gamma)                             //4th FP, at ix-1
+        {
+            A[oneside_unknowns+i][oneside_unknowns*3+i] = -left_wei_in[order][3]*coef_in[0];
+        }
+        else                                                                                 //4th FP, at ix+3
+        {
+            A[oneside_unknowns+i][oneside_unknowns*3+i] = -left_wei_in[order][3]*coef_in[4];
+        }
     }
     if(abs(inter_node_left.ID)%2 == 0)       //"-" => "+" => "-"
     {
         B[oneside_unknowns+6] = -1;
     }
-    else                                //"+" => "-" => "+"
+    else                                     //"+" => "-" => "+"
     {
         B[oneside_unknowns+6] = 1;
     }
@@ -1219,7 +1305,7 @@ void Intersections::Corner_MIB_2nd(Intersection_Data& inter_node_left, Intersect
     {
         B[oneside_unknowns*2+7] = -1;
     }
-    else                                //"+" => "-" => "+"
+    else                                    //"+" => "-" => "+"
     {
         B[oneside_unknowns*2+7] = 1;
     }
@@ -1228,30 +1314,45 @@ void Intersections::Corner_MIB_2nd(Intersection_Data& inter_node_left, Intersect
     order = 1;
     if(abs(inter_node_left.ID)%2 == 0)              //"-" => "+" => "-"
     {
-        coef_out = inter_node_right.beta.in;
-        coef_in = inter_node_right.beta.out;
+        for(int i = 0; i < (int)inter_node_right.diffcoef.inside.size(); i++)
+        {
+            coef_in[i] = inter_node_right.diffcoef.outside[i];
+            coef_out[i] = inter_node_right.diffcoef.inside[i];
+        }
     }
-    else                                       //"+" => "-" => "+"
+    else                                            //"+" => "-" => "+"
     {
-        coef_out = inter_node_right.beta.out;
-        coef_in = inter_node_right.beta.in;
+        for(int i = 0; i < (int)inter_node_right.diffcoef.inside.size(); i++)
+        {
+            coef_in[i] = inter_node_right.diffcoef.inside[i];
+            coef_out[i] = inter_node_right.diffcoef.outside[i];
+        }
     }
-    B[oneside_unknowns*3+1] = -right_wei_out[order][0] * coef_out;            //GP at ix
-    B[oneside_unknowns*3+2] =  right_wei_in[order][1] * coef_in;              //GP at ix+1
-    B[oneside_unknowns*3+3] = -right_wei_out[order][2] * coef_out;            //GP at ix+2
-    B[oneside_unknowns*3+4] = -right_wei_out[order][3] * coef_out;            //GP at ix+3
+    
+    B[oneside_unknowns*3+1] = -right_wei_out[order][0]*coef_out[1];            //GP at ix
+    B[oneside_unknowns*3+2] =  right_wei_in[order][1]*coef_in[2];              //GP at ix+1
+    B[oneside_unknowns*3+3] = -right_wei_out[order][2]*coef_out[3];            //GP at ix+2
+    B[oneside_unknowns*3+4] = -right_wei_out[order][3]*coef_out[4];            //GP at ix+3
     for(int i = 0; i < oneside_unknowns; i++)
     {
-        A[oneside_unknowns*3+i][i] = -right_wei_in[order][0] * coef_in;                       //1st FP, at ix
-        A[oneside_unknowns*3+i][oneside_unknowns+i] = right_wei_out[order][1] * coef_out;     //2nd FP, at ix+1
-        A[oneside_unknowns*3+i][oneside_unknowns*2+i] = -right_wei_in[order][2] * coef_in;    //3rd FP, at ix+2
-        A[oneside_unknowns*3+i][oneside_unknowns*3+i] = -right_wei_in[order][3] * coef_in;    //4th FP, at ix-1 or ix+3
+        A[oneside_unknowns*3+i][i] = -right_wei_in[order][0]*coef_in[1];                       //1st FP, at ix
+        A[oneside_unknowns*3+i][oneside_unknowns+i] = right_wei_out[order][1]*coef_out[2];     //2nd FP, at ix+1
+        A[oneside_unknowns*3+i][oneside_unknowns*2+i] = -right_wei_in[order][2]*coef_in[3];    //3rd FP, at ix+2
+        //4th FP, at ix-1 or ix+3
+        if((dv-inter_node_left.gamma) > inter_node_right.gamma)                                //4th FP, at ix-1
+        {
+            A[oneside_unknowns*3+i][oneside_unknowns*3+i] = -right_wei_in[order][3]*coef_in[0];
+        }
+        else                                                                                    //4th FP, at ix+3
+        {
+            A[oneside_unknowns*3+i][oneside_unknowns*3+i] = -right_wei_in[order][3]*coef_in[4];
+        }
     }
     if(abs(inter_node_left.ID)%2 == 0)       //"-" => "+" => "-"
     {
         B[oneside_unknowns*3+8] = -1;
     }
-    else                                //"+" => "-" => "+"
+    else                                    //"+" => "-" => "+"
     {
         B[oneside_unknowns*3+8] = 1;
     }
@@ -1888,7 +1989,7 @@ void Intersections::Refresh_Fp(Equation& eq)
  OUTPUT
  inter_node.jump : accurate jumps at current time
  ******************************************************************************/
-void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh)
+void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh, Beta& beta)
 {
     double jumpbeta_xi, jumpbeta_tau, jumpbeta_eta;
     double coord_x, coord_y, coord_z;
@@ -1921,8 +2022,8 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh)
                                                             ifpz[ix][iy][ip].p[2][0],ifpz[ix][iy][ip].p[2][1],ifpz[ix][iy][ip].p[2][2]);
                 
                 jumpbeta_xi = ifpz[ix][iy][ip].jump.betau_xi;
-                jumpbeta_eta = Eta_z(ifpz[ix][iy][ip],uh);
-                jumpbeta_tau = Tau_z(ifpz[ix][iy][ip],uh);
+                jumpbeta_eta = Eta_z(ifpz[ix][iy][ip],uh,beta);
+                jumpbeta_tau = Tau_z(ifpz[ix][iy][ip],uh,beta);
                 ifpz[ix][iy][ip].jump.betau_eta = jumpbeta_eta;
                 ifpz[ix][iy][ip].jump.betau_tau = jumpbeta_tau;
                 
@@ -1970,8 +2071,8 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh)
                                                             ifpy[ix][iz][ip].p[2][2]);
                 
                 jumpbeta_xi = ifpy[ix][iz][ip].jump.betau_xi;
-                jumpbeta_eta = Eta_y(ifpy[ix][iz][ip],uh);
-                jumpbeta_tau = Tau_y(ifpy[ix][iz][ip],uh);
+                jumpbeta_eta = Eta_y(ifpy[ix][iz][ip],uh,beta);
+                jumpbeta_tau = Tau_y(ifpy[ix][iz][ip],uh,beta);
                 ifpy[ix][iz][ip].jump.betau_eta = jumpbeta_eta;
                 ifpy[ix][iz][ip].jump.betau_tau = jumpbeta_tau;
                 
@@ -2017,8 +2118,8 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh)
                                                             ifpx[iy][iz][ip].p[2][2]);
                 
                 jumpbeta_xi = ifpx[iy][iz][ip].jump.betau_xi;
-                jumpbeta_eta = Eta_x(ifpx[iy][iz][ip],uh,eq);
-                jumpbeta_tau = Tau_x(ifpx[iy][iz][ip],uh,eq);
+                jumpbeta_eta = Eta_x(ifpx[iy][iz][ip],uh,beta);
+                jumpbeta_tau = Tau_x(ifpx[iy][iz][ip],uh,beta);
                 ifpx[iy][iz][ip].jump.betau_eta = jumpbeta_eta;
                 ifpx[iy][iz][ip].jump.betau_tau = jumpbeta_tau;
                 
@@ -3212,12 +3313,12 @@ void Intersections::Auxiliary_tau_z(Intersection_Data& inter_node)
  INPUT
  inter_node : given intersection node
  uh         : current solution
- reg        : fixed region (can be outside only)
+ beta       : beta object
  
  OUTPUT
  jumpbeta_eta : jump beta eta for given intersection based on current solution
  *******************************************************************************************/
-double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh, Equation& eq)
+double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh, Beta& beta)
 {
     int ix, iy, iz;                                                 //index of left node of intersection
     double upper_distance, lower_distance;                          //distance for eta approximation; distance for comparing outside and inside
@@ -3306,7 +3407,7 @@ double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh, Equati
         
         u_eta = wei_eta[0][1]*lower_value+wei_eta[2][1]*upper_value;
         
-        jumpbeta_eta = Eta_Plus(inter_node.jump.u_eta,u_eta);
+        jumpbeta_eta = Eta_Plus(inter_node,beta,u_eta);
     }
     //find six nodes available on inside Omega^{-} domain only, use all inside nodes for auxiliary points approximation
     else if(inter_node.eta.region == 'i')
@@ -3328,7 +3429,7 @@ double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh, Equati
         
         u_eta = wei_eta[0][1]*lower_value+wei_eta[2][1]*upper_value;
         
-        jumpbeta_eta = Eta_Minus(inter_node.jump.u_eta,u_eta);
+        jumpbeta_eta = Eta_Minus(inter_node,beta,u_eta);
     }
     else
     {
@@ -3345,12 +3446,12 @@ double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh, Equati
  INPUT
  inter_node : given intersection node
  uh         : current solution
- reg        : fixed region (can be outside only)
+ beta       : beta object
  
  OUTPUT
  jumpbeta_tau : jump beta tau for given intersection based on current solution
  *******************************************************************************************/
-double Intersections::Tau_x(Intersection_Data& inter_node, CubicDoub& uh, Equation& eq)
+double Intersections::Tau_x(Intersection_Data& inter_node, CubicDoub& uh, Beta& beta)
 {
     int ix, iy, iz;                                                 //index of left node of intersection
     double upper_distance, lower_distance;                          //distance for eta approximation; distance for comparing outside and inside
@@ -3437,7 +3538,7 @@ double Intersections::Tau_x(Intersection_Data& inter_node, CubicDoub& uh, Equati
         
         u_tau = wei_tau[0][1]*lower_value+wei_tau[2][1]*upper_value;
         
-        jumpbeta_tau = Tau_Plus(inter_node.jump.u_tau,u_tau);
+        jumpbeta_tau = Tau_Plus(inter_node,beta,u_tau);
     }
     else if(inter_node.tau.region == 'i')
     {
@@ -3458,7 +3559,7 @@ double Intersections::Tau_x(Intersection_Data& inter_node, CubicDoub& uh, Equati
         
         u_tau = wei_tau[0][1]*lower_value+wei_tau[2][1]*upper_value;
         
-        jumpbeta_tau = Tau_Minus(inter_node.jump.u_tau,u_tau);
+        jumpbeta_tau = Tau_Minus(inter_node,beta,u_tau);
     }
     else
     {
@@ -3475,12 +3576,12 @@ double Intersections::Tau_x(Intersection_Data& inter_node, CubicDoub& uh, Equati
  INPUT
  inter_node : given intersection node
  uh         : current solution
- reg        : fixed region (can be outside only)
+ beta       : beta object
  
  OUTPUT
  jumpbeta_eta : jump beta eta for given intersection based on current solution
  *******************************************************************************************/
-double Intersections::Eta_y(Intersection_Data& inter_node, CubicDoub& uh)
+double Intersections::Eta_y(Intersection_Data& inter_node, CubicDoub& uh, Beta& beta)
 {
     int ix,iz,iy;                                               //index of left node of intersection
     double upper_distance, lower_distance;                      //distance for eta approximation; distance for comparing outside and inside
@@ -3567,7 +3668,7 @@ double Intersections::Eta_y(Intersection_Data& inter_node, CubicDoub& uh)
         
         u_eta = wei_eta[0][1]*lower_value+wei_eta[2][1]*upper_value;
         
-        jumpbeta_eta = Eta_Plus(inter_node.jump.u_eta,u_eta);
+        jumpbeta_eta = Eta_Plus(inter_node,beta,u_eta);
     }
     else if(inter_node.eta.region == 'i')
     {
@@ -3588,7 +3689,7 @@ double Intersections::Eta_y(Intersection_Data& inter_node, CubicDoub& uh)
         
         u_eta = wei_eta[0][1]*lower_value+wei_eta[2][1]*upper_value;
         
-        jumpbeta_eta = Eta_Minus(inter_node.jump.u_eta,u_eta);
+        jumpbeta_eta = Eta_Minus(inter_node,beta,u_eta);
     }
     else
     {
@@ -3605,12 +3706,12 @@ double Intersections::Eta_y(Intersection_Data& inter_node, CubicDoub& uh)
  INPUT
  inter_node : given intersection node
  uh         : current solution
- reg        : fixed region (can be outside only)
+ beta       : beta object
  
  OUTPUT
  jumpbeta_tau : jump beta tau for given intersection based on current solution
  *******************************************************************************************/
-double Intersections::Tau_y(Intersection_Data& inter_node, CubicDoub& uh)
+double Intersections::Tau_y(Intersection_Data& inter_node, CubicDoub& uh, Beta& beta)
 {
     int ix,iz,iy;                                               //index of left node of intersection
     double upper_distance, lower_distance;                      //distance for eta approximation; distance for comparing outside and inside
@@ -3698,7 +3799,7 @@ double Intersections::Tau_y(Intersection_Data& inter_node, CubicDoub& uh)
         
         u_tau = wei_tau[0][1]*lower_value+wei_tau[2][1]*upper_value;
         
-        jumpbeta_tau = Tau_Plus(inter_node.jump.u_tau,u_tau);
+        jumpbeta_tau = Tau_Plus(inter_node,beta,u_tau);
     }
     else if(inter_node.tau.region == 'i')
     {
@@ -3719,7 +3820,7 @@ double Intersections::Tau_y(Intersection_Data& inter_node, CubicDoub& uh)
         
         u_tau = wei_tau[0][1]*lower_value+wei_tau[2][1]*upper_value;
         
-        jumpbeta_tau = Tau_Minus(inter_node.jump.u_tau,u_tau);
+        jumpbeta_tau = Tau_Minus(inter_node,beta,u_tau);
     }
     else
     {
@@ -3736,12 +3837,12 @@ double Intersections::Tau_y(Intersection_Data& inter_node, CubicDoub& uh)
  INPUT
  inter_node : given intersection node
  uh         : current solution
- reg        : fixed region (can be outside only)
+ beta       : beta object
  
  OUTPUT
  jumpbeta_eta : jump beta eta for given intersection based on current solution
  *******************************************************************************************/
-double Intersections::Eta_z(Intersection_Data& inter_node, CubicDoub& uh)
+double Intersections::Eta_z(Intersection_Data& inter_node, CubicDoub& uh, Beta& beta)
 {
     int ix,iz,iy;                                               //index of left node of intersection
     double upper_distance, lower_distance;                      //distance for eta approximation; distance for comparing outside and inside
@@ -3829,7 +3930,7 @@ double Intersections::Eta_z(Intersection_Data& inter_node, CubicDoub& uh)
         
         u_eta = wei_eta[0][1]*lower_value+wei_eta[2][1]*upper_value;
         
-        jumpbeta_eta = Eta_Plus(inter_node.jump.u_eta,u_eta);
+        jumpbeta_eta = Eta_Plus(inter_node,beta,u_eta);
     }
     else if(inter_node.eta.region == 'i')
     {
@@ -3850,7 +3951,7 @@ double Intersections::Eta_z(Intersection_Data& inter_node, CubicDoub& uh)
         
         u_eta = wei_eta[0][1]*lower_value+wei_eta[2][1]*upper_value;
         
-        jumpbeta_eta = Eta_Minus(inter_node.jump.u_eta,u_eta);
+        jumpbeta_eta = Eta_Minus(inter_node,beta,u_eta);
     }
     else
     {
@@ -3867,12 +3968,12 @@ double Intersections::Eta_z(Intersection_Data& inter_node, CubicDoub& uh)
  INPUT
  inter_node : given intersection node
  uh         : current solution
- reg        : fixed region (can be outside only)
+ beta       : beta object
  
  OUTPUT
  jumpbeta_tau : jump beta tau for given intersection based on current solution
  *******************************************************************************************/
-double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh)
+double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh, Beta& beta)
 {
     int ix,iz,iy;                                               //index of left node of intersection
     double upper_distance, lower_distance;                      //distance for eta approximation; distance for comparing outside and inside
@@ -3880,8 +3981,6 @@ double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh)
     double z0, u_tau;                                           //z coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
     VecDoub upper, lower, tau;                                  //absolute location for approximating two auxiliary points and u_{tau}
     MatrixDoub wei_upper, wei_lower, wei_tau;                   //weights for two auxiliary points and weights for u_{tau}
-    
-    
     
     VecDoub x_vec, z_vec;
     MatrixDoub wei_x, wei_z;
@@ -3946,7 +4045,6 @@ double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh)
         wei_lower[i].resize(1);
     }
     
-    
     if((REG == 'o') || (inter_node.tau.region == 'o'))
     {
         for(int i = 0; i < 3; i++)
@@ -3966,7 +4064,7 @@ double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh)
         
         u_tau = wei_tau[0][1]*lower_value+wei_tau[2][1]*upper_value;
         
-        jumpbeta_tau = Tau_Plus(inter_node.jump.u_tau,u_tau);
+        jumpbeta_tau = Tau_Plus(inter_node,beta,u_tau);
     }
     else if(inter_node.tau.region == 'i')
     {
@@ -3987,7 +4085,7 @@ double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh)
         
         u_tau = wei_tau[0][1]*lower_value+wei_tau[2][1]*upper_value;
         
-        jumpbeta_tau = Tau_Minus(inter_node.jump.u_tau,u_tau);
+        jumpbeta_tau = Tau_Minus(inter_node,beta,u_tau);
     }
     else
     {
@@ -4002,17 +4100,20 @@ double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh)
  Calculating of jump beta Eta with given Eta^{+}
  
  INPUT
- u_eta    : jump eta
- eta_plus : jump eta^{+}
+ inter_node : given intersection node
+ beta       : beta object
+ eta_plus   : jump eta^{+}
  
  OUTPUT
  eta_plus : jump beta eta^{+}
  *****************************************************************/
-double Intersections::Eta_Plus(Doub_I u_eta, Doub_I eta_plus)
+double Intersections::Eta_Plus(Intersection_Data& inter_node, Beta& beta, Doub_I eta_plus)
 {
     double temp;
     
-    temp = beta.in*u_eta + (beta.out-beta.in)*eta_plus;
+    temp = beta.Inside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value)*inter_node.jump.u_eta+
+          (beta.Outside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value)-
+           beta.Inside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value))*eta_plus;
     
     return temp;
 }
@@ -4021,17 +4122,20 @@ double Intersections::Eta_Plus(Doub_I u_eta, Doub_I eta_plus)
  Calculating of jump beta Eta with given Eta^{-}
  
  INPUT
- u_eta    : jump eta
- eta_plus : jump eta^{-}
+ inter_node : given intersection node
+ beta       : beta object
+ eta_plus   : jump eta^{-}
  
  OUTPUT
  eta_plus : jump beta eta^{-}
  *****************************************************************/
-double Intersections::Eta_Minus(Doub_I u_eta, Doub_I eta_minus)
+double Intersections::Eta_Minus(Intersection_Data& inter_node, Beta& beta, Doub_I eta_minus)
 {
     double temp;
     
-    temp = beta.out*u_eta + (beta.out-beta.in)*eta_minus;
+    temp = beta.Outside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value)*inter_node.jump.u_eta+
+          (beta.Outside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value)-
+           beta.Inside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value))*eta_minus;
     
     return temp;
 }
@@ -4040,18 +4144,21 @@ double Intersections::Eta_Minus(Doub_I u_eta, Doub_I eta_minus)
  Calculating of jump beta Tau with given Tau^{+}
  
  INPUT
- u_tau    : jump tau
- tau_plus : jump tau^{+}
+ inter_node : given intersection node
+ beta       : beta object
+ tau_plus   : jump tau^{+}
  
  OUTPUT
  tau_plus : jump beta tau^{+}
  *****************************************************************/
-double Intersections::Tau_Plus(Doub_I u_tau, Doub_I tau_plus)
+double Intersections::Tau_Plus(Intersection_Data& inter_node, Beta& beta, Doub_I tau_plus)
 {
     double temp;
     
-    temp = beta.in*u_tau + (beta.out-beta.in)*tau_plus;
-    
+    temp = beta.Inside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value)*inter_node.jump.u_tau+
+          (beta.Outside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value)-
+           beta.Inside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value))*tau_plus;
+
     return temp;
 }
 
@@ -4059,17 +4166,20 @@ double Intersections::Tau_Plus(Doub_I u_tau, Doub_I tau_plus)
  Calculating of jump beta Tau with giveN Tau^{-}
  
  INPUT
- u_tau    : jump tau
- tau_plus : jump tau^{-}
+ inter_node : given intersection node
+ beta       : beta object
+ tau_plus   : jump tau^{-}
  
  OUTPUT
  tau_plus : jump beta tau^{-}
  *****************************************************************/
-double Intersections::Tau_Minus(Doub_I u_tau, Doub_I tau_minus)
+double Intersections::Tau_Minus(Intersection_Data& inter_node, Beta& beta, Doub_I tau_minus)
 {
     double temp;
     
-    temp = beta.out*u_tau + (beta.out-beta.in)*tau_minus;
+    temp = beta.Outside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value)*inter_node.jump.u_tau+
+          (beta.Outside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value)-
+           beta.Inside(inter_node.coord.x_value,inter_node.coord.y_value,inter_node.coord.z_value))*tau_minus;
     
     return temp;
 }

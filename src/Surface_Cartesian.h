@@ -25,10 +25,6 @@ public:
     double Rtsafe_x(const Doub_I, const Doub_I, const Doub_I, const Doub_I);
     double Rtsafe_y(const Doub_I, const Doub_I, const Doub_I, const Doub_I);
     double Rtsafe_z(const Doub_I, const Doub_I, const Doub_I, const Doub_I);
-    
-    //double Get_zenith(Doub_I, Doub_I, Doub_I);
-    //double Get_azimuth(Doub_I, Doub_I);
-    
 };
 
 #endif

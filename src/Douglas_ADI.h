@@ -9,6 +9,7 @@
 #include "Surface_Cartesian.h"
 #include "Intersections.h"
 #include "Mesh.h"
+#include "Beta.h"
 
 using namespace std;
 
@@ -24,7 +25,6 @@ private:
     double jump_betauy, jump_betauyl, jump_betauyr;
     double jump_betauz, jump_betauzl, jump_betauzr;
     
-    Beta beta;
     VecDoub vdex,vdey,vdez;
     CubicDoub uhs, uhss, uhs2, uh1;
     CubicDoub vib, src;
@@ -42,9 +42,9 @@ private:
     void Getweight_cor(Int_I, Doub_I, VecDoub_O&, VecDoub_O&);
     int To1d(Int_I, Int_I, Int_I);
 public:
-    Douglas_ADI(Intersections&, Mesh&, Beta, VecDoub_I, Int_I);
-    void Solve_2nd(Equation&, Intersections&, CubicDoub_I&);
-    void Solve_4th(Equation&, Intersections&, CubicDoub_I&);
+    Douglas_ADI(Intersections&, Mesh&, Beta&, VecDoub_I, Int_I);
+    void Solve_2nd(Equation&, Intersections&, CubicDoub_I&, Beta&);
+    void Solve_4th(Equation&, Intersections&, CubicDoub_I&, Beta&);
     void Initialization(Equation&, CubicDoub_I&);
     void Error(Equation&, CubicDoub_I&, ofstream&);
 };

@@ -2,6 +2,7 @@
 #define __Equation_H__
 
 #include "Constant.h"
+#include "Beta_1.h"
 
 class Equation
 {
@@ -14,16 +15,17 @@ private:
     virtual double Outer_duz(Doub_I, Doub_I, Doub_I) const = 0;
 protected:
     double t;
-    double beta_minus,beta_plus;
 public:
     virtual double Outer_u(Doub_I, Doub_I, Doub_I) const = 0;         //Outer source term
     virtual double Inner_u(Doub_I, Doub_I, Doub_I) const = 0;         //Inner source term
     virtual double Outer_f(Doub_I, Doub_I, Doub_I) const = 0;         //Outer source term
     virtual double Inner_f(Doub_I, Doub_I, Doub_I) const = 0;         //Inner source term
+    
+    virtual double Jump_betau_x(Doub_I, Doub_I, Doub_I) const = 0;
+    virtual double Jump_betau_y(Doub_I, Doub_I, Doub_I) const = 0;
+    virtual double Jump_betau_z(Doub_I, Doub_I, Doub_I) const = 0;
+    
     double Jump_u(Doub_I, Doub_I, Doub_I) const;
-    double Jump_betau_x(Doub_I, Doub_I, Doub_I) const;
-    double Jump_betau_y(Doub_I, Doub_I, Doub_I) const;
-    double Jump_betau_z(Doub_I, Doub_I, Doub_I) const;
     double Jump_betau_xi(Doub_I, Doub_I, Doub_I, Doub_I, Doub_I, Doub_I) const;
     double Jump_u_eta(Doub_I, Doub_I, Doub_I, Doub_I, Doub_I, Doub_I) const;
     double Jump_u_tau(Doub_I, Doub_I, Doub_I, Doub_I, Doub_I, Doub_I) const;

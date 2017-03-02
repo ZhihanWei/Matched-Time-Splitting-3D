@@ -33,6 +33,7 @@
 		B66CD2081DA44CD70062A5EE /* Surface_Torus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B66CD1F41DA44CD70062A5EE /* Surface_Torus.cpp */; };
 		B6936BC81DBC2ACC0079A8D7 /* Surface_Cylinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6936BC61DBC2ACC0079A8D7 /* Surface_Cylinder.cpp */; };
 		B6936BCB1DBC35F90079A8D7 /* Surface_Cone.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6936BC91DBC35F90079A8D7 /* Surface_Cone.cpp */; };
+		B6EC68011E536B76004723A3 /* Beta_1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6EC67FF1E536B76004723A3 /* Beta_1.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -105,6 +106,9 @@
 		B6936BC71DBC2ACC0079A8D7 /* Surface_Cylinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Surface_Cylinder.h; sourceTree = "<group>"; };
 		B6936BC91DBC35F90079A8D7 /* Surface_Cone.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Surface_Cone.cpp; sourceTree = "<group>"; };
 		B6936BCA1DBC35F90079A8D7 /* Surface_Cone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Surface_Cone.h; sourceTree = "<group>"; };
+		B6EC67FF1E536B76004723A3 /* Beta_1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Beta_1.cpp; sourceTree = "<group>"; };
+		B6EC68001E536B76004723A3 /* Beta_1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta_1.h; sourceTree = "<group>"; };
+		B6EC68031E539F2E004723A3 /* Beta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta.h; sourceTree = "<group>"; };
 		B6FEE5211D89BCE600D31D5F /* MADI_3D */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MADI_3D; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -133,6 +137,9 @@
 				B66CD1E21DA44CD70062A5EE /* Intersections.cpp */,
 				B66CD1D31DA44CD70062A5EE /* Douglas_ADI.h */,
 				B66CD1D21DA44CD70062A5EE /* Douglas_ADI.cpp */,
+				B6EC68031E539F2E004723A3 /* Beta.h */,
+				B6EC68001E536B76004723A3 /* Beta_1.h */,
+				B6EC67FF1E536B76004723A3 /* Beta_1.cpp */,
 				B66CD1E11DA44CD70062A5EE /* Equation.h */,
 				B66CD1E01DA44CD70062A5EE /* Equation.cpp */,
 				B66CD1D51DA44CD70062A5EE /* Eq_0.h */,
@@ -263,6 +270,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6EC68011E536B76004723A3 /* Beta_1.cpp in Sources */,
 				B65B06551DB56500008F4708 /* Surface_Molecular.cpp in Sources */,
 				B66CD1F81DA44CD70062A5EE /* Eq_0.cpp in Sources */,
 				B60CE9631DB68FED00817826 /* Eq_6.cpp in Sources */,

@@ -10,6 +10,8 @@
 #include "Mesh.h"
 #include "Intersections.h"
 #include "Douglas_ADI.h"
+//User-defined diffusion coefficient beta
+#include "Beta_1.h"
 //User-defined surfaces
 #include "Surface_Cube.h"
 #include "Surface_Ellipsoid.h"
@@ -33,24 +35,23 @@
 
 using namespace std;
 
-void ADI_Starting(Int_I, Int_I, Beta, Mesh&, Intersections&, VecDoub_I&, CubicDoub_I&, ofstream&);
-void ADI_Solver(Int_I, Int_I, Beta, Mesh&, Intersections&, Douglas_ADI&, VecDoub_I&, CubicDoub_I&, ofstream&);
-void Write_txt(Intersections&, Mesh&, Beta, CubicDoub_I&, Int_I, Doub_I, Int_I);
+void ADI_Starting(Int_I, Int_I, Beta&, Mesh&, Intersections&, VecDoub_I&, CubicDoub_I&, ofstream&);
+void ADI_Solver(Int_I, Int_I, Beta&, Mesh&, Intersections&, Douglas_ADI&, VecDoub_I&, CubicDoub_I&, ofstream&);
+void Write_txt(Intersections&, Mesh&, Beta&, CubicDoub_I&, Int_I, Doub_I, Int_I);
 
 int main(int argc, char* argv[])
 {
     ofstream out_file;
     string file_name, current_time, out_file_name;
     VecDoub domain, running_time;
-    Beta beta;
     CubicDoub uh;
     VecInt size;
     Surface_Cartesian *ex_ptr;
+    Beta *beta_ptr;
     double tol_itype;
-    double t_begin, t_end,t;
+    double t_begin, t_end, t;
     char surface;
-    int equation;
-    int accuracy;
+    int equation, beta_code, accuracy;
     
     //Arguments for a Cube, for domain [-2,2;-2,2;-2,2]
     VecDoub arg_cube = {-1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
@@ -78,8 +79,7 @@ int main(int argc, char* argv[])
 
     vector<string> files = {"data/data1.txt"};
     //vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
-    //vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt"};
-    //vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
+    //vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/                   data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
     
     for(int i = 0; i < files.size(); i++)
     {
@@ -103,11 +103,10 @@ int main(int argc, char* argv[])
             domain = data.Get_Domain();
             size = data.Get_Size();
             running_time = data.Get_Time();
-            beta = data.Get_Beta();
+            beta_code = data.Get_Beta();
             tol_itype = data.Get_Tol();
             surface = data.Get_Surface();
             equation = data.Get_Equation();
-            accuracy = data.Get_Accuracy();
             
             out_file << "------------------------- Basic Info. ------------------------" << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Mesh Size" << ": " << setw(5) << "NX = " << setiosflags(ios::left) << setw(5) << size[0]
@@ -115,12 +114,20 @@ int main(int argc, char* argv[])
             out_file << setprecision(1) << scientific;
             out_file << setiosflags(ios::left) << setw(18) << "Time Step" << ": " << running_time[2] << endl;
             out_file << fixed;
-            out_file << setiosflags(ios::left) << setw(18) << "Beta in Omega^{+}" << ": " << beta.out << endl;
-            out_file << setiosflags(ios::left) << setw(18) << "Beta in Omega^{-}" << ": " << beta.in << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Surface" << ": " << surface << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Equation No." << ": " << equation << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Accuracy" << ": " << accuracy << endl << endl;
             
+            //Diffusion coefficients initialization
+            if(beta_code == 1)
+            {
+                Beta_1 beta1;
+                beta_ptr = &beta1;
+            }
+            
+            Beta &beta = *beta_ptr;
+            
+            //Surface initialization
             if(surface == 'C')
             {
                 Surface_Cube ex_cube(arg_cube);
@@ -193,7 +200,7 @@ int main(int argc, char* argv[])
             out_file << setprecision(1) << endl;
             out_file << "CPU time cost: " << t <<" seconds" << endl << endl;
             
-            //Write_txt(inter,mesh,beta,uh,equation,running_time[1],i);
+            Write_txt(inter,mesh,beta,uh,equation,running_time[1],i);
         }
         else
         {
@@ -215,12 +222,12 @@ int main(int argc, char* argv[])
  INPUT 
  equation : code of equation need to be used here
  mesh     : mesh object
+ diffcoef : diffusion coefficient object representing beta^{-} and beta^{+}
  inter    : object of all intersection nodes
  time     : vector of 3 double values represent beginning time, finishing time and time step
- beta     : vector of 2 double values represent beta^{-} and beta^{+}
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
-void ADI_Starting(Int_I equation, Int_I accuracy, Beta beta, Mesh& mesh, Intersections& inter, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
+void ADI_Starting(Int_I equation, Int_I accuracy, Beta& beta, Mesh& mesh, Intersections& inter, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
 {
     double t_start;
     Equation *eq_ptr;
@@ -294,7 +301,7 @@ void ADI_Starting(Int_I equation, Int_I accuracy, Beta beta, Mesh& mesh, Interse
  beta     : vector of 2 double values represent beta^{-} and beta^{+}
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
-void ADI_Solver(Int_I equation, Int_I accuracy, Beta beta, Mesh& mesh, Intersections& inter, Douglas_ADI& adi, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
+void ADI_Solver(Int_I equation, Int_I accuracy, Beta& beta, Mesh& mesh, Intersections& inter, Douglas_ADI& adi, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
 {
     double tnow, dt;
     int loop;
@@ -362,11 +369,11 @@ void ADI_Solver(Int_I equation, Int_I accuracy, Beta beta, Mesh& mesh, Intersect
             
             if(accuracy == 2)
             {
-                adi.Solve_2nd(eq_dt,inter,uh);
+                adi.Solve_2nd(eq_dt,inter,uh,beta);
             }
             else if(accuracy == 4)
             {
-                adi.Solve_4th(eq_dt,inter,uh);
+                adi.Solve_4th(eq_dt,inter,uh,beta);
             }
             else
             {
@@ -382,16 +389,27 @@ void ADI_Solver(Int_I equation, Int_I accuracy, Beta beta, Mesh& mesh, Intersect
         inter.Refresh_Fp(eq_now);
         inter.Error_Fp(out_file);
         
-        inter.Refresh_Jump(eq_now,uh);
+        inter.Refresh_Jump(eq_now,uh,beta);
         inter.Error_Jump(out_file);
-        
-        //inter.Display();
         
         adi.Error(eq_now,uh,out_file);
     }
 }
 
-void Write_txt(Intersections& inter, Mesh& mesh, Beta beta, CubicDoub_I& uh, Int_I equation, Doub_I t, Int_I i)
+
+/*********************************************************************************************
+ Write the function value for closest outside node around interface
+ 
+ INPUT
+ equation : code of equation need to be used here
+ mesh     : mesh object
+ inter    : object of all intersection nodes
+ t        : terminal time
+ beta     : vector of 2 double values represent beta^{-} and beta^{+}
+ uh       : three dimensional uninitialized solution
+ i        : file number
+ *********************************************************************************************/
+void Write_txt(Intersections& inter, Mesh& mesh, Beta& beta, CubicDoub_I& uh, Int_I equation, Doub_I t, Int_I i)
 {
     ofstream err_txt_file, sol_txt_file;
     string err_txt_file_name, sol_txt_file_name;

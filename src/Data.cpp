@@ -91,17 +91,14 @@ Data::Data(const string& file_name)
                     read_file >> parameter_value_1;
                     equation = parameter_value_1;
                     break;
-                case e_beta_inside:
-                    read_file >> parameter_value_2;
-                    beta_inside = parameter_value_2;
-                    break;
-                case e_beta_outside:
-                    read_file >> parameter_value_2;
-                    beta_outside = parameter_value_2;
+                case e_beta:
+                    read_file >> parameter_value_1;
+                    beta = parameter_value_1;
                     break;
                 case e_accuracy:
                     read_file >> parameter_value_1;
                     accuracy = parameter_value_1;
+                    break;
                     if(accuracy%2 == 1)
                     {
                         cout << "Order of accuracy has to be an even order" << endl;
@@ -150,9 +147,7 @@ Data::Prt_name Data::Translation(const string& in_string)
     else if(in_string == "nz") return e_nz;
     else if(in_string == "surface") return e_surface;
     else if(in_string == "equation") return e_equation;
-    else if(in_string == "beta_inside") return e_beta_inside;
-    else if(in_string == "beta_outside") return e_beta_outside;
-    else if(in_string == "accuracy") return e_accuracy;
+    else if(in_string == "beta") return e_beta;
     else
     {
         cout << "No corresponding parameter found, check data.txt file";
@@ -169,7 +164,6 @@ void Data::Display()
     cout << "xl = " << xl << " xr = " << xr << " yl = " << yl << " yr = " << yr << " zl = " << zl << " zr = " << zr << endl;
     cout << "t_start = " << t_start << " t_finish = " << t_finish << " t_step = " << t_step << endl;
     cout << "nx = " << nx << " ny = " << ny << " nz = " << nz << endl;
-    cout << "beta_inside = " << beta_inside << " beta_outside = " << beta_outside << endl;
 }
 
 /***********************************************************************************************
@@ -204,19 +198,6 @@ VecInt Data::Get_Size() const
 }
 
 /***********************************************************************************************
-                            Get data given by order [beta_inside,beta_outside]
- ***********************************************************************************************/
-Beta Data::Get_Beta() const
-{
-    Beta beta;
-    
-    beta.in = beta_inside;
-    beta.out = beta_outside;
-    
-    return beta;
-}
-
-/***********************************************************************************************
                             Get data given by order [t_start,t_finish,t_step]
  ***********************************************************************************************/
 VecDoub Data::Get_Time() const
@@ -239,7 +220,15 @@ char Data::Get_Surface() const
 }
 
 /***********************************************************************************************
-                                    Get accuracy order
+                                    Get data Beta
+ ***********************************************************************************************/
+int Data::Get_Beta() const
+{
+    return beta;
+}
+
+/***********************************************************************************************
+                                   Get data Accuracy
  ***********************************************************************************************/
 int Data::Get_Accuracy() const
 {
