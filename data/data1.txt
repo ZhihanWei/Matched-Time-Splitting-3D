@@ -5,9 +5,9 @@ yr = 1.99
 zl = -1.99
 zr = 1.99
 
-nx = 20
-ny = 20
-nz = 20
+nx = 40
+ny = 40
+nz = 40
 
 t_start = 0
 t_finish = 1
