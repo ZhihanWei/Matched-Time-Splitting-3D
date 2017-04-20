@@ -10,8 +10,6 @@
 #include "Mesh.h"
 #include "Intersections.h"
 #include "Douglas_ADI.h"
-//User-defined diffusion coefficient beta
-#include "Beta_1.h"
 //User-defined surfaces
 #include "Surface_Cube.h"
 #include "Surface_Ellipsoid.h"
@@ -23,6 +21,9 @@
 #include "Surface_Tanglecube.h"
 #include "Surface_Cylinder.h"
 #include "Surface_Cone.h"
+//User-defined diffusion coefficient beta
+#include "Beta_1.h"
+#include "Beta_2.h"
 //Users-defined functions
 #include "Eq_0.h"
 #include "Eq_1.h"
@@ -105,6 +106,7 @@ int main(int argc, char* argv[])
             running_time = data.Get_Time();
             beta_code = data.Get_Beta();
             tol_itype = data.Get_Tol();
+            accuracy = data.Get_Accuracy();
             surface = data.Get_Surface();
             equation = data.Get_Equation();
             
@@ -124,7 +126,16 @@ int main(int argc, char* argv[])
                 Beta_1 beta1;
                 beta_ptr = &beta1;
             }
-            
+            else if(beta_code == 2)
+            {
+                Beta_2 beta2;
+                beta_ptr = &beta2;
+            }
+            else
+            {
+                cout << "Beta is not found!" << endl;
+                exit(0);
+            }
             Beta &beta = *beta_ptr;
             
             //Surface initialization
@@ -200,7 +211,7 @@ int main(int argc, char* argv[])
             out_file << setprecision(1) << endl;
             out_file << "CPU time cost: " << t <<" seconds" << endl << endl;
             
-            Write_txt(inter,mesh,beta,uh,equation,running_time[1],i);
+            //Write_txt(inter,mesh,beta,uh,equation,running_time[1],i);
         }
         else
         {
@@ -366,19 +377,8 @@ void ADI_Solver(Int_I equation, Int_I accuracy, Beta& beta, Mesh& mesh, Intersec
             }
             
             Equation &eq_dt = *eq_dt_ptr;
-            
-            if(accuracy == 2)
-            {
-                adi.Solve_2nd(eq_dt,inter,uh,beta);
-            }
-            else if(accuracy == 4)
-            {
-                adi.Solve_4th(eq_dt,inter,uh,beta);
-            }
-            else
-            {
-                cout << "Accuracy cannot be higher that 4th order" << endl;
-            }
+
+            adi.Solve_2nd(eq_dt,inter,uh,beta);    
         }
         
         out_file << setprecision(1) << scientific << "T = " << tnow << endl;

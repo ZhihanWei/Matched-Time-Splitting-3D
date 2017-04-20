@@ -1,15 +1,15 @@
-#include "Beta_1.h"
+#include "Beta_2.h"
 
 /******************************************************************
-                            Constructor
+ Constructor
  ******************************************************************/
-Beta_1::Beta_1()
+Beta_2::Beta_2()
 {
     
 }
 
 /****************************************************
-          Diffusion coefficient in Omega^{-}
+ Diffusion coefficient in Omega^{-}
  
  INPUT
  x : x coordinate of given point
@@ -19,18 +19,17 @@ Beta_1::Beta_1()
  OUTPUT
  Diffusion coefficient at that point in Omega^{-}
  *****************************************************/
-double Beta_1::Inside(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_2::Inside(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
-    
-    //temp = 3;
-    temp = 1/(x*x+y*y+z*z+1);
+
+    temp = sin(x+y+z);
     
     return temp;
 }
 
 /****************************************************
-         Diffusion coefficient in Omega^{+}
+ Diffusion coefficient in Omega^{+}
  
  INPUT
  x : x coordinate of given point
@@ -40,12 +39,11 @@ double Beta_1::Inside(Doub_I x, Doub_I y, Doub_I z) const
  OUTPUT
  Diffusion coefficient at the point in Omega^{+}
  *****************************************************/
-double Beta_1::Outside(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_2::Outside(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    //temp = 10;
-    temp = -1/(x*x+y*y+z*z+1);
+    temp = cos(x+y+z);
     
     return temp;
 }

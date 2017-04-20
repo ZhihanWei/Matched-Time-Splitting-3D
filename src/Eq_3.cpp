@@ -227,7 +227,7 @@ double Eq_3::Jump_betau_x(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = beta.Inside(x,y,z)*Outer_dux(x,y,z) - beta.Outside(x,y,z)*Inner_dux(x,y,z);
+    temp = beta.Outside(x,y,z)*Outer_dux(x,y,z) - beta.Inside(x,y,z)*Inner_dux(x,y,z);
     
     return temp;
 }
@@ -247,7 +247,7 @@ double Eq_3::Jump_betau_y(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = beta.Inside(x,y,z)*Outer_duy(x,y,z) - beta.Outside(x,y,z)*Inner_duy(x,y,z);
+    temp = beta.Outside(x,y,z)*Outer_duy(x,y,z) - beta.Inside(x,y,z)*Inner_duy(x,y,z);
     
     return temp;
 }
@@ -267,7 +267,7 @@ double Eq_3::Jump_betau_z(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = beta.Inside(x,y,z)*Outer_duz(x,y,z) - beta.Outside(x,y,z)*Inner_duz(x,y,z);
+    temp = beta.Outside(x,y,z)*Outer_duz(x,y,z) - beta.Inside(x,y,z)*Inner_duz(x,y,z);
     
     return temp;
 }

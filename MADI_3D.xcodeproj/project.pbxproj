@@ -34,6 +34,7 @@
 		B6936BC81DBC2ACC0079A8D7 /* Surface_Cylinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6936BC61DBC2ACC0079A8D7 /* Surface_Cylinder.cpp */; };
 		B6936BCB1DBC35F90079A8D7 /* Surface_Cone.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6936BC91DBC35F90079A8D7 /* Surface_Cone.cpp */; };
 		B6EC68011E536B76004723A3 /* Beta_1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6EC67FF1E536B76004723A3 /* Beta_1.cpp */; };
+		B6F3515D1E96D92C00ABE3F8 /* Beta_2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6F3515B1E96D92C00ABE3F8 /* Beta_2.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -109,6 +110,8 @@
 		B6EC67FF1E536B76004723A3 /* Beta_1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Beta_1.cpp; sourceTree = "<group>"; };
 		B6EC68001E536B76004723A3 /* Beta_1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta_1.h; sourceTree = "<group>"; };
 		B6EC68031E539F2E004723A3 /* Beta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta.h; sourceTree = "<group>"; };
+		B6F3515B1E96D92C00ABE3F8 /* Beta_2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Beta_2.cpp; sourceTree = "<group>"; };
+		B6F3515C1E96D92C00ABE3F8 /* Beta_2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta_2.h; sourceTree = "<group>"; };
 		B6FEE5211D89BCE600D31D5F /* MADI_3D */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MADI_3D; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -140,6 +143,8 @@
 				B6EC68031E539F2E004723A3 /* Beta.h */,
 				B6EC68001E536B76004723A3 /* Beta_1.h */,
 				B6EC67FF1E536B76004723A3 /* Beta_1.cpp */,
+				B6F3515C1E96D92C00ABE3F8 /* Beta_2.h */,
+				B6F3515B1E96D92C00ABE3F8 /* Beta_2.cpp */,
 				B66CD1E11DA44CD70062A5EE /* Equation.h */,
 				B66CD1E01DA44CD70062A5EE /* Equation.cpp */,
 				B66CD1D51DA44CD70062A5EE /* Eq_0.h */,
@@ -274,6 +279,7 @@
 				B65B06551DB56500008F4708 /* Surface_Molecular.cpp in Sources */,
 				B66CD1F81DA44CD70062A5EE /* Eq_0.cpp in Sources */,
 				B60CE9631DB68FED00817826 /* Eq_6.cpp in Sources */,
+				B6F3515D1E96D92C00ABE3F8 /* Beta_2.cpp in Sources */,
 				B66CD2001DA44CD70062A5EE /* LU.cpp in Sources */,
 				B65B06521DB54041008F4708 /* Surface_Dupin_Cyclide.cpp in Sources */,
 				B66CD2011DA44CD70062A5EE /* main.cpp in Sources */,

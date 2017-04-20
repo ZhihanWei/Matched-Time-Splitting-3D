@@ -104,7 +104,6 @@ Data::Data(const string& file_name)
                         cout << "Order of accuracy has to be an even order" << endl;
                         exit(0);
                     }
-                    
                     break;
                 default:
                     cout << "No corresponding parameter found, check data.txt file" << endl;
@@ -148,9 +147,10 @@ Data::Prt_name Data::Translation(const string& in_string)
     else if(in_string == "surface") return e_surface;
     else if(in_string == "equation") return e_equation;
     else if(in_string == "beta") return e_beta;
+    else if(in_string == "accuracy") return e_accuracy;
     else
     {
-        cout << "No corresponding parameter found, check data.txt file";
+        cout << "No corresponding parameter found, check data.txt file" << endl;
         exit(0);
     }
 }
