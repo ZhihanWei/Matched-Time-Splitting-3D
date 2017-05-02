@@ -14,7 +14,7 @@ private:
         e_t_start,e_t_finish,e_t_step,
         e_nx,e_ny,e_nz,
         e_beta_inside,e_beta_outside,
-        e_surface,e_equation,
+        e_surface,e_equation,e_method,
         e_accuracy, e_beta
     };
     
@@ -23,6 +23,7 @@ private:
     double t_start,t_finish,t_step;
     int nx,ny,nz;
     char surface;
+    char method;
     int equation;
     int accuracy;
     int beta;
@@ -36,6 +37,7 @@ public:
     VecDoub Get_Domain() const;
     VecInt Get_Size() const;
     VecDoub Get_Time() const;
+    char Get_Method() const;
     char Get_Surface() const;
     int Get_Beta() const;
     int Get_Accuracy() const;

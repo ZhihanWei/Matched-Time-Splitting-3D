@@ -119,16 +119,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 if(inter.ifpy[ix][iz][ip].ID > 0)
                 {
                     data = inter.ifpy[ix][iz][ip];
-                    
-                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauy = eq.Jump_betau_y(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauy = inter.ifpy[ix][iz][ip].jump.u_dir;
-                    }
 
                     //Approximate IY
                     iy = data.left_loc;
@@ -167,19 +157,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     datal = inter.ifpy[ix][iz][ip];
                     datar = inter.ifpy[ix][iz][ip+1];
-                    
-                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauyl = eq.Jump_betau_y(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                        jump_betauyr = eq.Jump_betau_y(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauyl = inter.ifpy[ix][iz][ip].jump.u_dir;
-                        jump_betauyr = inter.ifpy[ix][iz][ip+1].jump.u_dir;
-                    }
                     
                     //Approximate IY
                     iy = datal.left_loc;
@@ -267,16 +244,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     data = inter.ifpz[ix][iy][ip];
                     
-                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauz = eq.Jump_betau_z(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauz = inter.ifpz[ix][iy][ip].jump.u_dir;
-                    }
-                    
                     //Approximate IZ
                     iz = data.left_loc;
                     Operator_weights_z(beta,vdez,ix,iy,iz,dz);
@@ -314,19 +281,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     datal = inter.ifpz[ix][iy][ip];
                     datar = inter.ifpz[ix][iy][ip+1];
-                    
-                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauzl = eq.Jump_betau_z(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                        jump_betauzr = eq.Jump_betau_z(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauzl = inter.ifpz[ix][iy][ip].jump.u_dir;
-                        jump_betauzr = inter.ifpz[ix][iy][ip+1].jump.u_dir;
-                    }
                     
                     //Approximate IZ, left FP
                     iz = datal.left_loc;
@@ -444,6 +398,24 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
         }
     }
     
+    /*
+    for(int ix = 0; ix < nx; ix++)
+    {
+        for(int iy = 0; iy < ny; iy++)
+        {
+            for(int iz = 0; iz < nz; iz++)
+            {
+                if(abs(uhs[ix][iy][iz]-80)>0.1)
+                {
+                    cout << "Flag: " << uhs[ix][iy][iz] << endl;
+                    cout << "ix: " << ix << " iy: " << iy << " iz: " << iz << endl;
+                    exit(0);
+                }
+            }
+        }
+    }
+     */
+
     //Generate LHS
     a.resize(nx);
     b.resize(nx);
@@ -496,16 +468,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     data = inter.ifpx[iy][iz][ip];
                     
-                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betaux = eq.Jump_betau_x(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betaux = inter.ifpx[iy][iz][ip].jump.u_dir;
-                    }
-                    
                     for(int i = 0; i < 2; i++)
                     {
                         for(int j = 0; j < 5; j++)
@@ -547,19 +509,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     datal = inter.ifpx[iy][iz][ip];
                     datar = inter.ifpx[iy][iz][ip+1];
-                    
-                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauxl = eq.Jump_betau_x(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                        jump_betauxr = eq.Jump_betau_x(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauxl = inter.ifpx[iy][iz][ip].jump.u_dir;
-                        jump_betauxr = inter.ifpx[iy][iz][ip+1].jump.u_dir;
-                    }
                     
                     for(int i = 0; i < 3; i++)
                     {
@@ -681,16 +630,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     data = inter.ifpy[ix][iz][ip];
                     
-                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauy = eq.Jump_betau_y(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauy = inter.ifpy[ix][iz][ip].jump.u_dir;
-                    }
-                    
                     //Approximate IY
                     iy = data.left_loc;
                     Operator_weights_y(beta,vdey,ix,iy,iz,dy);
@@ -728,19 +667,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     datal = inter.ifpy[ix][iz][ip];
                     datar = inter.ifpy[ix][iz][ip+1];
-                    
-                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauyl = eq.Jump_betau_y(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                        jump_betauyr = eq.Jump_betau_y(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauyl = inter.ifpy[ix][iz][ip].jump.u_dir;
-                        jump_betauyr = inter.ifpy[ix][iz][ip+1].jump.u_dir;
-                    }
                     
                     //Approximate IY, left FP
                     iy = datal.left_loc;
@@ -875,16 +801,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     data = inter.ifpy[ix][iz][ip];
                     
-                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauy = eq.Jump_betau_y(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauy = inter.ifpy[ix][iz][ip].jump.u_dir;
-                    }
-                    
                     for(int i = 0; i < 2; i++)
                     {
                         for(int j = 0; j < 5; j++)
@@ -926,19 +842,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     datal = inter.ifpy[ix][iz][ip];
                     datar = inter.ifpy[ix][iz][ip+1];
-                    
-                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauyl = eq.Jump_betau_y(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                        jump_betauyr = eq.Jump_betau_y(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauyl = inter.ifpy[ix][iz][ip].jump.u_dir;
-                        jump_betauyr = inter.ifpy[ix][iz][ip+1].jump.u_dir;
-                    }
                     
                     for(int i = 0; i < 3; i++)
                     {
@@ -1060,16 +963,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     data = inter.ifpz[ix][iy][ip];
                     
-                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauz = eq.Jump_betau_z(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauz = inter.ifpz[ix][iy][ip].jump.u_dir;
-                    }
-                    
                     //Approximate IZ
                     iz = data.left_loc;
                     Operator_weights_z(beta,vdez,ix,iy,iz,dz);
@@ -1107,19 +1000,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     datal = inter.ifpz[ix][iy][ip];
                     datar = inter.ifpz[ix][iy][ip+1];
-                    
-                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauzl = eq.Jump_betau_z(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                        jump_betauzr = eq.Jump_betau_z(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauzl = inter.ifpz[ix][iy][ip].jump.u_dir;
-                        jump_betauzr = inter.ifpz[ix][iy][ip+1].jump.u_dir;
-                    }
                     
                     //Approximate IZ, left FP
                     iz = datal.left_loc;
@@ -1254,16 +1134,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     data = inter.ifpz[ix][iy][ip];
                     
-                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauz = eq.Jump_betau_z(data.coord.x_value,data.coord.y_value,data.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauz = inter.ifpz[ix][iy][ip].jump.u_dir;
-                    }
-                    
                     for(int i = 0; i < 2; i++)
                     {
                         for(int j = 0; j < 5; j++)
@@ -1305,19 +1175,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
                 {
                     datal = inter.ifpz[ix][iy][ip];
                     datar = inter.ifpz[ix][iy][ip+1];
-                    
-                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    if(JP == 'r')
-                    {
-                        jump_betauzl = eq.Jump_betau_z(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
-                        jump_betauzr = eq.Jump_betau_z(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
-                    }
-                    else
-                    {
-                        jump_betauzl = inter.ifpz[ix][iy][ip].jump.u_dir;
-                        jump_betauzr = inter.ifpz[ix][iy][ip+1].jump.u_dir;
-                    }
                     
                     for(int i = 0; i < 3; i++)
                     {

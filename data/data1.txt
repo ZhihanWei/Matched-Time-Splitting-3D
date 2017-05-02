@@ -14,9 +14,10 @@ t_finish = 1
 t_step = 0.001
 
 surface = E
+method = L
 equation = 4
 
-beta = 2
+beta = 0
 
 TOL_ITYPE = 0
 

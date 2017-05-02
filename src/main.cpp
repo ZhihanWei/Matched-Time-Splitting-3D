@@ -10,6 +10,7 @@
 #include "Mesh.h"
 #include "Intersections.h"
 #include "Douglas_ADI.h"
+#include "LOD.h"
 //User-defined surfaces
 #include "Surface_Cube.h"
 #include "Surface_Ellipsoid.h"
@@ -22,6 +23,7 @@
 #include "Surface_Cylinder.h"
 #include "Surface_Cone.h"
 //User-defined diffusion coefficient beta
+#include "Beta_0.h"
 #include "Beta_1.h"
 #include "Beta_2.h"
 //Users-defined functions
@@ -38,6 +40,8 @@ using namespace std;
 
 void ADI_Starting(Int_I, Int_I, Beta&, Mesh&, Intersections&, VecDoub_I&, CubicDoub_I&, ofstream&);
 void ADI_Solver(Int_I, Int_I, Beta&, Mesh&, Intersections&, Douglas_ADI&, VecDoub_I&, CubicDoub_I&, ofstream&);
+void LOD_Starting(Int_I, Beta&, Mesh&, Intersections&, VecDoub_I&, CubicDoub_I&, ofstream&);
+void LOD_Solver(Int_I, Beta&, Mesh&, Intersections&, LOD&, VecDoub_I&, CubicDoub_I&, ofstream&);
 void Write_txt(Intersections&, Mesh&, Beta&, CubicDoub_I&, Int_I, Doub_I, Int_I);
 
 int main(int argc, char* argv[])
@@ -51,7 +55,7 @@ int main(int argc, char* argv[])
     Beta *beta_ptr;
     double tol_itype;
     double t_begin, t_end, t;
-    char surface;
+    char surface, method;
     int equation, beta_code, accuracy;
     
     //Arguments for a Cube, for domain [-2,2;-2,2;-2,2]
@@ -108,6 +112,7 @@ int main(int argc, char* argv[])
             tol_itype = data.Get_Tol();
             accuracy = data.Get_Accuracy();
             surface = data.Get_Surface();
+            method = data.Get_Method();
             equation = data.Get_Equation();
             
             out_file << "------------------------- Basic Info. ------------------------" << endl;
@@ -117,11 +122,17 @@ int main(int argc, char* argv[])
             out_file << setiosflags(ios::left) << setw(18) << "Time Step" << ": " << running_time[2] << endl;
             out_file << fixed;
             out_file << setiosflags(ios::left) << setw(18) << "Surface" << ": " << surface << endl;
+            out_file << setiosflags(ios::left) << setw(18) << "Method" << ": " << method << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Equation No." << ": " << equation << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Accuracy" << ": " << accuracy << endl << endl;
             
             //Diffusion coefficients initialization
-            if(beta_code == 1)
+            if(beta_code == 0)
+            {
+                Beta_0 beta0;
+                beta_ptr = &beta0;
+            }
+            else if(beta_code == 1)
             {
                 Beta_1 beta1;
                 beta_ptr = &beta1;
@@ -203,7 +214,19 @@ int main(int argc, char* argv[])
             
             cout << "Program is running......" << endl << endl;
             
-            ADI_Starting(equation,accuracy,beta,mesh,inter,running_time,uh,out_file);
+            if(method == 'A')
+            {
+                ADI_Starting(equation,accuracy,beta,mesh,inter,running_time,uh,out_file);
+            }
+            else if(method == 'L')
+            {
+                LOD_Starting(equation,beta,mesh,inter,running_time,uh,out_file);
+            }
+            else
+            {
+                cout << "Currently, only LOD and Douglas-ADI are applied" << endl;
+                exit(0);
+            }
             
             t_end = clock();
             t = ((double)(t_end - t_begin))/CLOCKS_PER_SEC;
@@ -312,7 +335,7 @@ void ADI_Starting(Int_I equation, Int_I accuracy, Beta& beta, Mesh& mesh, Inters
  beta     : vector of 2 double values represent beta^{-} and beta^{+}
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
-void ADI_Solver(Int_I equation, Int_I accuracy, Beta& beta, Mesh& mesh, Intersections& inter, Douglas_ADI& adi, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
+void ADI_Solver(Int_I equation, Int_I accruacy, Beta& beta, Mesh& mesh, Intersections& inter, Douglas_ADI& adi, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
 {
     double tnow, dt;
     int loop;
@@ -396,6 +419,174 @@ void ADI_Solver(Int_I equation, Int_I accuracy, Beta& beta, Mesh& mesh, Intersec
     }
 }
 
+/*********************************************************************************************
+ Initialization of starting solution and do iterations
+ 
+ INPUT
+ equation : code of equation need to be used here
+ mesh     : mesh object
+ diffcoef : diffusion coefficient object representing beta^{-} and beta^{+}
+ inter    : object of all intersection nodes
+ time     : vector of 3 double values represent beginning time, finishing time and time step
+ uh       : three dimensional uninitialized solution
+ *********************************************************************************************/
+void LOD_Starting(Int_I equation, Beta& beta, Mesh& mesh, Intersections& inter, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
+{
+    double t_start;
+    Equation *eq_ptr;
+    
+    t_start = time[0];
+    
+    if(equation == 0)
+    {
+        Eq_0 eq0(t_start,beta);
+        eq_ptr = &eq0;
+    }
+    else if(equation == 1)
+    {
+        Eq_1 eq1(t_start,beta);
+        eq_ptr = &eq1;
+    }
+    else if(equation == 2)
+    {
+        Eq_2 eq2(t_start,beta);
+        eq_ptr = &eq2;
+    }
+    else if(equation == 3)
+    {
+        Eq_3 eq3(t_start,beta);
+        eq_ptr = &eq3;
+    }
+    else if(equation == 4)
+    {
+        Eq_4 eq4(t_start,beta);
+        eq_ptr = &eq4;
+    }
+    else if(equation == 5)
+    {
+        Eq_5 eq5(t_start,beta);
+        eq_ptr = &eq5;
+    }
+    else if(equation == 6)
+    {
+        Eq_6 eq6(t_start,beta);
+        eq_ptr = &eq6;
+    }
+    else if(equation == 7)
+    {
+        Eq_7 eq7(t_start,beta);
+        eq_ptr = &eq7;
+    }
+    else
+    {
+        cout << "No of equation is not found!" << endl;
+        exit(0);
+    }
+    
+    Equation &eq = *eq_ptr;
+    
+    LOD lod(inter,mesh,beta,time);
+    
+    lod.Initialization(eq,uh);
+    
+    LOD_Solver(equation,beta,mesh,inter,lod,time,uh,out_file);
+}
+
+/*********************************************************************************************
+ Solve problem in LOD scheme by iterations
+ 
+ INPUT
+ equation : code of equation need to be used here
+ mesh     : mesh object
+ inter    : object of all intersection nodes
+ adi      : adi object
+ time     : vector of 3 double values represent beginning time, finishing time and time step
+ beta     : vector of 2 double values represent beta^{-} and beta^{+}
+ uh       : three dimensional uninitialized solution
+ *********************************************************************************************/
+void LOD_Solver(Int_I equation, Beta& beta, Mesh& mesh, Intersections& inter, LOD& lod, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
+{
+    double tnow, dt;
+    int loop;
+    Equation *eq_dt_ptr;
+    
+    out_file << "-------------------- Error of Matched ADI --------------------" << endl;
+    tnow = time[0];
+    dt = time[2];
+    
+    loop = (int)(time[1]/dt)/NPRINT;
+    
+    for(int i = 0; i < NPRINT; i++)
+    {
+        for(int j = 0; j < loop; j++)
+        {
+            tnow += dt;
+            
+            if(equation == 0)
+            {
+                Eq_0 eq0_dt(tnow,beta);
+                eq_dt_ptr = &eq0_dt;
+            }
+            else if(equation == 1)
+            {
+                Eq_1 eq1_dt(tnow,beta);
+                eq_dt_ptr = &eq1_dt;
+            }
+            else if(equation == 2)
+            {
+                Eq_2 eq2_dt(tnow,beta);
+                eq_dt_ptr = &eq2_dt;
+            }
+            else if(equation == 3)
+            {
+                Eq_3 eq3_dt(tnow,beta);
+                eq_dt_ptr = &eq3_dt;
+            }
+            else if(equation == 4)
+            {
+                Eq_4 eq4_dt(tnow,beta);
+                eq_dt_ptr = &eq4_dt;
+            }
+            else if(equation == 5)
+            {
+                Eq_5 eq5_dt(tnow,beta);
+                eq_dt_ptr = &eq5_dt;
+            }
+            else if(equation == 6)
+            {
+                Eq_6 eq6(tnow,beta);
+                eq_dt_ptr = &eq6;
+            }
+            else if(equation == 7)
+            {
+                Eq_7 eq7(tnow,beta);
+                eq_dt_ptr = &eq7;
+            }
+            else
+            {
+                cout << "No of equation is not found!" << endl;
+                exit(0);
+            }
+            
+            Equation &eq_dt = *eq_dt_ptr;
+            
+            lod.Solve_2nd(eq_dt,inter,uh,beta);
+        }
+        
+        out_file << setprecision(1) << scientific << "T = " << tnow << endl;
+        out_file << fixed;
+        
+        Equation &eq_now = *eq_dt_ptr;
+        
+        inter.Refresh_Fp(eq_now);
+        inter.Error_Fp(out_file);
+        
+        inter.Refresh_Jump(eq_now,uh,beta);
+        inter.Error_Jump(out_file);
+        
+        lod.Error(eq_now,uh,out_file);
+    }
+}
 
 /*********************************************************************************************
  Write the function value for closest outside node around interface

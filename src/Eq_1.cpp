@@ -28,7 +28,7 @@ double Eq_1::Inner_u(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = exp(t);
+    temp = exp(y)*exp(t);
     
     return temp;
 }
@@ -48,7 +48,7 @@ double Eq_1::Outer_u(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = exp(t);
+    temp = exp(y)*exp(t);
     
     return temp;
 }
@@ -67,8 +67,11 @@ double Eq_1::Outer_u(Doub_I x, Doub_I y, Doub_I z) const
 double Eq_1::Inner_f(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
-    
-    temp = exp(t);
+ 
+    temp = -0-
+            beta.Inside_Dx(x,y,z)*Inner_dux(x,y,z)-
+            beta.Inside_Dy(x,y,z)*Inner_duy(x,y,z)-
+            beta.Inside_Dz(x,y,z)*Inner_duz(x,y,z);
     
     return temp;
 }
@@ -88,7 +91,10 @@ double Eq_1::Outer_f(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = exp(t);
+    temp = -0-
+            beta.Outside_Dx(x,y,z)*Outer_dux(x,y,z)-
+            beta.Outside_Dy(x,y,z)*Outer_duy(x,y,z)-
+            beta.Outside_Dz(x,y,z)*Outer_duz(x,y,z);
     
     return temp;
 }
@@ -148,7 +154,7 @@ double Eq_1::Inner_duy(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 0;
+    temp = exp(y)*exp(t);
     
     return temp;
 }
@@ -168,7 +174,7 @@ double Eq_1::Outer_duy(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 0;
+    temp = exp(y)*exp(t);
     
     return temp;
 }

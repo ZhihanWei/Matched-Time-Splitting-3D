@@ -33,6 +33,8 @@
 		B66CD2081DA44CD70062A5EE /* Surface_Torus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B66CD1F41DA44CD70062A5EE /* Surface_Torus.cpp */; };
 		B6936BC81DBC2ACC0079A8D7 /* Surface_Cylinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6936BC61DBC2ACC0079A8D7 /* Surface_Cylinder.cpp */; };
 		B6936BCB1DBC35F90079A8D7 /* Surface_Cone.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6936BC91DBC35F90079A8D7 /* Surface_Cone.cpp */; };
+		B69E8CF01EA950420017B183 /* LOD.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69E8CEE1EA950420017B183 /* LOD.cpp */; };
+		B69E8CF31EB1AB200017B183 /* Beta_0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69E8CF11EB1AB200017B183 /* Beta_0.cpp */; };
 		B6EC68011E536B76004723A3 /* Beta_1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6EC67FF1E536B76004723A3 /* Beta_1.cpp */; };
 		B6F3515D1E96D92C00ABE3F8 /* Beta_2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6F3515B1E96D92C00ABE3F8 /* Beta_2.cpp */; };
 /* End PBXBuildFile section */
@@ -107,6 +109,10 @@
 		B6936BC71DBC2ACC0079A8D7 /* Surface_Cylinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Surface_Cylinder.h; sourceTree = "<group>"; };
 		B6936BC91DBC35F90079A8D7 /* Surface_Cone.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Surface_Cone.cpp; sourceTree = "<group>"; };
 		B6936BCA1DBC35F90079A8D7 /* Surface_Cone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Surface_Cone.h; sourceTree = "<group>"; };
+		B69E8CEE1EA950420017B183 /* LOD.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LOD.cpp; sourceTree = "<group>"; };
+		B69E8CEF1EA950420017B183 /* LOD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LOD.h; sourceTree = "<group>"; };
+		B69E8CF11EB1AB200017B183 /* Beta_0.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Beta_0.cpp; sourceTree = "<group>"; };
+		B69E8CF21EB1AB200017B183 /* Beta_0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta_0.h; sourceTree = "<group>"; };
 		B6EC67FF1E536B76004723A3 /* Beta_1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Beta_1.cpp; sourceTree = "<group>"; };
 		B6EC68001E536B76004723A3 /* Beta_1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta_1.h; sourceTree = "<group>"; };
 		B6EC68031E539F2E004723A3 /* Beta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta.h; sourceTree = "<group>"; };
@@ -138,9 +144,13 @@
 				B66CD1E71DA44CD70062A5EE /* Mesh.cpp */,
 				B66CD1E31DA44CD70062A5EE /* Intersections.h */,
 				B66CD1E21DA44CD70062A5EE /* Intersections.cpp */,
+				B69E8CEF1EA950420017B183 /* LOD.h */,
+				B69E8CEE1EA950420017B183 /* LOD.cpp */,
 				B66CD1D31DA44CD70062A5EE /* Douglas_ADI.h */,
 				B66CD1D21DA44CD70062A5EE /* Douglas_ADI.cpp */,
 				B6EC68031E539F2E004723A3 /* Beta.h */,
+				B69E8CF21EB1AB200017B183 /* Beta_0.h */,
+				B69E8CF11EB1AB200017B183 /* Beta_0.cpp */,
 				B6EC68001E536B76004723A3 /* Beta_1.h */,
 				B6EC67FF1E536B76004723A3 /* Beta_1.cpp */,
 				B6F3515C1E96D92C00ABE3F8 /* Beta_2.h */,
@@ -281,6 +291,7 @@
 				B60CE9631DB68FED00817826 /* Eq_6.cpp in Sources */,
 				B6F3515D1E96D92C00ABE3F8 /* Beta_2.cpp in Sources */,
 				B66CD2001DA44CD70062A5EE /* LU.cpp in Sources */,
+				B69E8CF31EB1AB200017B183 /* Beta_0.cpp in Sources */,
 				B65B06521DB54041008F4708 /* Surface_Dupin_Cyclide.cpp in Sources */,
 				B66CD2011DA44CD70062A5EE /* main.cpp in Sources */,
 				B65B064F1DB53C5A008F4708 /* Surface_Pile.cpp in Sources */,
@@ -288,6 +299,7 @@
 				B66CD1FE1DA44CD70062A5EE /* Equation.cpp in Sources */,
 				B66CD2021DA44CD70062A5EE /* Mesh.cpp in Sources */,
 				B66CD1F71DA44CD70062A5EE /* Douglas_ADI.cpp in Sources */,
+				B69E8CF01EA950420017B183 /* LOD.cpp in Sources */,
 				B66CD2071DA44CD70062A5EE /* Surface_Tanglecube.cpp in Sources */,
 				B66CD2081DA44CD70062A5EE /* Surface_Torus.cpp in Sources */,
 				B66CD2041DA44CD70062A5EE /* Surface_Cube.cpp in Sources */,
@@ -393,7 +405,7 @@
 		B6FEE5291D89BCE600D31D5F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -403,7 +415,7 @@
 		B6FEE52A1D89BCE600D31D5F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				PRODUCT_NAME = "$(TARGET_NAME)";

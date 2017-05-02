@@ -87,6 +87,10 @@ Data::Data(const string& file_name)
                     read_file >> parameter_value_3;
                     surface = parameter_value_3;
                     break;
+                case e_method:
+                    read_file >> parameter_value_3;
+                    method = parameter_value_3;
+                    break;
                 case e_equation:
                     read_file >> parameter_value_1;
                     equation = parameter_value_1;
@@ -145,6 +149,7 @@ Data::Prt_name Data::Translation(const string& in_string)
     else if(in_string == "ny") return e_ny;
     else if(in_string == "nz") return e_nz;
     else if(in_string == "surface") return e_surface;
+    else if(in_string == "method") return e_method;
     else if(in_string == "equation") return e_equation;
     else if(in_string == "beta") return e_beta;
     else if(in_string == "accuracy") return e_accuracy;
@@ -217,6 +222,14 @@ VecDoub Data::Get_Time() const
 char Data::Get_Surface() const
 {
     return surface;
+}
+
+/***********************************************************************************************
+                                    Get data Method
+ ***********************************************************************************************/
+char Data::Get_Method() const
+{
+    return method;
 }
 
 /***********************************************************************************************
