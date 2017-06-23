@@ -43,7 +43,7 @@ double Beta_0::Outside(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 10;
+    temp = 1;
     
     return temp;
 }

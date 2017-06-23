@@ -20,14 +20,15 @@ private:
     double dx, dy, dz, dt;
     double *xi, *yi, *zi, *indicator;
     
-    double jump_u, jump_ul, jump_ur;
-    double jump_betaux, jump_betauxl, jump_betauxr;
-    double jump_betauy, jump_betauyl, jump_betauyr;
-    double jump_betauz, jump_betauzl, jump_betauzr;
-    
-    void D_xx_l(Int_O, Int_O, Equation&, Intersections&, CubicDoub&, Beta&, VecDoub_O&, VecDoub_O&, VecDoub_O&, VecDoub_O&);
-    void D_yy_l(Int_O, Int_O, Equation&, Intersections&, CubicDoub&, Beta&, VecDoub_O&, VecDoub_O&, VecDoub_O&, VecDoub_O&);
-    void D_zz_l(Int_O, Int_O, Equation&, Intersections&, CubicDoub&, Beta&, VecDoub_O&, VecDoub_O&, VecDoub_O&, VecDoub_O&);
+    void D_xx_r_ie(CubicDoub&, CubicDoub&);
+    void D_yy_r_ie(CubicDoub&, CubicDoub&);
+    void D_zz_r_ie(CubicDoub&, CubicDoub&);
+    void D_xx_r_cn(Equation&, Intersections&, CubicDoub&, CubicDoub&, Beta&);
+    void D_yy_r_cn(Equation&, Intersections&, CubicDoub&, CubicDoub&, Beta&);
+    void D_zz_r_cn(Equation&, Intersections&, CubicDoub&, CubicDoub&, Beta&);
+    void D_xx_l(Int_I, Int_I, Equation&, Intersections&, CubicDoub&, Beta&, VecDoub_O&, VecDoub_O&, VecDoub_O&, VecDoub_O&);
+    void D_yy_l(Int_I, Int_I, Equation&, Intersections&, CubicDoub&, Beta&, VecDoub_O&, VecDoub_O&, VecDoub_O&, VecDoub_O&);
+    void D_zz_l(Int_I, Int_I, Equation&, Intersections&, CubicDoub&, Beta&, VecDoub_O&, VecDoub_O&, VecDoub_O&, VecDoub_O&);
     void Src_2nd(Equation&, Intersections&, CubicDoub&);
     void Set_bc(Equation&, CubicDoub&);
     void Convert2Tri_irr(Int_I, MatrixDoub_I&, VecDoub_O&, VecDoub_O&, VecDoub_O&, VecDoub_O&);

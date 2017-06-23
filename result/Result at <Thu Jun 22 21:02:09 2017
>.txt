@@ -1,10 +1,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% No. 1 file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ------------------------- Basic Info. ------------------------
-Mesh Size         : NX = 40    NY = 40    NZ = 40   
+Mesh Size         : NX = 80    NY = 80    NZ = 80   
 Time Step         : 1.0e-03
 Surface           : E
 Method            : L
-Equation No.      : 4
+Equation No.      : 2
 Accuracy          : 2
 
 Z-direction computation: 
@@ -16,16 +16,16 @@ X-direction computation:
 -------------------- Error of Matched ADI --------------------
 T = 1.0e+00
 ------------------------ Error of FPs ------------------------
-Lmax = 1.303e-01
-L2   = 9.125e-03
+Lmax = 1.862e-02
+L2   = 1.610e-03
 
 ------------------------ Error of Jumps ------------------------
-Lmax = 0.000e+00
-L2   = nan
+Lmax = 7.584e-01
+L2   = 8.091e-02
 
-[Xmax,Ymax,Zmax] = [0,0,0]
- Lmax = 0.000e+00;  L2 = nan
+[Xmax,Ymax,Zmax] = [40,40,39]
+ Lmax = 6.613e-02;  L2 = 8.550e-03
 
 
-CPU time cost: 47.6 seconds
+CPU time cost: 239.3 seconds
 

@@ -5,9 +5,9 @@ yr = 1.99
 zl = -1.99
 zr = 1.99
 
-nx = 40
-ny = 40
-nz = 40
+nx = 50
+ny = 50
+nz = 50
 
 t_start = 0
 t_finish = 1
@@ -15,7 +15,7 @@ t_step = 0.001
 
 surface = E
 method = L
-equation = 4
+equation = 1
 
 beta = 0
 

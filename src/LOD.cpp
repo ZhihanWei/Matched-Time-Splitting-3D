@@ -46,24 +46,27 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& bet
     VecDoub ax, bx, cx, rx, utx;
     VecDoub ay, by, cy, ry, uty;
     VecDoub az, bz, cz, rz, utz;
-    CubicDoub uhs, uhss, uh1;
+    CubicDoub v1, v2, v3, uh1;
     CubicDoub src;
     
     //Initialize size for solution
-    uhs.resize(nx);
-    uhss.resize(nx);
+    v1.resize(nx);
+    v2.resize(nx);
+    v3.resize(nx);
     uh1.resize(nx);
     src.resize(nx);
     for(int ix = 0; ix < nx; ix++)
     {
-        uhs[ix].resize(ny);
-        uhss[ix].resize(ny);
+        v1[ix].resize(ny);
+        v2[ix].resize(ny);
+        v3[ix].resize(ny);
         uh1[ix].resize(ny);
         src[ix].resize(ny);
         for(int iy = 0; iy < ny; iy++)
         {
-            uhs[ix][iy].resize(nz);
-            uhss[ix][iy].resize(nz);
+            v1[ix][iy].resize(nz);
+            v2[ix][iy].resize(nz);
+            v3[ix][iy].resize(nz);
             uh1[ix][iy].resize(nz);
             src[ix][iy].resize(nz);
         }
@@ -74,24 +77,15 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& bet
     
     /*******************************************************************************************************
      First Step:
-     (1 - Dt*beta*D_{xx})U^{*} = U^{N} + Dt*SRC^{N+1}
+     (1 - Dt*beta*D_{xx})V_{1} = U^{N}
      ******************************************************************************************************/
     //Set up RHS
-    for(int ix = 0; ix < nx; ix++)
-    {
-        for(int iy = 0; iy < ny; iy++)
-        {
-            for(int iz = 0; iz < nz; iz++)
-            {
-                //uhs[ix][iy][iz] = uh[ix][iy][iz];
-                uhs[ix][iy][iz] = uh[ix][iy][iz]+dt*src[ix][iy][iz];
-            }
-        }
-    }
+    D_xx_r_ie(uh,v1);
+    //D_xx_r_cn(eq,inter,uh,v1,beta);
     
-    //Set up boundary conditions for UHS
-    Set_bc(eq,uhs);
-
+    //Set up boundary conditions for V1
+    Set_bc(eq,v1);
+    
     //Set up LHS
     ax.resize(nx);
     bx.resize(nx);
@@ -103,36 +97,28 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& bet
     {
         for(int iz = 1; iz < nz-1; iz++)
         {
-            D_xx_l(iy,iz,eq,inter,uhs,beta,ax,bx,cx,rx);
+            D_xx_l(iy,iz,eq,inter,v1,beta,ax,bx,cx,rx);
             
             //Thomas Algorithm
             TDMA(ax,bx,cx,rx,utx);
             
             for(int ix = 0; ix < nx; ix++)
             {
-                uhs[ix][iy][iz] = utx[ix];
+                v1[ix][iy][iz] = utx[ix];
             }
         }
     }
     
     /*******************************************************************************************************
      Second Step:
-     (1 - Dt*beta*D_{yy})U^{**} = U^{*}
+     (1 - Dt*beta*D_{yy})V_{2} = V_{1}
      ******************************************************************************************************/
     //Set up RHS
-    for(int ix = 0; ix < nx; ix++)
-    {
-        for(int iy = 0; iy < ny; iy++)
-        {
-            for(int iz = 0; iz < nz; iz++)
-            {
-                uhss[ix][iy][iz] = uhs[ix][iy][iz];
-            }
-        }
-    }
+    D_yy_r_ie(v1,v2);
+    //D_yy_r_cn(eq,inter,v1,v2,beta);
     
     //Set up boundary conditions for UHS
-    Set_bc(eq,uhss);
+    Set_bc(eq,v2);
     
     //Set up LHS
     ay.resize(ny);
@@ -145,36 +131,28 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& bet
     {
         for(int iz = 1; iz < nz-1; iz++)
         {
-            D_yy_l(ix,iz,eq,inter,uhss,beta,ay,by,cy,ry);
+            D_yy_l(ix,iz,eq,inter,v2,beta,ay,by,cy,ry);
             
             //Thomas Algorithm
             TDMA(ay,by,cy,ry,uty);
             
             for(int iy = 0; iy < ny; iy++)
             {
-                uhss[ix][iy][iz] = uty[iy];
+                v2[ix][iy][iz] = uty[iy];
             }
         }
     }
     
     /*******************************************************************************************************
      Third Step:
-     (1 - Dt*beta*D_{zz})U^{N+1} = U^{**}
+     (1 - Dt*beta*D_{zz})V_{3} = V_{2}
      ******************************************************************************************************/
     //Set up RHS
-    for(int ix = 0; ix < nx; ix++)
-    {
-        for(int iy = 0; iy < ny; iy++)
-        {
-            for(int iz = 0; iz < nz; iz++)
-            {
-                uh1[ix][iy][iz] = uhss[ix][iy][iz];
-            }
-        }
-    }
+    D_zz_r_ie(v2,v3);
+    //D_zz_r_cn(eq,inter,v2,v3,beta);
     
     //Set up boundary conditions for UHS
-    Set_bc(eq,uh1);
+    Set_bc(eq,v3);
     
     //Set up LHS
     az.resize(nz);
@@ -187,20 +165,35 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& bet
     {
         for(int iy = 1; iy < ny-1; iy++)
         {
-            D_zz_l(ix,iy,eq,inter,uh1,beta,az,bz,cz,rz);
+            D_zz_l(ix,iy,eq,inter,v3,beta,az,bz,cz,rz);
             
             //Thomas Algorithm
             TDMA(az,bz,cz,rz,utz);
             
             for(int iz = 0; iz < nz; iz++)
             {
-                uh1[ix][iy][iz] = utz[iz];
+                v3[ix][iy][iz] = utz[iz];
             }
         }
     }
     
     /*******************************************************************************************************
-     Update UH to next time step
+     Fourth Step:
+     U^{n+1} = V_{3} + Dt*f^(n+1)
+     ******************************************************************************************************/
+    for(int ix = 0; ix < nx; ix++)
+    {
+        for(int iy = 0; iy < ny; iy++)
+        {
+            for(int iz = 0; iz < nz; iz++)
+            {
+                uh1[ix][iy][iz] = v3[ix][iy][iz] + dt*src[ix][iy][iz];
+            }
+        }
+    }
+    
+    /*******************************************************************************************************
+     Update UH to next time step,  [t^{n},t^{n+1}]
      ******************************************************************************************************/
     for(int ix = 0; ix < nx; ix++)
     {
@@ -251,17 +244,675 @@ void LOD::Set_bc(Equation& eq, CubicDoub& uc)
         }
     }
 }
- 
+
 /*********************************************************************************
- beta*Delta_xx operator for left hand side matrix
+ D_{xx} operator for right hand side vector
+ 
+ INPUT
+ uc1   : right hand side solution at current time step
+ 
+ OUTPUT
+ uc2   : right hand side solution at current time step
+ ********************************************************************************/
+void LOD::D_xx_r_ie(CubicDoub& uc1, CubicDoub& uc2)
+{
+    for(int ix = 0; ix < nx; ix++)
+    {
+        for(int iy = 0; iy < ny; iy++)
+        {
+            for(int iz = 0; iz < nz; iz++)
+            {
+                uc2[ix][iy][iz] = uc1[ix][iy][iz];
+            }
+        }
+    }
+}
+
+/*********************************************************************************
+ D_{yy} operator for right hand side vector
+ 
+ INPUT
+ uc1   : right hand side solution at current time step
+ 
+ OUTPUT
+ uc2   : right hand side solution at current time step
+ ********************************************************************************/
+void LOD::D_yy_r_ie(CubicDoub& uc1, CubicDoub& uc2)
+{
+    for(int ix = 0; ix < nx; ix++)
+    {
+        for(int iy = 0; iy < ny; iy++)
+        {
+            for(int iz = 0; iz < nz; iz++)
+            {
+                uc2[ix][iy][iz] = uc1[ix][iy][iz];
+            }
+        }
+    }
+}
+
+/*********************************************************************************
+ D_{zz} operator for right hand side vector
+ 
+ INPUT
+ uc1   : right hand side solution at current time step
+ 
+ OUTPUT
+ uc2   : right hand side solution at current time step
+ ********************************************************************************/
+void LOD::D_zz_r_ie(CubicDoub& uc1, CubicDoub& uc2)
+{
+    for(int ix = 0; ix < nx; ix++)
+    {
+        for(int iy = 0; iy < ny; iy++)
+        {
+            for(int iz = 0; iz < nz; iz++)
+            {
+                uc2[ix][iy][iz] = uc1[ix][iy][iz];
+            }
+        }
+    }
+}
+
+/*********************************************************************************
+ 1 + 1/2*Dt*beta*D_{xx} operator for right hand side vector
  
  INPUT
  iy    : coordinate index on y-direction
  iz    : coordinate index on z-direction
  eq    : equation object at current time step
- eq_dt : equation object at next time step
  inter : object of all intersections
- uhs   : right han side solution at current time step
+ beta  : object of variable coefficient
+ uc1   : right hand side solution at current time step
+ 
+ OUTPUT
+ uc2   : right hand side solution at current time step
+ ********************************************************************************/
+void LOD::D_xx_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
+{
+    int ix, ip;
+    double coef, sum;
+    double jump_u, jump_ul, jump_ur;
+    double jump_betaux, jump_betauxl, jump_betauxr;
+    VecDoub vdex;
+    Intersection_Data data, datal, datar;
+
+    coef = 0.5;
+    
+    vdex.resize(3);
+    
+    //Step I: Initialize without MIB
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iy = 1; iy < ny-1; iy++)
+        {
+            for(int iz = 1; iz < nz-1; iz++)
+            {
+                sum = 0;
+                for(int i = -1; i < 2; i++)
+                {
+                    Operator_weights_x(beta,vdex,ix,iy,iz,dx);
+                    sum += uc1[ix+i][iy][iz]*vdex[i+1];
+                }
+                
+                uc2[ix][iy][iz] = coef*dt*sum;
+            }
+        }
+    }
+    
+    //Step II: Apply MIB to operators
+    for(int iy = 1; iy < ny-1; iy++)
+    {
+        for(int iz = 1; iz < nz-1; iz++)
+        {
+            ip = 0;
+            while(ip < inter.ifpx[iy][iz].size())
+            {
+                //An irregular interface point
+                if(inter.ifpx[iy][iz][ip].ID > 0)
+                {
+                    data = inter.ifpx[iy][iz][ip];
+                    
+                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
+                    if(JP == 'r')
+                    {
+                        jump_betaux = eq.Jump_betau_x(data.coord.x_value,data.coord.y_value,data.coord.z_value);
+                    }
+                    else
+                    {
+                        jump_betaux = inter.ifpx[iy][iz][ip].jump.u_dir;
+                    }
+                    
+                    //Approximate IX
+                    ix = data.left_loc;
+                    Operator_weights_x(beta,vdex,ix,iy,iz,dx);
+                    //IX+1 cross interface, use right FP
+                    sum = 0;
+                    for(int i = -1; i < 1; i++)
+                    {
+                        sum += vdex[i+1]*uc1[ix+i][iy][iz];
+                    }
+                    for(int i = 0; i < 4; i++)
+                    {
+                        sum += vdex[2]*uc1[data.left_loc-1+i][iy][iz]*data.wei.weir[0][i];
+                    }
+                    sum += vdex[2]*(jump_u*data.wei.weir[0][4]+jump_betaux*data.wei.weir[0][5]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IX+1
+                    ix += 1;
+                    Operator_weights_x(beta,vdex,ix,iy,iz,dx);
+                    //IX-1 cross interface, use left FP
+                    sum = 0;
+                    for(int i = 0; i < 2; i++)
+                    {
+                        sum += vdex[i+1]*uc1[ix+i][iy][iz];
+                    }
+                    for(int i = 0; i < 4; i++)
+                    {
+                        sum += vdex[0]*uc1[data.left_loc-1+i][iy][iz]*data.wei.weil[0][i];
+                    }
+                    sum += vdex[0]*(jump_u*data.wei.weil[0][4]+jump_betaux*data.wei.weil[0][5]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    ip += 1;
+                }
+                //A corner interface point
+                else
+                {
+                    datal = inter.ifpx[iy][iz][ip];
+                    datar = inter.ifpx[iy][iz][ip+1];
+                    
+                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
+                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
+                    if(JP == 'r')
+                    {
+                        jump_betauxl = eq.Jump_betau_x(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
+                        jump_betauxr = eq.Jump_betau_x(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
+                    }
+                    else
+                    {
+                        jump_betauxl = inter.ifpx[iy][iz][ip].jump.u_dir;
+                        jump_betauxr = inter.ifpx[iy][iz][ip+1].jump.u_dir;
+                    }
+                    
+                    //Approximate IX
+                    ix = datal.left_loc;
+                    Operator_weights_x(beta,vdex,ix,iy,iz,dx);
+                    //IX+1 cross left interface, use middle FP
+                    sum = 0;
+                    for(int i = -1; i < 1; i++)
+                    {
+                        sum += vdex[i+1]*uc1[ix+i][iy][iz];
+                    }
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdex[2]*uc1[datal.left_loc-1+i][iy][iz]*datal.wei.weir[0][i];
+                    }
+                    sum += vdex[2]*(jump_ul*datal.wei.weir[0][5]+jump_betauxl*datal.wei.weir[0][6]+
+                                    jump_ur*datal.wei.weir[0][7]+jump_betauxr*datal.wei.weir[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IX+1, the inside corner point
+                    ix += 1;
+                    Operator_weights_x(beta,vdex,ix,iy,iz,dx);
+                    sum = 0;
+                    //IX-1 cross left interface, use left interface's left FP
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdex[0]*uc1[datal.left_loc-1+i][iy][iz]*datal.wei.weil[0][i];
+                    }
+                    sum += vdex[0]*(jump_ul*datal.wei.weil[0][5]+jump_betauxl*datal.wei.weil[0][6]+
+                                    jump_ur*datal.wei.weil[0][7]+jump_betauxr*datal.wei.weil[0][8]);
+                    //IX,  no FP
+                    sum += vdex[1]*uc1[ix][iy][iz];
+                    //IX+1 cross right interface, use right interface's right FP
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdex[2]*uc1[datar.left_loc-2+i][iy][iz]*datar.wei.weir[0][i];
+                    }
+                    sum += vdex[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauxl*datar.wei.weir[0][6]+
+                                    jump_ur*datar.wei.weir[0][7]+jump_betauxr*datar.wei.weir[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IX+2, right FP
+                    ix += 1;
+                    Operator_weights_x(beta,vdex,ix,iy,iz,dx);
+                    //IX-1 cross right interface, use middle FP
+                    sum = 0;
+                    for(int i = 0; i < 2; i++)
+                    {
+                        sum += vdex[i+1]*uc1[ix+i][iy][iz];
+                    }
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdex[0]*uc1[datar.left_loc-2+i][iy][iz]*datar.wei.weil[0][i];
+                    }
+                    sum += vdex[0]*(jump_ul*datar.wei.weil[0][5]+jump_betauxl*datar.wei.weil[0][6]+
+                                    jump_ur*datar.wei.weil[0][7]+jump_betauxr*datar.wei.weil[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    ip += 2;
+                }
+            }
+        }
+    }
+    
+    //Step III: add U_{i,j,k}
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iy = 1; iy < ny-1; iy++)
+        {
+            for(int iz = 1; iz < nz-1; iz++)
+            {
+                uc2[ix][iy][iz] += uc1[ix][iy][iz];
+            }
+        }
+    }
+}
+
+/*********************************************************************************
+ 1 + 1/2*Dt*beta*D_{yy} operator for right hand side vector
+ 
+ INPUT
+ iy    : coordinate index on y-direction
+ iz    : coordinate index on z-direction
+ eq    : equation object at current time step
+ inter : object of all intersections
+ beta  : object of variable coefficient
+ uc1   : right hand side solution at current time step
+ 
+ OUTPUT
+ uc2   : right hand side solution at current time step
+ ********************************************************************************/
+void LOD::D_yy_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
+{
+    int iy, ip;
+    double coef, sum;
+    double jump_u, jump_ul, jump_ur;
+    double jump_betauy, jump_betauyl, jump_betauyr;
+    VecDoub vdey;
+    Intersection_Data data, datal, datar;
+    
+    coef = 0.5;
+    
+    vdey.resize(3);
+    
+    //Step I: Initialize without MIB
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iy = 1; iy < ny-1; iy++)
+        {
+            for(int iz = 1; iz < nz-1; iz++)
+            {
+                sum = 0;
+                for(int i = -1; i < 2; i++)
+                {
+                    Operator_weights_y(beta,vdey,ix,iy,iz,dy);
+                    sum += uc1[ix][iy+i][iz]*vdey[i+1];
+                }
+                
+                uc2[ix][iy][iz] = coef*dt*sum;
+            }
+        }
+    }
+    
+    //Step II: Apply MIB
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iz = 1; iz < nz-1; iz++)
+        {
+            ip = 0;
+            while(ip < inter.ifpy[ix][iz].size())
+            {
+                //An irregular interface point
+                if(inter.ifpy[ix][iz][ip].ID > 0)
+                {
+                    data = inter.ifpy[ix][iz][ip];
+                    
+                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
+                    if(JP == 'r')
+                    {
+                        jump_betauy = eq.Jump_betau_y(data.coord.x_value,data.coord.y_value,data.coord.z_value);
+                    }
+                    else
+                    {
+                        jump_betauy = inter.ifpy[ix][iz][ip].jump.u_dir;
+                    }
+                    
+                    //Approximate IY
+                    iy = data.left_loc;
+                    Operator_weights_y(beta,vdey,ix,iy,iz,dy);
+                    //IY+1 cross interface, use right FP
+                    sum = 0;
+                    for(int i = -1; i < 1; i++)
+                    {
+                        sum += vdey[i+1]*uc1[ix][iy+i][iz];
+                    }
+                    for(int i = 0; i < 4; i++)
+                    {
+                        sum += vdey[2]*uc1[ix][data.left_loc-1+i][iz]*data.wei.weir[0][i];
+                    }
+                    sum += vdey[2]*(jump_u*data.wei.weir[0][4]+jump_betauy*data.wei.weir[0][5]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IY+1
+                    iy += 1;
+                    Operator_weights_y(beta,vdey,ix,iy,iz,dy);
+                    //IY-1 cross interface, use left FP
+                    sum = 0;
+                    for(int i = 0; i < 2; i++)
+                    {
+                        sum += vdey[i+1]*uc1[ix][iy+i][iz];
+                    }
+                    for(int i = 0; i < 4; i++)
+                    {
+                        sum += vdey[0]*uc1[ix][data.left_loc-1+i][iz]*data.wei.weil[0][i];
+                    }
+                    sum += vdey[0]*(jump_u*data.wei.weil[0][4]+jump_betauy*data.wei.weil[0][5]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    ip += 1;
+                }
+                //A corner interface point
+                else
+                {
+                    datal = inter.ifpy[ix][iz][ip];
+                    datar = inter.ifpy[ix][iz][ip+1];
+                    
+                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
+                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
+                    if(JP == 'r')
+                    {
+                        jump_betauyl = eq.Jump_betau_y(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
+                        jump_betauyr = eq.Jump_betau_y(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
+                    }
+                    else
+                    {
+                        jump_betauyl = inter.ifpy[ix][iz][ip].jump.u_dir;
+                        jump_betauyr = inter.ifpy[ix][iz][ip+1].jump.u_dir;
+                    }
+                    
+                    //Approximate IY
+                    iy = datal.left_loc;
+                    Operator_weights_y(beta,vdey,ix,iy,iz,dy);
+                    //IY+1 cross left interface, use middle FP
+                    sum = 0;
+                    for(int i = -1; i < 1; i++)
+                    {
+                        sum += vdey[i+1]*uc1[ix][iy+i][iz];
+                    }
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdey[2]*uc1[ix][datal.left_loc-1+i][iz]*datal.wei.weir[0][i];
+                    }
+                    sum += vdey[2]*(jump_ul*datal.wei.weir[0][5]+jump_betauyl*datal.wei.weir[0][6]+
+                                    jump_ur*datal.wei.weir[0][7]+jump_betauyr*datal.wei.weir[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IY+1, the inside corner point
+                    iy += 1;
+                    Operator_weights_y(beta,vdey,ix,iy,iz,dy);
+                    sum = 0;
+                    //IY-1 cross left interface, use left interface's left FP
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdey[0]*uc1[ix][datal.left_loc-1+i][iz]*datal.wei.weil[0][i];
+                    }
+                    sum += vdey[0]*(jump_ul*datal.wei.weil[0][5]+jump_betauyl*datal.wei.weil[0][6]+
+                                    jump_ur*datal.wei.weil[0][7]+jump_betauyr*datal.wei.weil[0][8]);
+                    //IY,  no FP
+                    sum += vdey[1]*uc1[ix][iy][iz];
+                    //IY+1 cross right interface, use right interface's right FP
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdey[2]*uc1[ix][datar.left_loc-2+i][iz]*datar.wei.weir[0][i];
+                    }
+                    sum += vdey[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauyl*datar.wei.weir[0][6]+
+                                    jump_ur*datar.wei.weir[0][7]+jump_betauyr*datar.wei.weir[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IY+2, right FP
+                    iy += 1;
+                    Operator_weights_y(beta,vdey,ix,iy,iz,dy);
+                    //IY-1 cross right interface, use middle FP
+                    sum = 0;
+                    for(int i = 0; i < 2; i++)
+                    {
+                        sum += vdey[i+1]*uc1[ix][iy+i][iz];
+                    }
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdey[0]*uc1[ix][datar.left_loc-2+i][iz]*datar.wei.weil[0][i];
+                    }
+                    sum += vdey[0]*(jump_ul*datar.wei.weil[0][5]+jump_betauyl*datar.wei.weil[0][6]+
+                                    jump_ur*datar.wei.weil[0][7]+jump_betauyr*datar.wei.weil[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    ip += 2;
+                }
+            }
+        }
+    }
+    
+    //Step III: add U_{i,j,k}
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iy = 1; iy < ny-1; iy++)
+        {
+            for(int iz = 1; iz < nz-1; iz++)
+            {
+                uc2[ix][iy][iz] += uc1[ix][iy][iz];
+            }
+        }
+    }
+}
+
+/*********************************************************************************
+ 1 + Dt*beta*D_{zz} operator for right hand side vector
+ 
+ INPUT
+ iy    : coordinate index on y-direction
+ iz    : coordinate index on z-direction
+ eq    : equation object at current time step
+ inter : object of all intersections
+ beta  : object of variable coefficient
+ uc1   : right hand side solution at current time step
+ 
+ OUTPUT
+ uc2   : right hand side solution at current time step
+ ********************************************************************************/
+void LOD::D_zz_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
+{
+    int iz, ip;
+    double coef, sum;
+    double jump_u, jump_ul, jump_ur;
+    double jump_betauz, jump_betauzl, jump_betauzr;
+    VecDoub vdez;
+    Intersection_Data data, datal, datar;
+    
+    coef = 1;
+
+    vdez.resize(3);
+
+    //Step I: Initialize without MIB
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iy = 1; iy < ny-1; iy++)
+        {
+            for(int iz = 1; iz < nz-1; iz++)
+            {
+                sum = 0;
+                for(int i = -1; i < 2; i++)
+                {
+                    Operator_weights_z(beta,vdez,ix,iy,iz,dz);
+                    sum += uc1[ix][iy][iz+i]*vdez[i+1];
+                }
+                uc2[ix][iy][iz] = coef*dt*sum;
+            }
+        }
+    }
+    
+    //Step II-2: Apply MIB
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iy = 1; iy < ny-1; iy++)
+        {
+            ip = 0;
+            while(ip < inter.ifpz[ix][iy].size())
+            {
+                //An irregular interface point
+                if(inter.ifpz[ix][iy][ip].ID > 0)
+                {
+                    data = inter.ifpz[ix][iy][ip];
+                    
+                    jump_u = eq.Jump_u(data.coord.x_value,data.coord.y_value,data.coord.z_value);
+                    if(JP == 'r')
+                    {
+                        jump_betauz = eq.Jump_betau_z(data.coord.x_value,data.coord.y_value,data.coord.z_value);
+                    }
+                    else
+                    {
+                        jump_betauz = inter.ifpz[ix][iy][ip].jump.u_dir;
+                    }
+                    
+                    //Approximate IZ
+                    iz = data.left_loc;
+                    Operator_weights_z(beta,vdez,ix,iy,iz,dz);
+                    //IZ+1 cross interface, use right FP
+                    sum = 0;
+                    for(int i = -1; i < 1; i++)
+                    {
+                        sum += vdez[i+1]*uc1[ix][iy][iz+i];
+                    }
+                    for(int i = 0; i < 4; i++)
+                    {
+                        sum += vdez[2]*uc1[ix][iy][data.left_loc-1+i]*data.wei.weir[0][i];
+                    }
+                    sum += vdez[2]*(jump_u*data.wei.weir[0][4]+jump_betauz*data.wei.weir[0][5]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IZ+1
+                    iz += 1;
+                    Operator_weights_z(beta,vdez,ix,iy,iz,dz);
+                    //IZ-1 cross interface, use left FP
+                    sum = 0;
+                    for(int i = 0; i < 2; i++)
+                    {
+                        sum += vdez[i+1]*uc1[ix][iy][iz+i];
+                    }
+                    for(int i = 0; i < 4; i++)
+                    {
+                        sum += vdez[0]*uc1[ix][iy][data.left_loc-1+i]*data.wei.weil[0][i];
+                    }
+                    sum += vdez[0]*(jump_u*data.wei.weil[0][4]+jump_betauz*data.wei.weil[0][5]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    ip += 1;
+                }
+                //A corner interface point
+                else
+                {
+                    datal = inter.ifpz[ix][iy][ip];
+                    datar = inter.ifpz[ix][iy][ip+1];
+                    
+                    jump_ul = eq.Jump_u(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
+                    jump_ur = eq.Jump_u(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
+                    if(JP == 'r')
+                    {
+                        jump_betauzl = eq.Jump_betau_z(datal.coord.x_value,datal.coord.y_value,datal.coord.z_value);
+                        jump_betauzr = eq.Jump_betau_z(datar.coord.x_value,datar.coord.y_value,datar.coord.z_value);
+                    }
+                    else
+                    {
+                        jump_betauzl = inter.ifpz[ix][iy][ip].jump.u_dir;
+                        jump_betauzr = inter.ifpz[ix][iy][ip+1].jump.u_dir;
+                    }
+                    
+                    //Approximate IZ, left FP
+                    iz = datal.left_loc;
+                    Operator_weights_z(beta,vdez,ix,iy,iz,dz);
+                    //IZ+1 cross left interface, use middle FP
+                    sum = 0;
+                    for(int i = -1; i < 1; i++)
+                    {
+                        sum += vdez[i+1]*uc1[ix][iy][iz+i];
+                    }
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdez[2]*uc1[ix][iy][datal.left_loc-1+i]*datal.wei.weir[0][i];
+                    }
+                    sum += vdez[2]*(jump_ul*datal.wei.weir[0][5]+jump_betauzl*datal.wei.weir[0][6]+
+                                    jump_ur*datal.wei.weir[0][7]+jump_betauzr*datal.wei.weir[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IZ+1, the inside corner point
+                    iz += 1;
+                    Operator_weights_z(beta,vdez,ix,iy,iz,dz);
+                    sum = 0;
+                    //IZ-1 cross left interface, use left interface's left FP
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdez[0]*uc1[ix][iy][datal.left_loc-1+i]*datal.wei.weil[0][i];
+                    }
+                    sum += vdez[0]*(jump_ul*datal.wei.weil[0][5]+jump_betauzl*datal.wei.weil[0][6]+
+                                    jump_ur*datal.wei.weil[0][7]+jump_betauzr*datal.wei.weil[0][8]);
+                    //IZ,  no FP
+                    sum += vdez[1]*uc1[ix][iy][iz];
+                    //IZ+1 cross right interface, use right interface's right FP
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdez[2]*uc1[ix][iy][datar.left_loc-2+i]*datar.wei.weir[0][i];
+                    }
+                    sum += vdez[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauzl*datar.wei.weir[0][6]+
+                                    jump_ur*datar.wei.weir[0][7]+jump_betauzr*datar.wei.weir[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    //Approximate IZ+2, right FP
+                    iz += 1;
+                    Operator_weights_z(beta,vdez,ix,iy,iz,dz);
+                    //IZ-1 cross right interface, use middle FP
+                    sum = 0;
+                    for(int i = 0; i < 2; i++)
+                    {
+                        sum += vdez[i+1]*uc1[ix][iy][iz+i];
+                    }
+                    for(int i = 0; i < 5; i++)
+                    {
+                        sum += vdez[0]*uc1[ix][iy][datar.left_loc-2+i]*datar.wei.weil[0][i];
+                    }
+                    sum += vdez[0]*(jump_ul*datar.wei.weil[0][5]+jump_betauzl*datar.wei.weil[0][6]+
+                                    jump_ur*datar.wei.weil[0][7]+jump_betauzr*datar.wei.weil[0][8]);
+                    uc2[ix][iy][iz] = coef*dt*sum;
+                    
+                    ip += 2;
+                }
+            }
+        }
+    }
+    
+    //Step III: add U_{i,j,k}
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iy = 1; iy < ny-1; iy++)
+        {
+            for(int iz = 1; iz < nz-1; iz++)
+            {
+                uc2[ix][iy][iz] += uc1[ix][iy][iz];
+            }
+        }
+    }
+}
+
+/*********************************************************************************
+ 1 - Dt*beta*D_{xx} operator for left hand side matrix
+ 
+ INPUT
+ iy    : coordinate index on y-direction
+ iz    : coordinate index on z-direction
+ eq    : equation object at current time step
+ inter : object of all intersections
+ uc    : right hand side solution at current time step
  beta  : object of variable coefficient
  
  OUTPUT
@@ -273,9 +924,14 @@ void LOD::Set_bc(Equation& eq, CubicDoub& uc)
 void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
 {
     int ix, ip;
+    double coef;
+    double jump_u, jump_ul, jump_ur;
+    double jump_betaux, jump_betauxl, jump_betauxr;
     VecDoub vdex;
     MatrixDoub irr_row, cor_row;
     Intersection_Data data, datal, datar;
+    
+    coef = 1;
     
     vdex.resize(3);
     //set up irr_row and cor_row
@@ -298,9 +954,9 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
     {
         Operator_weights_x(beta,vdex,ix,iy,iz,dx);
         
-        a[ix] = -dt*vdex[0];
-        b[ix] = 1 - dt*vdex[1];
-        c[ix] = -dt*vdex[2];
+        a[ix] = -coef*dt*vdex[0];
+        b[ix] = 1 - coef*dt*vdex[1];
+        c[ix] = -coef*dt*vdex[2];
     }
     a[nx-1] = 0.0;
     b[nx-1] = 1.0;
@@ -342,25 +998,25 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
             ix = data.left_loc;
             Operator_weights_x(beta,vdex,ix,iy,iz,dx);
             //use right FP
-            irr_row[0][0] = -dt*vdex[0];
-            irr_row[0][1] = 1 - dt*vdex[1];
+            irr_row[0][0] = -coef*dt*vdex[0];
+            irr_row[0][1] = 1 - coef*dt*vdex[1];
             for(int i = 0; i < 4; i++)
             {
-                irr_row[0][i] += -dt*vdex[2]*data.wei.weir[0][i];
+                irr_row[0][i] += -coef*dt*vdex[2]*data.wei.weir[0][i];
             }
-            irr_row[0][4] = uc[ix][iy][iz]+dt*vdex[2]*(jump_u*data.wei.weir[0][4]+jump_betaux*data.wei.weir[0][5]);
+            irr_row[0][4] = uc[ix][iy][iz]+coef*dt*vdex[2]*(jump_u*data.wei.weir[0][4]+jump_betaux*data.wei.weir[0][5]);
             
             //Approximate IX+1
             ix += 1;
             Operator_weights_x(beta,vdex,ix,iy,iz,dx);
             //use left FP
-            irr_row[1][2] = 1 - dt*vdex[1];
-            irr_row[1][3] = -dt*vdex[2];
+            irr_row[1][2] = 1 - coef*dt*vdex[1];
+            irr_row[1][3] = -coef*dt*vdex[2];
             for(int i = 0; i < 4; i++)
             {
-                irr_row[1][i] += -dt*vdex[0]*data.wei.weil[0][i];
+                irr_row[1][i] += -coef*dt*vdex[0]*data.wei.weil[0][i];
             }
-            irr_row[1][4] = uc[ix][iy][iz]+dt*vdex[0]*(jump_u*data.wei.weil[0][4]+jump_betaux*data.wei.weil[0][5]);
+            irr_row[1][4] = uc[ix][iy][iz]+coef*dt*vdex[0]*(jump_u*data.wei.weil[0][4]+jump_betaux*data.wei.weil[0][5]);
             
             Convert2Tri_irr(data.left_loc,irr_row,a,b,c,r);
             
@@ -398,47 +1054,47 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
             ix = datal.left_loc;
             Operator_weights_x(beta,vdex,ix,iy,iz,dx);
             //IX+1 cross left interface, use left interface's left FP
-            cor_row[0][0] = -dt*vdex[0];
-            cor_row[0][1] = 1 - dt*vdex[1];
+            cor_row[0][0] = -coef*dt*vdex[0];
+            cor_row[0][1] = 1 - coef*dt*vdex[1];
             for(int i = 0; i < 5; i++)
             {
-                cor_row[0][i] -= dt*vdex[2]*datal.wei.weir[0][i];
+                cor_row[0][i] -= coef*dt*vdex[2]*datal.wei.weir[0][i];
             }
-            cor_row[0][5] = uc[ix][iy][iz]+dt*vdex[2]*
+            cor_row[0][5] = uc[ix][iy][iz]+coef*dt*vdex[2]*
                             (jump_ul*datal.wei.weir[0][5]+jump_betauxl*datal.wei.weir[0][6]+
                              jump_ur*datal.wei.weir[0][7]+jump_betauxr*datal.wei.weir[0][8]);
             
             //Approximate IX+1
             ix += 1;
             Operator_weights_x(beta,vdex,ix,iy,iz,dx);
-            cor_row[1][2] = 1 - dt*vdex[1];
+            cor_row[1][2] = 1 - coef*dt*vdex[1];
             //IX-1 cross left interface, use left interface's left FP
             for(int i = 0; i < 5; i++)
             {
-                cor_row[1][i] -= dt*vdex[0]*datal.wei.weil[0][i];
+                cor_row[1][i] -= coef*dt*vdex[0]*datal.wei.weil[0][i];
             }
-            cor_row[1][5] = uc[ix][iy][iz]+dt*vdex[0]*
+            cor_row[1][5] = uc[ix][iy][iz]+coef*dt*vdex[0]*
                             (jump_ul*datal.wei.weil[0][5]+jump_betauxl*datal.wei.weil[0][6]+
                              jump_ur*datal.wei.weil[0][7]+jump_betauxr*datal.wei.weil[0][8]);
             //IX+1 cross right interface, use right interface's right FP
             for(int i = 0; i < 5; i++)
             {
-                cor_row[1][i] -= dt*vdex[2]*datar.wei.weir[0][i];
+                cor_row[1][i] -= coef*dt*vdex[2]*datar.wei.weir[0][i];
             }
-            cor_row[1][5] += dt*vdex[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauxl*datar.wei.weir[0][6]+
+            cor_row[1][5] += coef*dt*vdex[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauxl*datar.wei.weir[0][6]+
                                          jump_ur*datar.wei.weir[0][7]+jump_betauxr*datar.wei.weir[0][8]);
             
             //Approximate IX+2
             ix += 1;
             Operator_weights_x(beta,vdex,ix,iy,iz,dx);
             //IX-1 cross right interface, use right interface's left FP
-            cor_row[2][3] = 1 - dt*vdex[1];
-            cor_row[2][4] = -dt*vdex[2];
+            cor_row[2][3] = 1 - coef*dt*vdex[1];
+            cor_row[2][4] = -coef*dt*vdex[2];
             for(int i = 0; i < 5; i++)
             {
-                cor_row[2][i] -= dt*vdex[0]*datar.wei.weil[0][i];
+                cor_row[2][i] -= coef*dt*vdex[0]*datar.wei.weil[0][i];
             }
-            cor_row[2][5] = uc[ix][iy][iz]+dt*vdex[0]*
+            cor_row[2][5] = uc[ix][iy][iz]+coef*dt*vdex[0]*
                             (jump_ul*datar.wei.weil[0][5]+jump_betauxl*datar.wei.weil[0][6]+
                              jump_ur*datar.wei.weil[0][7]+jump_betauxr*datar.wei.weil[0][8]);
             
@@ -450,15 +1106,14 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
 }
 
 /*********************************************************************************
- beta*Delta_yy operator for left hand side matrix
+ 1 - Dt*beta*D_{yy} operator for left hand side matrix
  
  INPUT
  iy    : coordinate index on y-direction
  iz    : coordinate index on z-direction
  eq    : equation object at current time step
- eq_dt : equation object at next time step
  inter : object of all intersections
- uhs   : right han side solution at current time step
+ uc    : right han side solution at current time step
  beta  : object of variable coefficient
  
  OUTPUT
@@ -470,9 +1125,14 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
 void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
 {
     int iy, ip;
+    double coef;
+    double jump_u, jump_ul, jump_ur;
+    double jump_betauy, jump_betauyl, jump_betauyr;
     VecDoub vdey;
     MatrixDoub irr_row, cor_row;
     Intersection_Data data, datal, datar;
+    
+    coef = 1;
     
     vdey.resize(3);
     //set up irr_row and cor_row
@@ -495,9 +1155,9 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
     {
         Operator_weights_y(beta,vdey,ix,iy,iz,dy);
         
-        a[iy] = -dt*vdey[0];
-        b[iy] = 1 - dt*vdey[1];
-        c[iy] = -dt*vdey[2];
+        a[iy] = -coef*dt*vdey[0];
+        b[iy] = 1 - coef*dt*vdey[1];
+        c[iy] = -coef*dt*vdey[2];
     }
     a[ny-1] = 0.0;
     b[ny-1] = 1.0;
@@ -539,25 +1199,25 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
             iy = data.left_loc;
             Operator_weights_y(beta,vdey,ix,iy,iz,dy);
             //use right FP
-            irr_row[0][0] = -dt*vdey[0];
-            irr_row[0][1] = 1 - dt*vdey[1];
+            irr_row[0][0] = -coef*dt*vdey[0];
+            irr_row[0][1] = 1 - coef*dt*vdey[1];
             for(int i = 0; i < 4; i++)
             {
-                irr_row[0][i] += -dt*vdey[2]*data.wei.weir[0][i];
+                irr_row[0][i] += -coef*dt*vdey[2]*data.wei.weir[0][i];
             }
-            irr_row[0][4] = uc[ix][iy][iz]+dt*vdey[2]*(jump_u*data.wei.weir[0][4]+jump_betauy*data.wei.weir[0][5]);
+            irr_row[0][4] = uc[ix][iy][iz]+coef*dt*vdey[2]*(jump_u*data.wei.weir[0][4]+jump_betauy*data.wei.weir[0][5]);
             
             //Approximate IY+1
             iy += 1;
             Operator_weights_y(beta,vdey,ix,iy,iz,dy);
             //use left FP
-            irr_row[1][2] = 1 - dt*vdey[1];
-            irr_row[1][3] = -dt*vdey[2];
+            irr_row[1][2] = 1 - coef*dt*vdey[1];
+            irr_row[1][3] = -coef*dt*vdey[2];
             for(int i = 0; i < 4; i++)
             {
-                irr_row[1][i] += -dt*vdey[0]*data.wei.weil[0][i];
+                irr_row[1][i] += -coef*dt*vdey[0]*data.wei.weil[0][i];
             }
-            irr_row[1][4] = uc[ix][iy][iz]+dt*vdey[0]*(jump_u*data.wei.weil[0][4]+jump_betauy*data.wei.weil[0][5]);
+            irr_row[1][4] = uc[ix][iy][iz]+coef*dt*vdey[0]*(jump_u*data.wei.weil[0][4]+jump_betauy*data.wei.weil[0][5]);
             
             Convert2Tri_irr(data.left_loc,irr_row,a,b,c,r);
             
@@ -594,47 +1254,47 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
             iy = datal.left_loc;
             Operator_weights_y(beta,vdey,ix,iy,iz,dy);
             //IY+1 cross left interface, use left interface's right FP
-            cor_row[0][0] = -dt*vdey[0];
-            cor_row[0][1] = 1 - dt*vdey[1];
+            cor_row[0][0] = -coef*dt*vdey[0];
+            cor_row[0][1] = 1 - coef*dt*vdey[1];
             for(int i = 0; i < 5; i++)
             {
-                cor_row[0][i] -= dt*vdey[2]*datal.wei.weir[0][i];
+                cor_row[0][i] -= coef*dt*vdey[2]*datal.wei.weir[0][i];
             }
-            cor_row[0][5] = uc[ix][iy][iz]+dt*vdey[2]*
+            cor_row[0][5] = uc[ix][iy][iz]+coef*dt*vdey[2]*
                             (jump_ul*datal.wei.weir[0][5]+jump_betauyl*datal.wei.weir[0][6]+
                              jump_ur*datal.wei.weir[0][7]+jump_betauyr*datal.wei.weir[0][8]);
             
             //Approximate IY+1
             iy += 1;
             Operator_weights_y(beta,vdey,ix,iy,iz,dy);
-            cor_row[1][2] = 1 - dt*vdey[1];
+            cor_row[1][2] = 1 - coef*dt*vdey[1];
             //IY-1 cross left interface, use left interface's left FP
             for(int i = 0; i < 5; i++)
             {
-                cor_row[1][i] -= dt*vdey[0]*datal.wei.weil[0][i];
+                cor_row[1][i] -= coef*dt*vdey[0]*datal.wei.weil[0][i];
             }
-            cor_row[1][5] = uc[ix][iy][iz]+dt*vdey[0]*
+            cor_row[1][5] = uc[ix][iy][iz]+coef*dt*vdey[0]*
                             (jump_ul*datal.wei.weil[0][5]+jump_betauyl*datal.wei.weil[0][6]+
                              jump_ur*datal.wei.weil[0][7]+jump_betauyr*datal.wei.weil[0][8]);
             //IY+1 cross right interface, use right interface's right FP
             for(int i = 0; i < 5; i++)
             {
-                cor_row[1][i] -= dt*vdey[2]*datar.wei.weir[0][i];
+                cor_row[1][i] -= coef*dt*vdey[2]*datar.wei.weir[0][i];
             }
-            cor_row[1][5] += dt*vdey[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauyl*datar.wei.weir[0][6]+
-                                         jump_ur*datar.wei.weir[0][7]+jump_betauyr*datar.wei.weir[0][8]);
+            cor_row[1][5] += coef*dt*vdey[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauyl*datar.wei.weir[0][6]+
+                                              jump_ur*datar.wei.weir[0][7]+jump_betauyr*datar.wei.weir[0][8]);
             
             //Approximate IY+2
             iy += 1;
             Operator_weights_y(beta,vdey,ix,iy,iz,dy);
             //IY-1 cross right interface, use right interface's left FP
-            cor_row[2][3] = 1 - dt*vdey[1];
-            cor_row[2][4] = -dt*vdey[2];
+            cor_row[2][3] = 1 - coef*dt*vdey[1];
+            cor_row[2][4] = -coef*dt*vdey[2];
             for(int i = 0; i < 5; i++)
             {
-                cor_row[2][i] -= dt*vdey[0]*datar.wei.weil[0][i];
+                cor_row[2][i] -= coef*dt*vdey[0]*datar.wei.weil[0][i];
             }
-            cor_row[2][5] = uc[ix][iy][iz]+dt*vdey[0]*
+            cor_row[2][5] = uc[ix][iy][iz]+coef*dt*vdey[0]*
                             (jump_ul*datar.wei.weil[0][5]+jump_betauyl*datar.wei.weil[0][6]+
                              jump_ur*datar.wei.weil[0][7]+jump_betauyr*datar.wei.weil[0][8]);
             
@@ -646,15 +1306,14 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
 }
 
 /*********************************************************************************
- beta*Delta_zz operator for left hand side matrix
+ 1 - Dt*beta*D_{zz} operator for left hand side matrix
  
  INPUT
  iy    : coordinate index on y-direction
  iz    : coordinate index on z-direction
  eq    : equation object at current time step
- eq_dt : equation object at next time step
  inter : object of all intersections
- uhs   : right han side solution at current time step
+ uc    : right han side solution at current time step
  beta  : object of variable coefficient
  
  OUTPUT
@@ -666,9 +1325,14 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
 void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
 {
     int iz, ip;
+    double coef;
+    double jump_u, jump_ul, jump_ur;
+    double jump_betauz, jump_betauzl, jump_betauzr;
     VecDoub vdez;
     MatrixDoub irr_row, cor_row;
     Intersection_Data data, datal, datar;
+    
+    coef = 1;
     
     vdez.resize(3);
     //set up irr_row and cor_row
@@ -691,9 +1355,9 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDo
     {
         Operator_weights_z(beta,vdez,ix,iy,iz,dz);
         
-        a[iz] = -dt*vdez[0];
-        b[iz] = 1 - dt*vdez[1];
-        c[iz] = -dt*vdez[2];
+        a[iz] = -coef*dt*vdez[0];
+        b[iz] = 1 - coef*dt*vdez[1];
+        c[iz] = -coef*dt*vdez[2];
     }
     a[nz-1] = 0.0;
     b[nz-1] = 1.0;
@@ -735,25 +1399,25 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDo
             iz = data.left_loc;
             Operator_weights_z(beta,vdez,ix,iy,iz,dz);
             //use right FP
-            irr_row[0][0] = -dt*vdez[0];
-            irr_row[0][1] = 1 - dt*vdez[1];
+            irr_row[0][0] = -coef*dt*vdez[0];
+            irr_row[0][1] = 1 - coef*dt*vdez[1];
             for(int i = 0; i < 4; i++)
             {
-                irr_row[0][i] += -dt*vdez[2]*data.wei.weir[0][i];
+                irr_row[0][i] += -coef*dt*vdez[2]*data.wei.weir[0][i];
             }
-            irr_row[0][4] = uc[ix][iy][iz]+dt*vdez[2]*(jump_u*data.wei.weir[0][4]+jump_betauz*data.wei.weir[0][5]);
+            irr_row[0][4] = uc[ix][iy][iz]+coef*dt*vdez[2]*(jump_u*data.wei.weir[0][4]+jump_betauz*data.wei.weir[0][5]);
             
             //Approximate IZ+1
             iz += 1;
             Operator_weights_z(beta,vdez,ix,iy,iz,dz);
             //use left FP
-            irr_row[1][2] = 1 - dt*vdez[1];
-            irr_row[1][3] = -dt*vdez[2];
+            irr_row[1][2] = 1 - coef*dt*vdez[1];
+            irr_row[1][3] = -coef*dt*vdez[2];
             for(int i = 0; i < 4; i++)
             {
-                irr_row[1][i] += -dt*vdez[0]*data.wei.weil[0][i];
+                irr_row[1][i] += -coef*dt*vdez[0]*data.wei.weil[0][i];
             }
-            irr_row[1][4] = uc[ix][iy][iz]+dt*vdez[0]*(jump_u*data.wei.weil[0][4]+jump_betauz*data.wei.weil[0][5]);
+            irr_row[1][4] = uc[ix][iy][iz]+coef*dt*vdez[0]*(jump_u*data.wei.weil[0][4]+jump_betauz*data.wei.weil[0][5]);
             
             Convert2Tri_irr(data.left_loc,irr_row,a,b,c,r);
             
@@ -790,47 +1454,47 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDo
             iz = datal.left_loc;
             Operator_weights_z(beta,vdez,ix,iy,iz,dz);
             //IZ+1 cross left interface, use left interface's left FP
-            cor_row[0][0] = -dt*vdez[0];
-            cor_row[0][1] = 1 - dt*vdez[1];
+            cor_row[0][0] = -coef*dt*vdez[0];
+            cor_row[0][1] = 1 - coef*dt*vdez[1];
             for(int i = 0; i < 5; i++)
             {
-                cor_row[0][i] -= dt*vdez[2]*datal.wei.weir[0][i];
+                cor_row[0][i] -= coef*dt*vdez[2]*datal.wei.weir[0][i];
             }
-            cor_row[0][5] = uc[ix][iy][iz]+dt*vdez[2]*
+            cor_row[0][5] = uc[ix][iy][iz]+coef*dt*vdez[2]*
                             (jump_ul*datal.wei.weir[0][5]+jump_betauzl*datal.wei.weir[0][6]+
                              jump_ur*datal.wei.weir[0][7]+jump_betauzr*datal.wei.weir[0][8]);;
             
             //Approximate IZ+1
             iz += 1;
             Operator_weights_z(beta,vdez,ix,iy,iz,dz);
-            cor_row[1][2] = 1 - dt*vdez[1];
+            cor_row[1][2] = 1 - coef*dt*vdez[1];
             //IZ-1 cross left interface, use left interface's left FP
             for(int i = 0; i < 5; i++)
             {
-                cor_row[1][i] -= dt*vdez[0]*datal.wei.weil[0][i];
+                cor_row[1][i] -= coef*dt*vdez[0]*datal.wei.weil[0][i];
             }
-            cor_row[1][5] = uc[ix][iy][iz]+dt*vdez[0]*
+            cor_row[1][5] = uc[ix][iy][iz]+coef*dt*vdez[0]*
                             (jump_ul*datal.wei.weil[0][5]+jump_betauzl*datal.wei.weil[0][6]+
                              jump_ur*datal.wei.weil[0][7]+jump_betauzr*datal.wei.weil[0][8]);
             //IZ+1 cross right interface, use right interface's right FP
             for(int i = 0; i < 5; i++)
             {
-                cor_row[1][i] -= dt*vdez[2]*datar.wei.weir[0][i];
+                cor_row[1][i] -= coef*dt*vdez[2]*datar.wei.weir[0][i];
             }
-            cor_row[1][5] += dt*vdez[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauzl*datar.wei.weir[0][6]+
+            cor_row[1][5] += coef*dt*vdez[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauzl*datar.wei.weir[0][6]+
                                          jump_ur*datar.wei.weir[0][7]+jump_betauzr*datar.wei.weir[0][8]);
             
             //Approximate IZ+2
             iz += 1;
             Operator_weights_z(beta,vdez,ix,iy,iz,dz);
             //IZ-1 cross right interface, use right interface's left FP
-            cor_row[2][3] = 1 - dt*vdez[1];
-            cor_row[2][4] = -dt*vdez[2];
+            cor_row[2][3] = 1 - coef*dt*vdez[1];
+            cor_row[2][4] = -coef*dt*vdez[2];
             for(int i = 0; i < 5; i++)
             {
-                cor_row[2][i] -= dt*vdez[0]*datar.wei.weil[0][i];
+                cor_row[2][i] -= coef*dt*vdez[0]*datar.wei.weil[0][i];
             }
-            cor_row[2][5] = uc[ix][iy][iz]+dt*vdez[0]*
+            cor_row[2][5] = uc[ix][iy][iz]+coef*dt*vdez[0]*
                             (jump_ul*datar.wei.weil[0][5]+jump_betauzl*datar.wei.weil[0][6]+
                              jump_ur*datar.wei.weil[0][7]+jump_betauzr*datar.wei.weil[0][8]);
             

@@ -4,7 +4,7 @@ Mesh Size         : NX = 40    NY = 40    NZ = 40
 Time Step         : 1.0e-03
 Surface           : E
 Method            : L
-Equation No.      : 4
+Equation No.      : 2
 Accuracy          : 2
 
 Z-direction computation: 
@@ -16,16 +16,16 @@ X-direction computation:
 -------------------- Error of Matched ADI --------------------
 T = 1.0e+00
 ------------------------ Error of FPs ------------------------
-Lmax = 7.446e-02
-L2   = 4.600e-03
+Lmax = 3.943e-02
+L2   = 6.632e-03
 
 ------------------------ Error of Jumps ------------------------
-Lmax = 1.009e+01
-L2   = 8.966e-01
+Lmax = 8.978e-16
+L2   = 1.765e-16
 
-[Xmax,Ymax,Zmax] = [38,19,12]
- Lmax = 3.005e-02;  L2 = 6.297e-03
+[Xmax,Ymax,Zmax] = [20,20,20]
+ Lmax = 1.110e-01;  L2 = 9.394e-03
 
 
-CPU time cost: 45.0 seconds
+CPU time cost: 39.3 seconds
 
