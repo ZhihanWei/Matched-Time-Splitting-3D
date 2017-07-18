@@ -26,6 +26,7 @@
 #include "Beta_0.h"
 #include "Beta_1.h"
 #include "Beta_2.h"
+#include "Beta_3.h"
 //Users-defined functions
 #include "Eq_0.h"
 #include "Eq_1.h"
@@ -53,26 +54,25 @@ int main(int argc, char* argv[])
     VecInt size;
     Surface_Cartesian *ex_ptr;
     Beta *beta_ptr;
-    double tol_itype;
     double t_begin, t_end, t;
     char surface, method;
-    int equation, beta_code, accuracy;
+    int equation, beta_code, accuracy, mib_method;
     
-    //Arguments for a Cube, for domain [-2,2;-2,2;-2,2]
+    //Arguments for a Cube, choose domain [-2,2;-2,2;-2,2], 'C'
     VecDoub arg_cube = {-1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
-    //Arguments for a Cylinder, for domain [-4,4;-4,4;-4,4]
+    //Arguments for a Cylinder, choose domain [-4,4;-4,4;-4,4], 'L'
     VecDoub arg_cylinder = {2.0, -3.0, 3.0};
-    //Arguments for a Cone, for domain [-4,4;-4,4;-4,1]
+    //Arguments for a Cone, choose domain [-4,4;-4,4;-4,1], 'O'
     VecDoub arg_cone = {1.0, 0.0, 0.0, -3.0, 0.0};
-    //Arguments for an Ellipsoid with parameter[2,1,1,1], for domain [-4,4;-2,2;-2,2]
+    //Arguments for an Ellipsoid with parameter[2,1,1,1], choose domain [-4,4;-2,2;-2,2], 'E'
     VecDoub arg_ellipsoid = {2.0, 1.0, 1.0, 1.0};
-    //Arguments for a Torus with parameter[0.5,0.2], for domain [-4,4;-4,4;-4,4]
+    //Arguments for a Torus with parameter[0.5,0.2], choose domain [-4,4;-4,4;-4,4], 'R'
     VecDoub arg_torus = {1.5, 0.7};
-    //Arguments for a Dupin Cyclide with parameter[1,0.3,0.6], for domain [-4,4;-4,4;-4,4]
+    //Arguments for a Dupin Cyclide with parameter[1,0.3,0.6], choose domain [-5,5;-5,5;-5,5], 'D'
     VecDoub arg_dupin_cyclide = {1.0, 0.3, 0.6};
-    //Arguments for a Heart Surface with parameter [1,9/4,1,-1,-1,-9/80], for domain [-4,4;-2,2;-4,4]
+    //Arguments for a Heart Surface with parameter [1,9/4,1,-1,-1,-9/80], choose domain [-4,4;-2,2;-4,4], 'H'
     VecDoub arg_heart = {1.0, 9.0/4.0, 1.0, -1.0, -1.0, -9.0/80.0};
-    //Arguments for Tanglecube with parameter [1,-5,1,-5,1,-5,10], for domain [-4,4;-4,4;-5,5]
+    //Arguments for Tanglecube with parameter [1,-5,1,-5,1,-5,10], choose domain [-3.99,3.99;-3.99,3.99;-4.99,4.99], 'T'
     VecDoub arg_tanglecube = {1.0, -5.0, 1.0, -5.0, 1.0, -5.0, 10.0};
     
     time_t rawtime;
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 
     vector<string> files = {"data/data1.txt"};
     //vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
-    //vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/                   data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
+    //vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/                                data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
     
     for(int i = 0; i < files.size(); i++)
     {
@@ -109,10 +109,10 @@ int main(int argc, char* argv[])
             size = data.Get_Size();
             running_time = data.Get_Time();
             beta_code = data.Get_Beta();
-            tol_itype = data.Get_Tol();
             accuracy = data.Get_Accuracy();
             surface = data.Get_Surface();
             method = data.Get_Method();
+            mib_method = data.Get_MIB_method();
             equation = data.Get_Equation();
             
             out_file << "------------------------- Basic Info. ------------------------" << endl;
@@ -121,8 +121,11 @@ int main(int argc, char* argv[])
             out_file << setprecision(1) << scientific;
             out_file << setiosflags(ios::left) << setw(18) << "Time Step" << ": " << running_time[2] << endl;
             out_file << fixed;
+            out_file << setiosflags(ios::left) << setw(18) << "Jump" << ": " << JP << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Surface" << ": " << surface << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Method" << ": " << method << endl;
+            out_file << setiosflags(ios::left) << setw(18) << "MIB Method" << ": L" << mib_method << endl;
+            out_file << setiosflags(ios::left) << setw(18) << "Beta No." << ": " << beta_code << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Equation No." << ": " << equation << endl;
             out_file << setiosflags(ios::left) << setw(18) << "Accuracy" << ": " << accuracy << endl << endl;
             
@@ -141,6 +144,11 @@ int main(int argc, char* argv[])
             {
                 Beta_2 beta2;
                 beta_ptr = &beta2;
+            }
+            else if(beta_code == 3)
+            {
+                Beta_3 beta3;
+                beta_ptr = &beta3;
             }
             else
             {
@@ -210,7 +218,7 @@ int main(int argc, char* argv[])
             
             Mesh mesh(domain,size,ex);
             
-            Intersections inter(ex,mesh,beta,tol_itype,accuracy,out_file);
+            Intersections inter(ex,mesh,beta,accuracy,mib_method,out_file);
             
             cout << "Program is running......" << endl << endl;
             
@@ -521,7 +529,7 @@ void LOD_Solver(Int_I equation, Beta& beta, Mesh& mesh, Intersections& inter, LO
         for(int j = 0; j < loop; j++)
         {
             tnow += dt;
-            
+
             if(equation == 0)
             {
                 Eq_0 eq0_dt(tnow,beta);

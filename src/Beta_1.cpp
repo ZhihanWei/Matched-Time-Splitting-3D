@@ -23,8 +23,7 @@ double Beta_1::Inside(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = y;
-    //temp = 1/(x*x+y*y+z*z+1);
+    temp = 1/(x*x+y*y+z*z+1)+1;
     
     return temp;
 }
@@ -44,8 +43,7 @@ double Beta_1::Outside(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = -y;
-    //temp = -1/(x*x+y*y+z*z+1);
+    temp = -1/(x*x+y*y+z*z+1)+2;
     
     return temp;
 }
@@ -65,8 +63,7 @@ double Beta_1::Inside_Dx(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 0;
-    //temp= -2*x/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
+    temp= -2*x/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
     
     return temp;
 }
@@ -86,8 +83,7 @@ double Beta_1::Outside_Dx(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 0;
-    //temp = 2*x/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
+    temp = 2*x/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
     
     return temp;
 }
@@ -107,8 +103,7 @@ double Beta_1::Inside_Dy(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 1;
-    //temp = -2*y/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
+    temp = -2*y/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
     
     return temp;
 }
@@ -128,8 +123,7 @@ double Beta_1::Outside_Dy(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = -1;
-    //temp = 2*y/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
+    temp = 2*y/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
     
     return temp;
 }
@@ -149,8 +143,7 @@ double Beta_1::Inside_Dz(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 0;
-    //temp = -2*z/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
+    temp = -2*z/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
     
     return temp;
 }
@@ -170,8 +163,7 @@ double Beta_1::Outside_Dz(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 0;
-    //temp = 2*z/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
+    temp = 2*z/(x*x+y*y+z*z+1)/(x*x+y*y+z*z+1);
     
     return temp;
 }
