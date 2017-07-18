@@ -19,12 +19,6 @@ struct Line
     int indx1;
     int indx2;
 };
-//Beta of the interface
-struct Beta
-{
-    double in;
-    double out;
-};
 //Jumps on the interface
 struct Jump
 {
@@ -40,11 +34,16 @@ struct Jump
     double betau_tau;
     double tau_err;
 };
+//Normal direction
 struct Local_Coord
 {
     VecDoub normal;
-    //VecDoub tau;
-    //VecDoub eta;
+};
+//Outside and inside diffusion coefficients for all used grid nodes ordered from small index to large index
+struct Diff_Coef
+{
+    double inside;
+    double outside;
 };
 //Zenith and Azimuth of interface point
 struct Angle
@@ -67,7 +66,7 @@ struct Err
 //All data used to approximate Eta and Tau jumps
 struct Approximated_Jumps
 {
-    VecChar auxlaxis;                  //on which axis to approximate auxiliary points
+    VecChar auxlaxis;               //on which axis to approximate auxiliary points
     //VecInt ul_indx;                  //upper and lower indx of the axis used to do approximation; size: 2; 1st for upper, 2nd for lower
     VecDoub auxl;                   //coordinate location of auxiliary points; size: 2; 1st for upper, 2nd for lower
     VecInt uin_auxlnodes;           //indices of upper inside auxiliary nodes
@@ -80,10 +79,10 @@ struct Intersection_Data
 {
     Coord coord;
     Line line;
-    Beta beta;
     Wei wei;
     Err err;
     Jump jump;
+    Diff_Coef diffcoef;
     Local_Coord local;
     MatrixDoub p;
     Approximated_Jumps eta;

@@ -31,10 +31,6 @@ Data::Data(const string& file_name)
             
             switch(Translation(parameter_name))
             {
-                case e_TOL_ITYPE:
-                    read_file >> parameter_value_2;
-                    TOL_ITYPE = parameter_value_2;
-                    break;
                 case e_xl:
                     read_file >> parameter_value_2;
                     xl = parameter_value_2;
@@ -87,27 +83,31 @@ Data::Data(const string& file_name)
                     read_file >> parameter_value_3;
                     surface = parameter_value_3;
                     break;
+                case e_method:
+                    read_file >> parameter_value_3;
+                    method = parameter_value_3;
+                    break;
                 case e_equation:
                     read_file >> parameter_value_1;
                     equation = parameter_value_1;
                     break;
-                case e_beta_inside:
-                    read_file >> parameter_value_2;
-                    beta_inside = parameter_value_2;
+                case e_mib_method:
+                    read_file >> parameter_value_1;
+                    mib_method = parameter_value_1;
                     break;
-                case e_beta_outside:
-                    read_file >> parameter_value_2;
-                    beta_outside = parameter_value_2;
+                case e_beta:
+                    read_file >> parameter_value_1;
+                    beta = parameter_value_1;
                     break;
                 case e_accuracy:
                     read_file >> parameter_value_1;
                     accuracy = parameter_value_1;
+                    break;
                     if(accuracy%2 == 1)
                     {
                         cout << "Order of accuracy has to be an even order" << endl;
                         exit(0);
                     }
-                    
                     break;
                 default:
                     cout << "No corresponding parameter found, check data.txt file" << endl;
@@ -135,8 +135,7 @@ Data::Data(const string& file_name)
  ***********************************************************************************************/
 Data::Prt_name Data::Translation(const string& in_string)
 {
-    if(in_string == "TOL_ITYPE") return e_TOL_ITYPE;
-    else if(in_string == "xl") return e_xl;
+    if(in_string == "xl") return e_xl;
     else if(in_string == "xr") return e_xr;
     else if(in_string == "yl") return e_yl;
     else if(in_string == "yr") return e_yr;
@@ -149,13 +148,14 @@ Data::Prt_name Data::Translation(const string& in_string)
     else if(in_string == "ny") return e_ny;
     else if(in_string == "nz") return e_nz;
     else if(in_string == "surface") return e_surface;
+    else if(in_string == "method") return e_method;
+    else if(in_string == "mib_method") return e_mib_method;
     else if(in_string == "equation") return e_equation;
-    else if(in_string == "beta_inside") return e_beta_inside;
-    else if(in_string == "beta_outside") return e_beta_outside;
+    else if(in_string == "beta") return e_beta;
     else if(in_string == "accuracy") return e_accuracy;
     else
     {
-        cout << "No corresponding parameter found, check data.txt file";
+        cout << "No corresponding parameter found, check data.txt file" << endl;
         exit(0);
     }
 }
@@ -165,11 +165,9 @@ Data::Prt_name Data::Translation(const string& in_string)
  ***********************************************************************************************/
 void Data::Display()
 {
-    cout << "TOL_ITPYE = " << TOL_ITYPE << endl;
     cout << "xl = " << xl << " xr = " << xr << " yl = " << yl << " yr = " << yr << " zl = " << zl << " zr = " << zr << endl;
     cout << "t_start = " << t_start << " t_finish = " << t_finish << " t_step = " << t_step << endl;
     cout << "nx = " << nx << " ny = " << ny << " nz = " << nz << endl;
-    cout << "beta_inside = " << beta_inside << " beta_outside = " << beta_outside << endl;
 }
 
 /***********************************************************************************************
@@ -204,19 +202,6 @@ VecInt Data::Get_Size() const
 }
 
 /***********************************************************************************************
-                            Get data given by order [beta_inside,beta_outside]
- ***********************************************************************************************/
-Beta Data::Get_Beta() const
-{
-    Beta beta;
-    
-    beta.in = beta_inside;
-    beta.out = beta_outside;
-    
-    return beta;
-}
-
-/***********************************************************************************************
                             Get data given by order [t_start,t_finish,t_step]
  ***********************************************************************************************/
 VecDoub Data::Get_Time() const
@@ -239,7 +224,23 @@ char Data::Get_Surface() const
 }
 
 /***********************************************************************************************
-                                    Get accuracy order
+                                    Get data Method
+ ***********************************************************************************************/
+char Data::Get_Method() const
+{
+    return method;
+}
+
+/***********************************************************************************************
+                                    Get data Beta
+ ***********************************************************************************************/
+int Data::Get_Beta() const
+{
+    return beta;
+}
+
+/***********************************************************************************************
+                                   Get data Accuracy
  ***********************************************************************************************/
 int Data::Get_Accuracy() const
 {
@@ -255,9 +256,9 @@ int Data::Get_Equation() const
 }
 
 /***********************************************************************************************
-                                    Get data TOL_ITYPE
+                                    Get data MIB method
  ***********************************************************************************************/
-double Data::Get_Tol() const
+int Data::Get_MIB_method() const
 {
-    return TOL_ITYPE;
+    return mib_method;
 }

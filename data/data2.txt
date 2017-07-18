@@ -19,6 +19,4 @@ equation = 5
 beta_inside = 1
 beta_outside = 10
 
-TOL_ITYPE = 0
-
 accuracy = 2
