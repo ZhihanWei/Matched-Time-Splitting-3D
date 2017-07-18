@@ -1,23 +1,23 @@
 xl = -3.99
 xr = 3.99
-yl = -1.99
-yr = 1.99
-zl = -1.99
-zr = 1.99
+yl = -3.99
+yr = 3.99
+zl = -4.99
+zr = 4.99
 
-nx = 20
-ny = 20
-nz = 20
+nx = 40
+ny = 40
+nz = 40
 
 t_start = 0
 t_finish = 1
 t_step = 0.001
 
-surface = E
-equation = 4
+surface = T
+method = A
+equation = 3
+beta = 3
 
-beta = 2
-
-TOL_ITYPE = 0
+mib_method = 1
 
 accuracy = 2

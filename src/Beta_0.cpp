@@ -1,9 +1,9 @@
-#include "Beta_2.h"
+#include "Beta_0.h"
 
 /******************************************************************
  Constructor
  ******************************************************************/
-Beta_2::Beta_2()
+Beta_0::Beta_0()
 {
     
 }
@@ -19,11 +19,11 @@ Beta_2::Beta_2()
  OUTPUT
  Diffusion coefficient at that point in Omega^{-}
  *****************************************************/
-double Beta_2::Inside(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_0::Inside(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
-
-    temp = sin(x+y+z)+2;
+    
+    temp = 1;
     
     return temp;
 }
@@ -39,11 +39,11 @@ double Beta_2::Inside(Doub_I x, Doub_I y, Doub_I z) const
  OUTPUT
  Diffusion coefficient at the point in Omega^{+}
  *****************************************************/
-double Beta_2::Outside(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_0::Outside(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = -cos(x+y+z)+2;
+    temp = 10;
     
     return temp;
 }
@@ -59,11 +59,11 @@ double Beta_2::Outside(Doub_I x, Doub_I y, Doub_I z) const
  OUTPUT
  Diffusion coefficient at that point in Omega^{-}
  ***************************************************************/
-double Beta_2::Inside_Dx(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_0::Inside_Dx(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = cos(x+y+z);
+    temp = 0;
     
     return temp;
 }
@@ -79,11 +79,11 @@ double Beta_2::Inside_Dx(Doub_I x, Doub_I y, Doub_I z) const
  OUTPUT
  Diffusion coefficient at the point in Omega^{+}
  *****************************************************/
-double Beta_2::Outside_Dx(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_0::Outside_Dx(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = sin(x+y+z);
+    temp = 0;
     
     return temp;
 }
@@ -99,11 +99,11 @@ double Beta_2::Outside_Dx(Doub_I x, Doub_I y, Doub_I z) const
  OUTPUT
  Diffusion coefficient at that point in Omega^{-}
  ***************************************************************/
-double Beta_2::Inside_Dy(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_0::Inside_Dy(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = cos(x+y+z);
+    temp = 0;
     
     return temp;
 }
@@ -119,11 +119,11 @@ double Beta_2::Inside_Dy(Doub_I x, Doub_I y, Doub_I z) const
  OUTPUT
  Diffusion coefficient at the point in Omega^{+}
  *****************************************************/
-double Beta_2::Outside_Dy(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_0::Outside_Dy(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = sin(x+y+z);
+    temp = 0;
     
     return temp;
 }
@@ -139,11 +139,11 @@ double Beta_2::Outside_Dy(Doub_I x, Doub_I y, Doub_I z) const
  OUTPUT
  Diffusion coefficient at that point in Omega^{-}
  ***************************************************************/
-double Beta_2::Inside_Dz(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_0::Inside_Dz(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = cos(x+y+z);
+    temp = 0;
     
     return temp;
 }
@@ -159,11 +159,11 @@ double Beta_2::Inside_Dz(Doub_I x, Doub_I y, Doub_I z) const
  OUTPUT
  Diffusion coefficient at the point in Omega^{+}
  *****************************************************/
-double Beta_2::Outside_Dz(Doub_I x, Doub_I y, Doub_I z) const
+double Beta_0::Outside_Dz(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = sin(x+y+z);
+    temp = 0;
     
     return temp;
 }

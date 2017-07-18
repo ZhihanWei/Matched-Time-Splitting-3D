@@ -1,13 +1,13 @@
-#ifndef __Beta_1_H__
-#define __Beta_1_H__
+#ifndef __Beta_0_H__
+#define __Beta_0_H__
 
 #include "Constant.h"
 #include "Beta.h"
 
-class Beta_1: public Beta
+class Beta_0: public Beta
 {
 public:
-    Beta_1();
+    Beta_0();
     
     virtual double Inside(Doub_I, Doub_I, Doub_I) const;
     virtual double Outside(Doub_I, Doub_I, Doub_I) const;

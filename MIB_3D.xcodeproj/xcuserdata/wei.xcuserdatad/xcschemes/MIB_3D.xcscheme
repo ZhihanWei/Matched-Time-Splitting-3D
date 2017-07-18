@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B6FEE5201D89BCE600D31D5F"
-               BuildableName = "MADI_3D"
-               BlueprintName = "MADI_3D"
-               ReferencedContainer = "container:MADI_3D.xcodeproj">
+               BlueprintIdentifier = "B60AFC261F1E83260037A976"
+               BuildableName = "MIB_3D"
+               BlueprintName = "MIB_3D"
+               ReferencedContainer = "container:MIB_3D.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B6FEE5201D89BCE600D31D5F"
-            BuildableName = "MADI_3D"
-            BlueprintName = "MADI_3D"
-            ReferencedContainer = "container:MADI_3D.xcodeproj">
+            BlueprintIdentifier = "B60AFC261F1E83260037A976"
+            BuildableName = "MIB_3D"
+            BlueprintName = "MIB_3D"
+            ReferencedContainer = "container:MIB_3D.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -56,10 +56,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B6FEE5201D89BCE600D31D5F"
-            BuildableName = "MADI_3D"
-            BlueprintName = "MADI_3D"
-            ReferencedContainer = "container:MADI_3D.xcodeproj">
+            BlueprintIdentifier = "B60AFC261F1E83260037A976"
+            BuildableName = "MIB_3D"
+            BlueprintName = "MIB_3D"
+            ReferencedContainer = "container:MIB_3D.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -75,10 +75,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B6FEE5201D89BCE600D31D5F"
-            BuildableName = "MADI_3D"
-            BlueprintName = "MADI_3D"
-            ReferencedContainer = "container:MADI_3D.xcodeproj">
+            BlueprintIdentifier = "B60AFC261F1E83260037A976"
+            BuildableName = "MIB_3D"
+            BlueprintName = "MIB_3D"
+            ReferencedContainer = "container:MIB_3D.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -68,7 +68,10 @@ double Eq_2::Inner_f(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = -beta.Inside(x,y,z)*10*(-6+4*(x*x+y*y+z*z))*exp(-x*x)*exp(-y*y)*exp(-z*z)+exp(a+t);
+    temp = -beta.Inside(x,y,z)*10*(-6+4*(x*x+y*y+z*z))*exp(-x*x)*exp(-y*y)*exp(-z*z)+exp(a+t)-
+            beta.Inside_Dx(x,y,z)*Inner_dux(x,y,z)-
+            beta.Inside_Dy(x,y,z)*Inner_duy(x,y,z)-
+            beta.Inside_Dz(x,y,z)*Inner_duz(x,y,z);
     
     return temp;
 }
@@ -88,7 +91,10 @@ double Eq_2::Outer_f(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = -beta.Outside(x,y,z)*5*(-6+4*(x*x+y*y+z*z))*exp(-x*x)*exp(-y*y)*exp(-z*z)+exp(a+t);
+    temp = -beta.Outside(x,y,z)*5*(-6+4*(x*x+y*y+z*z))*exp(-x*x)*exp(-y*y)*exp(-z*z)+exp(a+t)-
+            beta.Outside_Dx(x,y,z)*Outer_dux(x,y,z)-
+            beta.Outside_Dy(x,y,z)*Outer_duy(x,y,z)-
+            beta.Outside_Dz(x,y,z)*Outer_duz(x,y,z);;
     
     return temp;
 }

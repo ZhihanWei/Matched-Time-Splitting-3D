@@ -42,8 +42,8 @@ struct Local_Coord
 //Outside and inside diffusion coefficients for all used grid nodes ordered from small index to large index
 struct Diff_Coef
 {
-    VecDoub inside;
-    VecDoub outside;
+    double inside;
+    double outside;
 };
 //Zenith and Azimuth of interface point
 struct Angle

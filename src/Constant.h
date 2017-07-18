@@ -10,10 +10,12 @@ const double PI = acos(-1);
 const int NPRINT = 1;
 const double TOL_SETUP = 1.0e-12;
 const double TOL_RTSAFE = 1.0e-14;
+
 //region of approximated jump condition ('o': for outside only; others)
 const char REG = 'i';
-//indicator of jump condition (approximated or analytical; 'r': for real; others)
-const char JP = 'r';
+//jump condition ('r': for real jump only; others)
+const char JP = 'a';
+
 const bool DEBUGFLAG = false;
 const bool WARNINGS = false;
 

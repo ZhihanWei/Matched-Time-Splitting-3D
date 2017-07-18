@@ -48,7 +48,7 @@ double Eq_0::Outer_u(Doub_I x, Doub_I y, Doub_I z) const
 {
     double temp;
     
-    temp = 80;
+    temp = 100;
     
     return temp;
 }

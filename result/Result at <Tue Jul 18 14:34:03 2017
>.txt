@@ -1,0 +1,66 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% No. 1 file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+------------------------- Basic Info. ------------------------
+Mesh Size         : NX = 40    NY = 40    NZ = 40   
+Time Step         : 1.0e-03
+Jump              : a
+Surface           : T
+Method            : A
+MIB Method        : L1
+Beta No.          : 3
+Equation No.      : 3
+Accuracy          : 2
+
+Z-direction computation: 
+Corner interface is found in Z-direction at IX: 15 IY: 18
+Corner interface is found in Z-direction at IX: 15 IY: 18
+Corner interface is found in Z-direction at IX: 15 IY: 21
+Corner interface is found in Z-direction at IX: 15 IY: 21
+Corner interface is found in Z-direction at IX: 18 IY: 15
+Corner interface is found in Z-direction at IX: 18 IY: 15
+Corner interface is found in Z-direction at IX: 18 IY: 24
+Corner interface is found in Z-direction at IX: 18 IY: 24
+Corner interface is found in Z-direction at IX: 21 IY: 15
+Corner interface is found in Z-direction at IX: 21 IY: 15
+Corner interface is found in Z-direction at IX: 21 IY: 24
+Corner interface is found in Z-direction at IX: 21 IY: 24
+Corner interface is found in Z-direction at IX: 24 IY: 18
+Corner interface is found in Z-direction at IX: 24 IY: 18
+Corner interface is found in Z-direction at IX: 24 IY: 21
+Corner interface is found in Z-direction at IX: 24 IY: 21
+
+Y-direction computation: 
+Corner interface is found in Y-direction at IX: 18 IZ: 16
+Corner interface is found in Y-direction at IX: 18 IZ: 16
+Corner interface is found in Y-direction at IX: 18 IZ: 23
+Corner interface is found in Y-direction at IX: 18 IZ: 23
+Corner interface is found in Y-direction at IX: 21 IZ: 16
+Corner interface is found in Y-direction at IX: 21 IZ: 16
+Corner interface is found in Y-direction at IX: 21 IZ: 23
+Corner interface is found in Y-direction at IX: 21 IZ: 23
+
+X-direction computation: 
+Corner interface is found in X-direction at IY: 18 IZ: 16
+Corner interface is found in X-direction at IY: 18 IZ: 16
+Corner interface is found in X-direction at IY: 18 IZ: 23
+Corner interface is found in X-direction at IY: 18 IZ: 23
+Corner interface is found in X-direction at IY: 21 IZ: 16
+Corner interface is found in X-direction at IY: 21 IZ: 16
+Corner interface is found in X-direction at IY: 21 IZ: 23
+Corner interface is found in X-direction at IY: 21 IZ: 23
+
+-------------------- Error of Matched ADI --------------------
+T = 1.0e+00
+------------------------ Error of FPs ------------------------
+Lmax = 1.105e+00
+L2   = 6.239e-02
+
+------------------------ Error of Jumps ------------------------
+Lmax = 4.316e+02
+L2   = 8.461e+00
+
+[Xmax,Ymax,Zmax] = [30,27,17]
+ Lmax = 2.589e-01;  L2 = 3.135e-02
+
+
+CPU time cost: 178.7 seconds
+

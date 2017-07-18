@@ -15,13 +15,11 @@ using namespace std;
  ex          : cartesian surface object
  mesh        : mesh object (at least contains: nx, dx, grids location xi[n] and grid indicator mesh_value[i])
  beta        : diffusion coefficient object representing beta^{-} and beta^{+}
- TOL_ITYPE   : tolerance of itype
+ mib_method  : MIB method (either L1 or L2)
  accuracy    : accuracy of scheme order
  **************************************************************************************************************/
-Intersections::Intersections(Surface_Cartesian& ex, Mesh& mesh, Beta& beta, Doub_I TOL_ITYPE, Int_I in_accuracy, ofstream& out_file)
+Intersections::Intersections(Surface_Cartesian& ex, Mesh& mesh, Beta& beta, Int_I in_accuracy, Int_I mib_method, ofstream& out_file)
 {
-    tol_type = TOL_ITYPE;
-    
     nx = mesh.nx;
     ny = mesh.ny;
     nz = mesh.nz;
@@ -38,7 +36,20 @@ Intersections::Intersections(Surface_Cartesian& ex, Mesh& mesh, Beta& beta, Doub
     
     Setup_Intersections(ex,beta,out_file);
     
-    Setup_MIB(beta);
+    if (mib_method == 1)
+    {
+        Setup_MIB_L1(beta);
+    }
+    else if(mib_method == 2)
+    {
+        Setup_MIB_L2(beta);
+
+    }
+    else
+    {
+        cout << "No method for MIB part is found (1: L1 method & 2: L2 method)" << endl;
+        exit(0);
+    }
 }
 
 /**********************************************************
@@ -333,14 +344,6 @@ void Intersections::Getdata_irr_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node.err.errl[i] = 0;
     }
     
-    inter_node.diffcoef.inside.resize(accuracy*2);
-    inter_node.diffcoef.outside.resize(accuracy*2);
-    for(int i = 0; i < accuracy*2; i++)
-    {
-        inter_node.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy],zi[iz-accuracy/2+i]);
-        inter_node.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy],zi[iz-accuracy/2+i]);
-    }
-    
     inter_node.coord.x_value = xi[ix];
     inter_node.coord.y_value = yi[iy];
     inter_node.coord.z_value = ex.Gamma_z(xi[ix],yi[iy],zi[iz],zi[iz+1]);
@@ -358,6 +361,9 @@ void Intersections::Getdata_irr_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node.jump.u_tau = 0;
     inter_node.jump.u_dir = 0;
     inter_node.jump.err = 0;
+    
+    inter_node.diffcoef.inside = beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
+    inter_node.diffcoef.outside = beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
     
     inter_node.local.normal = ex.normal(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
     
@@ -388,14 +394,6 @@ void Intersections::Getdata_irr_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node.err.errl[i] = 0;
     }
     
-    inter_node.diffcoef.inside.resize(accuracy*2);
-    inter_node.diffcoef.outside.resize(accuracy*2);
-    for(int i = 0; i < accuracy*2; i++)
-    {
-        inter_node.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy-accuracy/2+i],zi[iz]);
-        inter_node.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy-accuracy/2+i],zi[iz]);
-    }
-    
     inter_node.coord.x_value = xi[ix];
     inter_node.coord.y_value = ex.Gamma_y(xi[ix],yi[iy],yi[iy+1],zi[iz]);
     inter_node.coord.z_value = zi[iz];
@@ -413,6 +411,9 @@ void Intersections::Getdata_irr_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node.jump.u_tau = 0;
     inter_node.jump.u_dir = 0;
     inter_node.jump.err = 0;
+    
+    inter_node.diffcoef.inside = beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
+    inter_node.diffcoef.outside = beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
     
     inter_node.local.normal = ex.normal(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
     
@@ -443,14 +444,6 @@ void Intersections::Getdata_irr_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node.err.errl[i] = 0;
     }
     
-    inter_node.diffcoef.inside.resize(accuracy*2);
-    inter_node.diffcoef.outside.resize(accuracy*2);
-    for(int i = 0; i < accuracy*2; i++)
-    {
-        inter_node.diffcoef.inside[i] = beta.Inside(xi[ix-accuracy/2+i],yi[iy],zi[iz]);
-        inter_node.diffcoef.outside[i] = beta.Outside(xi[ix-accuracy/2+i],yi[iy],zi[iz]);
-    }
-    
     inter_node.coord.x_value = ex.Gamma_x(xi[ix],xi[ix+1],yi[iy],zi[iz]);
     inter_node.coord.y_value = yi[iy];
     inter_node.coord.z_value = zi[iz];
@@ -468,6 +461,9 @@ void Intersections::Getdata_irr_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node.jump.u_tau = 0;
     inter_node.jump.u_dir = 0;
     inter_node.jump.err = 0;
+    
+    inter_node.diffcoef.inside = beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
+    inter_node.diffcoef.outside = beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
     
     inter_node.local.normal = ex.normal(inter_node.coord.x_value, inter_node.coord.y_value, inter_node.coord.z_value);
     
@@ -500,15 +496,6 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_left.err.errl[i] = 0;
     }
     
-    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
-    inter_node_left.diffcoef.inside.resize(5);
-    inter_node_left.diffcoef.outside.resize(5);
-    for(int i = 0; i < 5; i++)
-    {
-        inter_node_left.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy],zi[iz-1+i]);
-        inter_node_left.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy],zi[iz-1+i]);
-    }
-    
     inter_node_left.coord.x_value = xi[ix];
     inter_node_left.coord.y_value = yi[iy];
     inter_node_left.coord.z_value = ex.Gamma_z(xi[ix],yi[iy],zi[iz],zi[iz+1]);
@@ -527,6 +514,9 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_left.jump.u_dir = 0;
     inter_node_left.jump.err = 0;
     
+    inter_node_left.diffcoef.inside = beta.Inside(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
+    inter_node_left.diffcoef.outside = beta.Outside(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
+    
     inter_node_left.local.normal = ex.normal(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
     
     Pmatrix_Setup_z(inter_node_left);
@@ -542,15 +532,6 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     {
         inter_node_right.err.errr[i] = 0;
         inter_node_right.err.errl[i] = 0;
-    }
-    
-    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
-    inter_node_right.diffcoef.inside.resize(5);
-    inter_node_right.diffcoef.outside.resize(5);
-    for(int i = 0; i < 5; i++)
-    {
-        inter_node_right.diffcoef.inside[i] = beta.Outside(xi[ix],yi[iy],zi[iz-2+i]);
-        inter_node_right.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy],zi[iz-2+i]);
     }
     
     inter_node_right.coord.x_value = xi[ix];
@@ -570,6 +551,9 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_right.jump.u_tau = 0;
     inter_node_right.jump.u_dir = 0;
     inter_node_right.jump.err = 0;
+    
+    inter_node_right.diffcoef.inside = beta.Inside(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
+    inter_node_right.diffcoef.outside = beta.Outside(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
     
     inter_node_right.local.normal = ex.normal(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
     
@@ -602,15 +586,6 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_left.err.errl[i] = 0;
     }
     
-    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
-    inter_node_left.diffcoef.inside.resize(5);
-    inter_node_left.diffcoef.outside.resize(5);
-    for(int i = 0; i < 5; i++)
-    {
-        inter_node_left.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy-1+i],zi[iz]);
-        inter_node_left.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy-1+i],zi[iz]);
-    }
-    
     inter_node_left.coord.x_value = xi[ix];
     inter_node_left.coord.y_value = ex.Gamma_y(xi[ix],yi[iy],yi[iy+1],zi[iz]);
     inter_node_left.coord.z_value = zi[iz];
@@ -629,6 +604,9 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_left.jump.u_dir = 0;
     inter_node_left.jump.err = 0;
     
+    inter_node_left.diffcoef.inside = beta.Inside(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
+    inter_node_left.diffcoef.outside = beta.Outside(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
+    
     inter_node_left.local.normal = ex.normal(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
     
     Pmatrix_Setup_y(inter_node_left);
@@ -644,15 +622,6 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     {
         inter_node_right.err.errr[i] = 0;
         inter_node_right.err.errl[i] = 0;
-    }
-    
-    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
-    inter_node_right.diffcoef.inside.resize(5);
-    inter_node_right.diffcoef.outside.resize(5);
-    for(int i = 0; i < 5; i++)
-    {
-        inter_node_right.diffcoef.inside[i] = beta.Inside(xi[ix],yi[iy-2+i],zi[iz]);
-        inter_node_right.diffcoef.outside[i] = beta.Outside(xi[ix],yi[iy-2+i],zi[iz]);
     }
     
     inter_node_right.coord.x_value = xi[ix];
@@ -672,6 +641,9 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_right.jump.u_tau = 0;
     inter_node_right.jump.u_dir = 0;
     inter_node_right.jump.err = 0;
+    
+    inter_node_right.diffcoef.inside = beta.Inside(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
+    inter_node_right.diffcoef.outside = beta.Outside(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
     
     inter_node_right.local.normal = ex.normal(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
     
@@ -704,15 +676,6 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
         inter_node_left.err.errl[i] = 0;
     }
     
-    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
-    inter_node_left.diffcoef.inside.resize(5);
-    inter_node_left.diffcoef.outside.resize(5);
-    for(int i = 0; i < 5; i++)
-    {
-        inter_node_left.diffcoef.inside[i] = beta.Inside(xi[ix-1+i],yi[iy],zi[iz]);
-        inter_node_left.diffcoef.outside[i] = beta.Outside(xi[ix-1+i],yi[iy],zi[iz]);
-    }
-    
     inter_node_left.coord.x_value = ex.Gamma_x(xi[ix],xi[ix+1],yi[iy],zi[iz]);
     inter_node_left.coord.y_value = yi[iy];
     inter_node_left.coord.z_value = zi[iz];
@@ -731,6 +694,9 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_left.jump.u_dir = 0;
     inter_node_left.jump.err = 0;
     
+    inter_node_left.diffcoef.inside = beta.Inside(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
+    inter_node_left.diffcoef.outside = beta.Outside(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
+    
     inter_node_left.local.normal = ex.normal(inter_node_left.coord.x_value, inter_node_left.coord.y_value, inter_node_left.coord.z_value);
     
     Pmatrix_Setup_x(inter_node_left);
@@ -746,15 +712,6 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     {
         inter_node_right.err.errr[i] = 0;
         inter_node_right.err.errl[i] = 0;
-    }
-    
-    //Only consider 2nd order of accuracy in if any corner points presents, otherwise, this function will not be called
-    inter_node_right.diffcoef.inside.resize(5);
-    inter_node_right.diffcoef.outside.resize(5);
-    for(int i = 0; i < 5; i++)
-    {
-        inter_node_right.diffcoef.inside[i] = beta.Inside(xi[ix-2+i],yi[iy],zi[iz]);
-        inter_node_right.diffcoef.outside[i] = beta.Outside(xi[ix-2+i],yi[iy],zi[iz]);
     }
     
     inter_node_right.coord.x_value = ex.Gamma_x(xi[ix+1],xi[ix+2],yi[iy],zi[iz]);
@@ -775,6 +732,9 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
     inter_node_right.jump.u_dir = 0;
     inter_node_right.jump.err = 0;
     
+    inter_node_right.diffcoef.inside = beta.Inside(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
+    inter_node_right.diffcoef.outside = beta.Outside(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
+    
     inter_node_right.local.normal = ex.normal(inter_node_right.coord.x_value, inter_node_right.coord.y_value, inter_node_right.coord.z_value);
     
     Pmatrix_Setup_x(inter_node_right);
@@ -785,7 +745,7 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz, Surface_Cartesia
 /*************************************************************************************************
  Initialize intersection nodes(both irregular and corner) calculated fictitious points' weights
  *************************************************************************************************/
-void Intersections::Setup_MIB(Beta& beta)
+void Intersections::Setup_MIB_L2(Beta& beta)
 {
     Intersection_Data inter_node;
     int ip;
@@ -800,12 +760,12 @@ void Intersections::Setup_MIB(Beta& beta)
             {
                 if(ifpz[ix][iy][ip].ID > 0)
                 {
-                    Irregular_MIB(ifpz[ix][iy][ip],beta,dz);
+                    Irregular_MIB_L2(ifpz[ix][iy][ip],beta,dz);
                     ip += 1;
                 }
                 else if(ifpz[ix][iy][ip].ID < 0)
                 {
-                    Corner_MIB_2nd(ifpz[ix][iy][ip],ifpz[ix][iy][ip+1],beta,dz);
+                    Corner_MIB_L2_2nd(ifpz[ix][iy][ip],ifpz[ix][iy][ip+1],beta,dz);
                     ip += 2;
                 }
                 else
@@ -827,12 +787,12 @@ void Intersections::Setup_MIB(Beta& beta)
             {
                 if(ifpy[ix][iz][ip].ID > 0)
                 {
-                    Irregular_MIB(ifpy[ix][iz][ip],beta,dy);
+                    Irregular_MIB_L2(ifpy[ix][iz][ip],beta,dy);
                     ip += 1;
                 }
                 else if(ifpy[ix][iz][ip].ID < 0)
                 {
-                    Corner_MIB_2nd(ifpy[ix][iz][ip],ifpy[ix][iz][ip+1],beta,dy);
+                    Corner_MIB_L2_2nd(ifpy[ix][iz][ip],ifpy[ix][iz][ip+1],beta,dy);
                     ip += 2;
                 }
                 else
@@ -854,12 +814,13 @@ void Intersections::Setup_MIB(Beta& beta)
             {
                 if(ifpx[iy][iz][ip].ID > 0)
                 {
-                    Irregular_MIB(ifpx[iy][iz][ip],beta,dx);
+                    Irregular_MIB_L2(ifpx[iy][iz][ip],beta,dx);
                     ip += 1;
                 }
                 else if(ifpx[iy][iz][ip].ID < 0)
                 {
-                    Corner_MIB_2nd(ifpx[iy][iz][ip],ifpx[iy][iz][ip+1],beta,dx);
+
+                    Corner_MIB_L2_2nd(ifpx[iy][iz][ip],ifpx[iy][iz][ip+1],beta,dx);
                     ip += 2;
                 }
                 else
@@ -872,6 +833,393 @@ void Intersections::Setup_MIB(Beta& beta)
     }
 }
 
+/*************************************************************************************************
+ Initialize intersection nodes(both irregular and corner) calculated fictitious points' weights
+ *************************************************************************************************/
+void Intersections::Setup_MIB_L1(Beta& beta)
+{
+    Intersection_Data inter_node;
+    int ip;
+    
+    //Z-direction
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iy = 1; iy < ny-1; iy++)
+        {
+            ip = 0;
+            while(ip < ifpz[ix][iy].size())
+            {
+                if(ifpz[ix][iy][ip].ID > 0)
+                {
+                    Irregular_MIB_L1(ifpz[ix][iy][ip],beta,dz);
+                    ip += 1;
+                }
+                else if(ifpz[ix][iy][ip].ID < 0)
+                {
+                    Corner_MIB_L1(ifpz[ix][iy][ip],ifpz[ix][iy][ip+1],beta,dz);
+                    ip += 2;
+                }
+                else
+                {
+                    cout << "Wrong value for interface node ID in Z-direction" << endl;
+                    exit(0);
+                }
+            }
+        }
+    }
+    
+    //Y-direction
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iz = 1; iz < nz-1; iz++)
+        {
+            ip = 0;
+            while(ip < ifpy[ix][iz].size())
+            {
+                if(ifpy[ix][iz][ip].ID > 0)
+                {
+                    Irregular_MIB_L1(ifpy[ix][iz][ip],beta,dy);
+                    ip += 1;
+                }
+                else if(ifpy[ix][iz][ip].ID < 0)
+                {
+                    Corner_MIB_L1(ifpy[ix][iz][ip],ifpy[ix][iz][ip+1],beta,dy);
+                    ip += 2;
+                }
+                else
+                {
+                    cout << "Wrong value for interface node ID in Y-direction" << endl;
+                    exit(0);
+                }
+            }
+        }
+    }
+    
+    //X-direction
+    for(int iy = 1; iy < ny-1; iy++)
+    {
+        for(int iz = 1; iz < nz-1; iz++)
+        {
+            ip = 0;
+            while(ip < ifpx[iy][iz].size())
+            {
+                if(ifpx[iy][iz][ip].ID > 0)
+                {
+                    Irregular_MIB_L1(ifpx[iy][iz][ip],beta,dx);
+                    ip += 1;
+                }
+                else if(ifpx[iy][iz][ip].ID < 0)
+                {
+                    Corner_MIB_L1(ifpx[iy][iz][ip],ifpx[iy][iz][ip+1],beta,dx);
+                    ip += 2;
+                }
+                else
+                {
+                    cout << "Wrong value for interface node ID in X-direction" << endl;
+                    exit(0);
+                }
+            }
+        }
+    }
+}
+
+/***************************************************************************************
+ Core MIB algorithm, solve fictitious points by pairs
+ 
+ INPUT
+ inter_node     : intersection node struct
+ dv             : grid mesh size at given direction
+ beta           : diffusion coefficient
+ 
+ OUTPUT
+ x : vector of weights for a pair of fictitious points
+ ****************************************************************************************/
+void Intersections::MIB_L1(Intersection_Data& inter_node, Beta& beta, Doub_I dv, VecDoub_I& x)
+{
+    MatrixDoub A,wei,temp;
+    VecDoub B,v;
+    int order,dev_order,oneside_pts,total_unknowns,onefp_unknowns;
+    double coefl,coefr;                               //diffusion coefficients along interface
+    
+    onefp_unknowns = 4;                               //unknowns for one fictitious point need to be solved
+    total_unknowns = 2*onefp_unknowns;                //total unknowns need to be solved
+    oneside_pts = 2;                                  //numbers of real points used for one fictitous point
+    dev_order = 1;                                    //highest order of derivative in two equations
+    
+    //Matrix Initialization
+    B.resize(total_unknowns);
+    A.resize(total_unknowns);
+    for(int i = 0; i < total_unknowns; i++)
+    {
+        A[i].resize(total_unknowns);
+    }
+    for(int i = 0; i < total_unknowns; i++)
+    {
+        B[i] = 0;
+        for(int j = 0; j < total_unknowns; j++)
+        {
+            A[i][j] = 0;
+        }
+    }
+    
+    //Weights Initialization
+    v.resize(oneside_pts);
+    v[0] = 0;
+    v[1] = dv;
+    
+    temp.resize(oneside_pts);
+    for(int i = 0; i < oneside_pts; i++)
+    {
+        temp[i].resize(dev_order+1);
+    }
+    
+    Weights(inter_node.gamma,v,oneside_pts,dev_order,temp);
+    
+    wei.resize(dev_order+1);
+    for(int i = 0; i < dev_order+1; i++)
+    {
+        wei[i].resize(oneside_pts);
+    }
+    
+    for(int i = 0; i < dev_order+1; i++)
+    {
+        for(int j = 0; j < oneside_pts; j++)
+        {
+            wei[i][j] = temp[j][i];
+        }
+    }
+
+    //MIB core algorithm
+    //Zero order: U^{-} = U^{+} -[U]
+    order = 0;
+    
+    //All real points weight
+    B[0] = -wei[order][0];
+    B[1] =  wei[order][1];
+    
+    //Two FP weight
+    for(int i = 0; i < onefp_unknowns; i++)
+    {
+        A[i][i]                = -wei[order][0];                   //Left FP
+        A[i][onefp_unknowns+i] =  wei[order][1];                   //Right FP
+    }
+    
+    if(abs(inter_node.ID)%2 == 0)                   //"-" => "+", U^{-} = U^{+} - [U], F = G - [U]
+    {
+        B[onefp_unknowns-2] += -1;
+    }
+    else                                            //"+" => "-", U^{-} = U^{+} - [U], G + [U] = F
+    {
+        B[onefp_unknowns-2] += 1;
+    }
+    
+    //First order: BETA^{-}*U_{x} ^{-} = BETA^{+}*U_{x}^{+} - [BETA U_{x}]
+    order = 1;
+    
+    if(abs(inter_node.ID)%2 == 0)                   //"-" => "+", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], F = G - [BETA U_{X}]
+    {
+        coefr = inter_node.diffcoef.inside;
+        coefl = inter_node.diffcoef.outside;
+    }
+    else                                           //"+" => "-", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], G + [BETA U_{X}] = F
+    {
+        coefr = inter_node.diffcoef.outside;
+        coefl = inter_node.diffcoef.inside;
+    }
+    
+    //All real points weight
+    B[onefp_unknowns+0] = -wei[order][0]*coefr;
+    B[onefp_unknowns+1] =  wei[order][1]*coefl;
+    
+    //Two FP weight
+    for(int i = 0; i < onefp_unknowns; i++)
+    {
+        A[onefp_unknowns+i][i]                = -wei[order][0]*coefl;               //Left FP
+        A[onefp_unknowns+i][onefp_unknowns+i] =  wei[order][1]*coefr;               //Right FP
+    }
+    
+    if(abs(inter_node.ID)%2 == 0)                   //"-" => "+", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], F = G - [BETA U_{X}]
+    {
+        B[total_unknowns-1] += -1;
+    }
+    else                                            //"+" => "-", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], G + [BETA U_{X}] = F
+    {
+        B[total_unknowns-1] += 1;
+    }
+    
+    //Using LU decomposition to solve Ax = B
+    LU lu_dcmp(A);
+    lu_dcmp.solve(B,x);
+
+    //Singular matrix checking
+    if(abs(lu_dcmp.det()) < TOL_SETUP)
+    {
+        cout << "Warning: when solving IRREGULAR interface, A is a singular matrix locate at: X = "
+        << inter_node.coord.x_value << " Y = " << inter_node.coord.y_value
+        << " Z = " << inter_node.coord.z_value << endl;
+        
+        cout << "Determinant of A: " << lu_dcmp.det() << endl;
+        
+        for(int i = 0; i < total_unknowns; i++)
+        {
+            double sum = 0;
+            
+            for(int j = 0; j < total_unknowns; j++)
+            {
+                sum = sum + A[i][j]*x[j];
+            }
+            
+            if(abs(B[i]-sum) > TOL_SETUP)
+            {
+                cout << "B[" << i << "] approximation error: " << abs(B[i]-sum) << endl;
+                
+            }
+        }
+        cout << endl;
+    }
+}
+
+/******************************************************************************
+ Calculate corner fictitous points' weights
+ 
+ INPUT
+ inter_node_left  : left interseciton node
+ inter_node_right : right intersection node
+ dv               : grid mesh size
+ ******************************************************************************/
+void Intersections::Irregular_MIB_L1(Intersection_Data& inter_node, Beta& beta, Doub_I dv)
+{
+    VecDoub x;
+    int onefp_unknowns;
+    
+    onefp_unknowns = 4;
+    
+    x.resize(8);
+    
+    inter_node.wei.weil.resize(1);
+    inter_node.wei.weir.resize(1);
+    for(int i = 0; i < 1; i++)
+    {
+        inter_node.wei.weil[i].resize(6);
+        inter_node.wei.weir[i].resize(6);
+    }
+    
+    for(int i = 0; i < 1; i++)
+    {
+        for(int j = 0; j < 6; j++)
+        {
+            inter_node.wei.weil[i][j] = 0;
+            inter_node.wei.weir[i][j] = 0;
+        }
+    }
+    
+    for(int i = 0; i < 8; i++)
+    {
+        x[i] = 0;
+    }
+    
+    MIB_L1(inter_node,beta,dv,x);
+
+    //Reform to output structure
+    for(int i = 0; i < 1; i++)
+    {
+        inter_node.wei.weil[i][1] = x[0];
+        inter_node.wei.weil[i][2] = x[1];
+        inter_node.wei.weil[i][4] = x[2];
+        inter_node.wei.weil[i][5] = x[3];
+        
+        inter_node.wei.weir[i][1] = x[onefp_unknowns+0];
+        inter_node.wei.weir[i][2] = x[onefp_unknowns+1];
+        inter_node.wei.weir[i][4] = x[onefp_unknowns+2];
+        inter_node.wei.weir[i][5] = x[onefp_unknowns+3];
+    }
+}
+
+/******************************************************************************
+ Calculate corner fictitous points' weights
+ 
+ INPUT
+ inter_node_left  : left interseciton node
+ inter_node_right : right intersection node
+ dv               : grid mesh size
+ ******************************************************************************/
+void Intersections::Corner_MIB_L1(Intersection_Data& inter_node_left, Intersection_Data& inter_node_right, Beta& beta, Doub_I dv)
+{
+    VecDoub x;
+    int onefp_unknowns;
+    
+    onefp_unknowns = 4;
+    
+    x.resize(8);
+    
+    inter_node_left.wei.weil.resize(1);
+    inter_node_left.wei.weir.resize(1);
+    inter_node_right.wei.weil.resize(1);
+    inter_node_right.wei.weir.resize(1);
+    for(int i = 0; i < 1; i++)
+    {
+        inter_node_left.wei.weil[i].resize(9);
+        inter_node_left.wei.weir[i].resize(9);
+        inter_node_right.wei.weil[i].resize(9);
+        inter_node_right.wei.weir[i].resize(9);
+    }
+    
+    for(int i = 0; i < 1; i++)
+    {
+        for(int j = 0; j < 9; j++)
+        {
+            inter_node_right.wei.weil[i][j] = 0;
+            inter_node_right.wei.weir[i][j] = 0;
+            inter_node_left.wei.weil[i][j] = 0;
+            inter_node_left.wei.weir[i][j] = 0;
+        }
+    }
+    
+    //For left interface
+    for(int i = 0; i < 8; i++)
+    {
+        x[i] = 0;
+    }
+    
+    MIB_L1(inter_node_left,beta,dv,x);
+    
+    //Reform to output structure
+    for(int i = 0; i < 1; i++)
+    {
+        inter_node_left.wei.weil[i][1] = x[0];
+        inter_node_left.wei.weil[i][2] = x[1];
+        inter_node_left.wei.weil[i][5] = x[2];
+        inter_node_left.wei.weil[i][6] = x[3];
+        
+        inter_node_left.wei.weir[i][1] = x[onefp_unknowns+0];
+        inter_node_left.wei.weir[i][2] = x[onefp_unknowns+1];
+        inter_node_left.wei.weir[i][5] = x[onefp_unknowns+2];
+        inter_node_left.wei.weir[i][6] = x[onefp_unknowns+3];
+    }
+    
+    //For right interface
+    for(int i = 0; i < 8; i++)
+    {
+        x[i] = 0;
+    }
+    
+    MIB_L1(inter_node_right,beta,dv,x);
+    
+    //Reform to output structure
+    for(int i = 0; i < 1; i++)
+    {
+        inter_node_right.wei.weil[i][2] = x[0];
+        inter_node_right.wei.weil[i][3] = x[1];
+        inter_node_right.wei.weil[i][7] = x[2];
+        inter_node_right.wei.weil[i][8] = x[3];
+        
+        inter_node_right.wei.weir[i][2] = x[onefp_unknowns+0];
+        inter_node_right.wei.weir[i][3] = x[onefp_unknowns+1];
+        inter_node_right.wei.weir[i][7] = x[onefp_unknowns+2];
+        inter_node_right.wei.weir[i][8] = x[onefp_unknowns+3];
+    }
+}
+
 /***************************************************************************
  Recursive MIB weights calculation function
  
@@ -879,7 +1227,7 @@ void Intersections::Setup_MIB(Beta& beta)
  inter_node : intersection node struct
  dv         : grid mesh size at given direction
  ***************************************************************************/
-void Intersections::Irregular_MIB(Intersection_Data& inter_node, Beta& beta, Doub_I dv)
+void Intersections::Irregular_MIB_L2(Intersection_Data& inter_node, Beta& beta, Doub_I dv)
 {
     VecDoub x;
     int onefp_unknowns,stlength,fpno;
@@ -904,8 +1252,8 @@ void Intersections::Irregular_MIB(Intersection_Data& inter_node, Beta& beta, Dou
         {
             x[j] = 0;
         }
-        
-        Irregular_MIB_Recursive(inter_node,beta,dv,onefp_unknowns,stlength,x);
+    
+        Irregular_MIB_L2_Recursive(inter_node,beta,dv,onefp_unknowns,stlength,x);
         
         for(int j = 0; j < onefp_unknowns; j++)
         {
@@ -929,13 +1277,13 @@ void Intersections::Irregular_MIB(Intersection_Data& inter_node, Beta& beta, Dou
  OUTPUT
  x : vector of weights for a pair of fictitious points
  ****************************************************************************************/
-void Intersections::Irregular_MIB_Recursive(Intersection_Data& inter_node, Beta& beta, Doub_I dv, Int_I onefp_unknowns, Int_I stlength, VecDoub_O& x)
+void Intersections::Irregular_MIB_L2_Recursive(Intersection_Data& inter_node, Beta& beta, Doub_I dv, Int_I onefp_unknowns, Int_I stlength, VecDoub_O& x)
 {
     MatrixDoub A,weil,weir;
-    VecDoub coefl,coefr;                              //diffusion coefficients copied from intersection information
     VecDoub B;
     int order;
     int dev_order,total_unknowns,oneside_pts;
+    double coefl,coefr;                               //diffusion coefficients along interface
     
     total_unknowns = 2*onefp_unknowns;                //total unknowns need to be solved
     oneside_pts = accuracy;                           //numbers of real points used for one fictitous point
@@ -1003,45 +1351,36 @@ void Intersections::Irregular_MIB_Recursive(Intersection_Data& inter_node, Beta&
     //First order: BETA^{-}*U_{x} ^{-} = BETA^{+}*U_{x}^{+} - [BETA U_{x}]
     order = 1;
     
-    coefr.resize((int)inter_node.diffcoef.inside.size());
-    coefl.resize((int)inter_node.diffcoef.outside.size());
-    
     if(abs(inter_node.ID)%2 == 0)                   //"-" => "+", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], F = G - [BETA U_{X}]
     {
-        for(int i = 0; i < (int)inter_node.diffcoef.inside.size(); i++)
-        {
-            coefr[i] = inter_node.diffcoef.inside[i];
-            coefl[i] = inter_node.diffcoef.outside[i];
-        }
+        coefr = inter_node.diffcoef.inside;
+        coefl = inter_node.diffcoef.outside;
     }
     else                                           //"+" => "-", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], G + [BETA U_{X}] = F
     {
-        for(int i = 0; i < (int)inter_node.diffcoef.inside.size(); i++)
-        {
-            coefr[i] = inter_node.diffcoef.outside[i];
-            coefl[i] = inter_node.diffcoef.inside[i];
-        }
+        coefr = inter_node.diffcoef.outside;
+        coefl = inter_node.diffcoef.inside;
     }
     //All real points weight
     for(int i = 0; i < oneside_pts; i++)
     {
-        B[onefp_unknowns+i] += -weir[order][i]*coefr[i];                                                           //Right FP
-        B[onefp_unknowns+oneside_pts+i] += weil[order][stlength-oneside_pts+i]*coefl[oneside_pts+i];               //Left FP
+        B[onefp_unknowns+i] += -weir[order][i]*coefr;                                               //Right FP
+        B[onefp_unknowns+oneside_pts+i] += weil[order][stlength-oneside_pts+i]*coefl;               //Left FP
     }
     //All calculated fictitious points weight
     for(int i = 0; i < stlength-oneside_pts-1; i++)
     {
         for(int j = 0; j < onefp_unknowns; j++)
         {
-            B[onefp_unknowns+j] += -weir[order][oneside_pts+i]*coefr[oneside_pts+i]*inter_node.wei.weir[i][j];                                //Right FP
-            B[onefp_unknowns+j] += weil[order][stlength-oneside_pts-1-i]*coefl[stlength-oneside_pts-1-i]*inter_node.wei.weil[i][j];           //Left FP
+            B[onefp_unknowns+j] += -weir[order][oneside_pts+i]*coefr*inter_node.wei.weir[i][j];                     //Right FP
+            B[onefp_unknowns+j] += weil[order][stlength-oneside_pts-1-i]*coefl*inter_node.wei.weil[i][j];           //Left FP
         }
     }
     //Two fictitious points weight
     for(int i = 0; i < onefp_unknowns; i++)
     {
-        A[onefp_unknowns+i][onefp_unknowns+i] = weir[order][stlength-1]*coefr[stlength-1];                //Right FP
-        A[onefp_unknowns+i][i] = -weil[order][0]*coefl[accuracy*2-stlength];                              //Left FP
+        A[onefp_unknowns+i][onefp_unknowns+i] = weir[order][stlength-1]*coefr;          //Right FP
+        A[onefp_unknowns+i][i] = -weil[order][0]*coefl;                                 //Left FP
     }
     if(abs(inter_node.ID)%2 == 0)                   //"-" => "+", BETA^{-}U_{X}^{-} = BETA^{+}U_{X}^{+} - [BETA U_{X}], F = G - [BETA U_{X}]
     {
@@ -1169,11 +1508,11 @@ void Intersections::Get_irr_weights(Doub_I gamma, Doub_I dv, Int_I oneside_pts, 
  inter_node_right : right intersection node
  dv               : grid mesh size
  ******************************************************************************/
-void Intersections::Corner_MIB_2nd(Intersection_Data& inter_node_left, Intersection_Data& inter_node_right, Beta& beta, Doub_I dv)
+void Intersections::Corner_MIB_L2_2nd(Intersection_Data& inter_node_left, Intersection_Data& inter_node_right, Beta& beta, Doub_I dv)
 {
     MatrixDoub A, left_wei_out, left_wei_in, right_wei_out, right_wei_in;
-    VecDoub coef_out, coef_in;
     VecDoub B, x;
+    double coef_out, coef_in;
     int order;
     int fictitouspts_no, oneside_unknowns, total_unknowns, dev_order, stlength;
     
@@ -1239,43 +1578,34 @@ void Intersections::Corner_MIB_2nd(Intersection_Data& inter_node_left, Intersect
     //First order: BETA^{-}*U_{x} ^{-} = BETA^{+}*U_{x}^{+} - [BETA U_{x}]
     order = 1;
     
-    coef_in.resize((int)inter_node_left.diffcoef.inside.size());
-    coef_out.resize((int)inter_node_left.diffcoef.inside.size());
-    
     if(abs(inter_node_left.ID)%2 == 0)              //"-" => "+" => "-"
     {
-        for(int i = 0; i < (int)inter_node_left.diffcoef.inside.size(); i++)
-        {
-            coef_in[i] = inter_node_left.diffcoef.outside[i];
-            coef_out[i] = inter_node_left.diffcoef.inside[i];
-        }
+        coef_in = inter_node_left.diffcoef.outside;
+        coef_out = inter_node_left.diffcoef.inside;
     }
     else                                           //"+" => "-" => "+"
     {
-        for(int i = 0; i < (int)inter_node_left.diffcoef.inside.size(); i++)
-        {
-            coef_in[i] = inter_node_left.diffcoef.inside[i];
-            coef_out[i] = inter_node_left.diffcoef.outside[i];
-        }
+        coef_in = inter_node_left.diffcoef.inside;
+        coef_out = inter_node_left.diffcoef.outside;
     }
     
-    B[oneside_unknowns+0] = -left_wei_out[order][0]*coef_out[0];             //GP at ix-1
-    B[oneside_unknowns+1] = -left_wei_out[order][1]*coef_out[1];             //GP at ix
-    B[oneside_unknowns+2] =  left_wei_in[order][1]*coef_in[2];               //GP at ix+1
-    B[oneside_unknowns+3] = -left_wei_out[order][3]*coef_out[3];             //GP at ix+2
+    B[oneside_unknowns+0] = -left_wei_out[order][0]*coef_out;             //GP at ix-1
+    B[oneside_unknowns+1] = -left_wei_out[order][1]*coef_out;             //GP at ix
+    B[oneside_unknowns+2] =  left_wei_in[order][1]*coef_in;               //GP at ix+1
+    B[oneside_unknowns+3] = -left_wei_out[order][3]*coef_out;             //GP at ix+2
     for(int i = 0; i < oneside_unknowns; i++)
     {
-        A[oneside_unknowns+i][i] = -left_wei_in[order][0]*coef_in[1];                       //1st FP, at ix
-        A[oneside_unknowns+i][oneside_unknowns+i] = left_wei_out[order][2]*coef_out[2];     //2nd FP, at ix+1
-        A[oneside_unknowns+i][oneside_unknowns*2+i] = -left_wei_in[order][2]*coef_in[3];    //3rd FP, at ix+2
+        A[oneside_unknowns+i][i] = -left_wei_in[order][0]*coef_in;                       //1st FP, at ix
+        A[oneside_unknowns+i][oneside_unknowns+i] = left_wei_out[order][2]*coef_out;     //2nd FP, at ix+1
+        A[oneside_unknowns+i][oneside_unknowns*2+i] = -left_wei_in[order][2]*coef_in;    //3rd FP, at ix+2
         //4th FP, at ix-1 or ix+3
         if((dv-inter_node_left.gamma) > inter_node_right.gamma)                             //4th FP, at ix-1
         {
-            A[oneside_unknowns+i][oneside_unknowns*3+i] = -left_wei_in[order][3]*coef_in[0];
+            A[oneside_unknowns+i][oneside_unknowns*3+i] = -left_wei_in[order][3]*coef_in;
         }
         else                                                                                 //4th FP, at ix+3
         {
-            A[oneside_unknowns+i][oneside_unknowns*3+i] = -left_wei_in[order][3]*coef_in[4];
+            A[oneside_unknowns+i][oneside_unknowns*3+i] = -left_wei_in[order][3]*coef_in;
         }
     }
     if(abs(inter_node_left.ID)%2 == 0)       //"-" => "+" => "-"
@@ -1314,38 +1644,32 @@ void Intersections::Corner_MIB_2nd(Intersection_Data& inter_node_left, Intersect
     order = 1;
     if(abs(inter_node_left.ID)%2 == 0)              //"-" => "+" => "-"
     {
-        for(int i = 0; i < (int)inter_node_right.diffcoef.inside.size(); i++)
-        {
-            coef_in[i] = inter_node_right.diffcoef.outside[i];
-            coef_out[i] = inter_node_right.diffcoef.inside[i];
-        }
+        coef_in = inter_node_right.diffcoef.outside;
+        coef_out = inter_node_right.diffcoef.inside;
     }
     else                                            //"+" => "-" => "+"
     {
-        for(int i = 0; i < (int)inter_node_right.diffcoef.inside.size(); i++)
-        {
-            coef_in[i] = inter_node_right.diffcoef.inside[i];
-            coef_out[i] = inter_node_right.diffcoef.outside[i];
-        }
+        coef_in = inter_node_right.diffcoef.inside;
+        coef_out = inter_node_right.diffcoef.outside;
     }
     
-    B[oneside_unknowns*3+1] = -right_wei_out[order][0]*coef_out[1];            //GP at ix
-    B[oneside_unknowns*3+2] =  right_wei_in[order][1]*coef_in[2];              //GP at ix+1
-    B[oneside_unknowns*3+3] = -right_wei_out[order][2]*coef_out[3];            //GP at ix+2
-    B[oneside_unknowns*3+4] = -right_wei_out[order][3]*coef_out[4];            //GP at ix+3
+    B[oneside_unknowns*3+1] = -right_wei_out[order][0]*coef_out;            //GP at ix
+    B[oneside_unknowns*3+2] =  right_wei_in[order][1]*coef_in;              //GP at ix+1
+    B[oneside_unknowns*3+3] = -right_wei_out[order][2]*coef_out;            //GP at ix+2
+    B[oneside_unknowns*3+4] = -right_wei_out[order][3]*coef_out;            //GP at ix+3
     for(int i = 0; i < oneside_unknowns; i++)
     {
-        A[oneside_unknowns*3+i][i] = -right_wei_in[order][0]*coef_in[1];                       //1st FP, at ix
-        A[oneside_unknowns*3+i][oneside_unknowns+i] = right_wei_out[order][1]*coef_out[2];     //2nd FP, at ix+1
-        A[oneside_unknowns*3+i][oneside_unknowns*2+i] = -right_wei_in[order][2]*coef_in[3];    //3rd FP, at ix+2
+        A[oneside_unknowns*3+i][i] = -right_wei_in[order][0]*coef_in;                       //1st FP, at ix
+        A[oneside_unknowns*3+i][oneside_unknowns+i] = right_wei_out[order][1]*coef_out;     //2nd FP, at ix+1
+        A[oneside_unknowns*3+i][oneside_unknowns*2+i] = -right_wei_in[order][2]*coef_in;    //3rd FP, at ix+2
         //4th FP, at ix-1 or ix+3
         if((dv-inter_node_left.gamma) > inter_node_right.gamma)                                //4th FP, at ix-1
         {
-            A[oneside_unknowns*3+i][oneside_unknowns*3+i] = -right_wei_in[order][3]*coef_in[0];
+            A[oneside_unknowns*3+i][oneside_unknowns*3+i] = -right_wei_in[order][3]*coef_in;
         }
         else                                                                                    //4th FP, at ix+3
         {
-            A[oneside_unknowns*3+i][oneside_unknowns*3+i] = -right_wei_in[order][3]*coef_in[4];
+            A[oneside_unknowns*3+i][oneside_unknowns*3+i] = -right_wei_in[order][3]*coef_in;
         }
     }
     if(abs(inter_node_left.ID)%2 == 0)       //"-" => "+" => "-"
@@ -4657,7 +4981,8 @@ void Intersections::Intersection_display(Intersection_Data inter_node, int ind)
      }
      }
      cout << endl;
-     
+     */
+    
      cout << "Error left: " << endl;
      for(int i = 0; i < inter_node.err.errr.size(); i++)
      {
@@ -4669,13 +4994,9 @@ void Intersections::Intersection_display(Intersection_Data inter_node, int ind)
      cout << i << ": " << inter_node.err.errr[i] << endl;
      }
      cout << endl;
-     
-     cout << "Jumps approximation relative error: " << inter_node.jump.err << endl;
-     cout << endl;
-     */
+
     
-    
-    
+    /*
     if(abs(inter_node.jump.err) > 0.5)
     {
         cout << endl;
@@ -4687,6 +5008,7 @@ void Intersections::Intersection_display(Intersection_Data inter_node, int ind)
         cout << "Tau_error" << endl;
         cout << inter_node.jump.tau_err << endl;
     }
+     */
     
     
     /*

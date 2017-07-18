@@ -4,7 +4,7 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>MADI_3D.xcscheme</key>
+		<key>MIB_3D.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
@@ -12,7 +12,7 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>B6FEE5201D89BCE600D31D5F</key>
+		<key>B60AFC261F1E83260037A976</key>
 		<dict>
 			<key>primary</key>
 			<true/>
