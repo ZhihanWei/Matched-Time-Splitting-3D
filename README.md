@@ -1,5 +1,3 @@
-# Matched-ADI-3D(Variable coefficients)
-
 # README
 
 ## Project Name
