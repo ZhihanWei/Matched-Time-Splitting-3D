@@ -11,6 +11,7 @@
 #include "Intersections.h"
 #include "Douglas_ADI.h"
 #include "LOD.h"
+#include "TS.h"
 //User-defined surfaces
 #include "Surface_Cube.h"
 #include "Surface_Ellipsoid.h"
@@ -43,6 +44,8 @@ void ADI_Starting(Int_I, Int_I, Beta&, Mesh&, Intersections&, VecDoub_I&, CubicD
 void ADI_Solver(Int_I, Int_I, Beta&, Mesh&, Intersections&, Douglas_ADI&, VecDoub_I&, CubicDoub_I&, ofstream&);
 void LOD_Starting(Int_I, Beta&, Mesh&, Intersections&, VecDoub_I&, CubicDoub_I&, ofstream&);
 void LOD_Solver(Int_I, Beta&, Mesh&, Intersections&, LOD&, VecDoub_I&, CubicDoub_I&, ofstream&);
+void TS_Starting(Int_I, Beta&, Mesh&, Intersections&, VecDoub_I&, CubicDoub_I&, ofstream&);
+void TS_Solver(Int_I, Beta&, Mesh&, Intersections&, TS&, VecDoub_I&, CubicDoub_I&, ofstream&);
 void Write_txt(Intersections&, Mesh&, Beta&, CubicDoub_I&, Int_I, Doub_I, Int_I);
 
 int main(int argc, char* argv[])
@@ -230,6 +233,10 @@ int main(int argc, char* argv[])
             {
                 LOD_Starting(equation,beta,mesh,inter,running_time,uh,out_file);
             }
+            else if(method == 'T')
+            {
+                TS_Starting(equation,beta,mesh,inter,running_time,uh,out_file);
+            }
             else
             {
                 cout << "Currently, only LOD and Douglas-ADI are applied" << endl;
@@ -349,7 +356,7 @@ void ADI_Solver(Int_I equation, Int_I accruacy, Beta& beta, Mesh& mesh, Intersec
     int loop;
     Equation *eq_dt_ptr;
     
-    out_file << "-------------------- Error of Matched ADI --------------------" << endl;
+    out_file << "-------------------- Error of Douglas-ADI with MIB --------------------" << endl;
     tnow = time[0];
     dt = time[2];
     
@@ -507,7 +514,7 @@ void LOD_Starting(Int_I equation, Beta& beta, Mesh& mesh, Intersections& inter, 
  equation : code of equation need to be used here
  mesh     : mesh object
  inter    : object of all intersection nodes
- adi      : adi object
+ lod      : lod object
  time     : vector of 3 double values represent beginning time, finishing time and time step
  beta     : vector of 2 double values represent beta^{-} and beta^{+}
  uh       : three dimensional uninitialized solution
@@ -518,7 +525,7 @@ void LOD_Solver(Int_I equation, Beta& beta, Mesh& mesh, Intersections& inter, LO
     int loop;
     Equation *eq_dt_ptr;
     
-    out_file << "-------------------- Error of Matched ADI --------------------" << endl;
+    out_file << "-------------------- Error of LOD with MIB--------------------" << endl;
     tnow = time[0];
     dt = time[2];
     
@@ -593,6 +600,209 @@ void LOD_Solver(Int_I equation, Beta& beta, Mesh& mesh, Intersections& inter, LO
         inter.Error_Jump(out_file);
         
         lod.Error(eq_now,uh,out_file);
+    }
+}
+
+/*********************************************************************************************
+ Initialization of starting solution and do iterations
+ 
+ INPUT
+ equation : code of equation need to be used here
+ mesh     : mesh object
+ diffcoef : diffusion coefficient object representing beta^{-} and beta^{+}
+ inter    : object of all intersection nodes
+ time     : vector of 3 double values represent beginning time, finishing time and time step
+ uh       : three dimensional uninitialized solution
+ *********************************************************************************************/
+void TS_Starting(Int_I equation, Beta& beta, Mesh& mesh, Intersections& inter, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
+{
+    double t_start;
+    Equation *eq_ptr;
+    
+    t_start = time[0];
+    
+    if(equation == 0)
+    {
+        Eq_0 eq0(t_start,beta);
+        eq_ptr = &eq0;
+    }
+    else if(equation == 1)
+    {
+        Eq_1 eq1(t_start,beta);
+        eq_ptr = &eq1;
+    }
+    else if(equation == 2)
+    {
+        Eq_2 eq2(t_start,beta);
+        eq_ptr = &eq2;
+    }
+    else if(equation == 3)
+    {
+        Eq_3 eq3(t_start,beta);
+        eq_ptr = &eq3;
+    }
+    else if(equation == 4)
+    {
+        Eq_4 eq4(t_start,beta);
+        eq_ptr = &eq4;
+    }
+    else if(equation == 5)
+    {
+        Eq_5 eq5(t_start,beta);
+        eq_ptr = &eq5;
+    }
+    else if(equation == 6)
+    {
+        Eq_6 eq6(t_start,beta);
+        eq_ptr = &eq6;
+    }
+    else if(equation == 7)
+    {
+        Eq_7 eq7(t_start,beta);
+        eq_ptr = &eq7;
+    }
+    else
+    {
+        cout << "No of equation is not found!" << endl;
+        exit(0);
+    }
+    
+    Equation &eq = *eq_ptr;
+    
+    TS ts(inter,mesh,beta,time);
+    
+    ts.Initialization(eq,uh);
+    
+    TS_Solver(equation,beta,mesh,inter,ts,time,uh,out_file);
+}
+
+/*********************************************************************************************
+ Solve problem in Trapezoidal Splitting scheme by iterations
+ 
+ INPUT
+ equation : code of equation need to be used here
+ mesh     : mesh object
+ inter    : object of all intersection nodes
+ ts       : ts object
+ time     : vector of 3 double values represent beginning time, finishing time and time step
+ beta     : vector of 2 double values represent beta^{-} and beta^{+}
+ uh       : three dimensional uninitialized solution
+ *********************************************************************************************/
+void TS_Solver(Int_I equation, Beta& beta, Mesh& mesh, Intersections& inter, TS& ts, VecDoub_I& time, CubicDoub_I& uh, ofstream& out_file)
+{
+    double tnow, dt;
+    int loop;
+    Equation *eq_ptr, *eq_half_dt_ptr, *eq_dt_ptr;
+    
+    out_file << "-------------------- Error of Trapezoidal Splitting with MIB --------------------" << endl;
+    tnow = time[0];
+    dt = time[2];
+    
+    loop = (int)(time[1]/dt)/NPRINT;
+    
+    for(int i = 0; i < NPRINT; i++)
+    {
+        for(int j = 0; j < loop; j++)
+        {
+            tnow += dt;
+            
+            if(equation == 0)
+            {
+                Eq_0 eq0(tnow-dt,beta);
+                Eq_0 eq0_half_dt(tnow-0.5*dt,beta);
+                Eq_0 eq0_dt(tnow,beta);
+                eq_ptr = &eq0;
+                eq_half_dt_ptr = &eq0_half_dt;
+                eq_dt_ptr = &eq0_dt;
+            }
+            else if(equation == 1)
+            {
+                Eq_1 eq1(tnow-dt,beta);
+                Eq_1 eq1_half_dt(tnow-0.5*dt,beta);
+                Eq_1 eq1_dt(tnow,beta);
+                eq_ptr = &eq1;
+                eq_half_dt_ptr = &eq1_half_dt;
+                eq_dt_ptr = &eq1_dt;
+            }
+            else if(equation == 2)
+            {
+                Eq_2 eq2(tnow-dt,beta);
+                Eq_2 eq2_half_dt(tnow-0.5*dt,beta);
+                Eq_2 eq2_dt(tnow,beta);
+                eq_ptr = &eq2;
+                eq_half_dt_ptr = &eq2_half_dt;
+                eq_dt_ptr = &eq2_dt;
+            }
+            else if(equation == 3)
+            {
+                Eq_3 eq3(tnow-dt,beta);
+                Eq_3 eq3_half_dt(tnow-0.5*dt,beta);
+                Eq_3 eq3_dt(tnow,beta);
+                eq_ptr = &eq3;
+                eq_half_dt_ptr = &eq3_half_dt;
+                eq_dt_ptr = &eq3_dt;
+            }
+            else if(equation == 4)
+            {
+                Eq_4 eq4(tnow-dt,beta);
+                Eq_4 eq4_half_dt(tnow-0.5*dt,beta);
+                Eq_4 eq4_dt(tnow,beta);
+                eq_ptr = &eq4;
+                eq_half_dt_ptr = &eq4_half_dt;
+                eq_dt_ptr = &eq4_dt;
+            }
+            else if(equation == 5)
+            {
+                Eq_5 eq5(tnow-dt,beta);
+                Eq_5 eq5_half_dt(tnow-0.5*dt,beta);
+                Eq_5 eq5_dt(tnow,beta);
+                eq_ptr = &eq5;
+                eq_half_dt_ptr = &eq5_half_dt;
+                eq_dt_ptr = &eq5_dt;
+            }
+            else if(equation == 6)
+            {
+                Eq_6 eq6(tnow-dt,beta);
+                Eq_6 eq6_half_dt(tnow-0.5*dt,beta);
+                Eq_6 eq6_dt(tnow,beta);
+                eq_ptr = &eq6;
+                eq_half_dt_ptr = &eq6_half_dt;
+                eq_dt_ptr = &eq6_dt;
+            }
+            else if(equation == 7)
+            {
+                Eq_7 eq7(tnow-dt,beta);
+                Eq_7 eq7_half_dt(tnow-0.5*dt,beta);
+                Eq_7 eq7_dt(tnow,beta);
+                eq_ptr = &eq7;
+                eq_half_dt_ptr = &eq7_half_dt;
+                eq_dt_ptr = &eq7_dt;
+            }
+            else
+            {
+                cout << "No of equation is not found!" << endl;
+                exit(0);
+            }
+            
+            Equation &eq = *eq_ptr;
+            Equation &eq_half_dt = *eq_half_dt_ptr;
+            Equation &eq_dt = *eq_dt_ptr;
+            
+            ts.Solve_2nd(eq,eq_half_dt,eq_dt,inter,uh,beta);
+        }
+        
+        out_file << setprecision(1) << scientific << "T = " << tnow << endl;
+        out_file << fixed;
+        
+        Equation &eq_now = *eq_dt_ptr;
+        
+        inter.Refresh_Fp(eq_now);
+        inter.Error_Fp(out_file);
+        
+        inter.Refresh_Jump(eq_now,uh,beta);
+        inter.Error_Jump(out_file);
+        
+        ts.Error(eq_now,uh,out_file);
     }
 }
 

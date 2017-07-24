@@ -1,6 +1,6 @@
 #include <iostream>
 #include <iomanip>
-#include "LOD.h"
+#include "TS.h"
 
 /******************************************************************************************
  Constructor
@@ -12,7 +12,7 @@
  time     : vector of 3 double values represent beginning time, finishing time and time step
  accuracy : accuracy of scheme
  *******************************************************************************************/
-LOD::LOD(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time)
+TS::TS(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time)
 {
     dt = time[2];
     
@@ -31,7 +31,7 @@ LOD::LOD(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time)
 }
 
 /*********************************************************************************
- LOD solver at each time step
+ Trapezoidal Splitting solver at each time step
  
  INPUT
  eq    : equation object at next time step
@@ -41,118 +41,138 @@ LOD::LOD(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time)
  OUTPUT
  uh : three-dimensional solution at current time step to next time step
  ********************************************************************************/
-void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& beta)
+void TS::Solve_2nd(Equation& eq, Equation& eq_half, Equation& eq_one, Intersections& inter, CubicDoub& uh, Beta& beta)
 {
     VecDoub ax, bx, cx, rx, utx;
     VecDoub ay, by, cy, ry, uty;
     VecDoub az, bz, cz, rz, utz;
-    CubicDoub v1, v2, v3, uh1;
+    CubicDoub v1, v2, v3, v4, v5, v6, v7, v8, uh1;
     CubicDoub src;
     
     //Initialize size for solution
     v1.resize(nx);
     v2.resize(nx);
     v3.resize(nx);
-    uh1.resize(nx);
+    v4.resize(nx);
+    v5.resize(nx);
+    v6.resize(nx);
+    v7.resize(nx);
+    v8.resize(nx);
     src.resize(nx);
     for(int ix = 0; ix < nx; ix++)
     {
         v1[ix].resize(ny);
         v2[ix].resize(ny);
         v3[ix].resize(ny);
-        uh1[ix].resize(ny);
+        v4[ix].resize(ny);
+        v5[ix].resize(ny);
+        v6[ix].resize(ny);
+        v7[ix].resize(ny);
+        v8[ix].resize(ny);
         src[ix].resize(ny);
         for(int iy = 0; iy < ny; iy++)
         {
             v1[ix][iy].resize(nz);
             v2[ix][iy].resize(nz);
             v3[ix][iy].resize(nz);
-            uh1[ix][iy].resize(nz);
+            v4[ix][iy].resize(nz);
+            v5[ix][iy].resize(nz);
+            v6[ix][iy].resize(nz);
+            v7[ix][iy].resize(nz);
+            v8[ix][iy].resize(nz);
             src[ix][iy].resize(nz);
         }
     }
     
-    inter.Refresh_Jump(eq,uh,beta);
-    Src_2nd(eq,inter,src);
+    //----------------------First half of Trapezoidal Splitting method [n] -> [n+1/2]--------------------------------
+    inter.Refresh_Jump(eq_one,uh,beta);
     
     /*******************************************************************************************************
      First Step:
-     (1 - Dt*beta*D_{xx})V_{1} = U^{N}
+     v1^{n+1/2} = ( 1 + dt/2 * beta * D_xx ) v1^{n}   with v1^{n} = u^{n}
      ******************************************************************************************************/
     //Set up RHS
-    D_xx_r_ie(uh,v1);
-    //D_xx_r_cn(eq,inter,uh,v1,beta);
+    D_xx_r(eq_one,inter,uh,v1,beta);
     
-    //Set up boundary conditions for V1
-    Set_bc(eq,v1);
-    
-    //Set up LHS
-    ax.resize(nx);
-    bx.resize(nx);
-    cx.resize(nx);
-    rx.resize(nx);
-    utx.resize(nx);
-    
-    for(int iy = 1; iy < ny-1; iy++)
-    {
-        for(int iz = 1; iz < nz-1; iz++)
-        {
-            D_xx_l(iy,iz,eq,inter,v1,beta,ax,bx,cx,rx);
-            
-            //Thomas Algorithm
-            TDMA(ax,bx,cx,rx,utx);
-            
-            for(int ix = 0; ix < nx; ix++)
-            {
-                v1[ix][iy][iz] = utx[ix];
-            }
-        }
-    }
+    //Set up boundary conditions for v1
+    Set_bc(eq_half,v1);
     
     /*******************************************************************************************************
      Second Step:
-     (1 - Dt*beta*D_{yy})V_{2} = V_{1}
+     v2^{n+1/2} = ( 1 + dt/2 * beta * D_yy ) v2^{n}   with v2^{n} = v1^{n+1/2}
      ******************************************************************************************************/
     //Set up RHS
-    D_yy_r_ie(v1,v2);
-    //D_yy_r_cn(eq,inter,v1,v2,beta);
+    D_yy_r(eq_one,inter,v1,v2,beta);
     
-    //Set up boundary conditions for UHS
-    Set_bc(eq,v2);
+    //Set up boundary conditions for v2
+    Set_bc(eq_half,v2);
     
-    //Set up LHS
-    ay.resize(ny);
-    by.resize(ny);
-    cy.resize(ny);
-    ry.resize(ny);
-    uty.resize(ny);
+    /*******************************************************************************************************
+     Thrid Step:
+     v3^{n+1/2} = ( 1 + dt/2 * beta * D_zz ) v3^{n}   with v3^{n} = v2^{n+1/2}
+     ******************************************************************************************************/
+    //Set up RHS
+    D_zz_r(eq_one,inter,v2,v3,beta);
     
-    for(int ix = 1; ix < nx-1; ix++)
+    //Set up boundary conditions for v3
+    Set_bc(eq_half,v3);
+
+    /*******************************************************************************************************
+     Fourth Step:
+     v4^{n+1/2} = v4^{n} + dt/2 * f(t^{n}, v4^{n})  with v4^{n} = v3^{n+1/2}
+     ******************************************************************************************************/
+    //Initialize source term at time step n
+    Src_2nd(eq,inter,src);
+    
+    for(int ix = 0; ix < nx; ix++)
     {
-        for(int iz = 1; iz < nz-1; iz++)
+        for(int iy = 0; iy < ny; iy++)
         {
-            D_yy_l(ix,iz,eq,inter,v2,beta,ay,by,cy,ry);
-            
-            //Thomas Algorithm
-            TDMA(ay,by,cy,ry,uty);
-            
-            for(int iy = 0; iy < ny; iy++)
+            for(int iz = 0; iz < nz; iz++)
             {
-                v2[ix][iy][iz] = uty[iy];
+                v4[ix][iy][iz] = v3[ix][iy][iz] + 0.5*dt*src[ix][iy][iz];
+            }
+        }
+    }
+    
+    //----------------------Second half of Trapezoidal Splitting method [n+1/2] -> [n+1]--------------------------------
+    //inter.Refresh_Jump(eq_one,v4,beta);
+    
+    /*******************************************************************************************************
+     Fifth Step:
+     v5^{n+1} = v5^{n+1/2} + dt/2 * f(t^{n+1}, v5^{n+1})  with v5^{n} = v4^{n+1/2}
+     ******************************************************************************************************/
+    Src_2nd(eq_one,inter,src);
+    
+    for(int ix = 0; ix < nx; ix++)
+    {
+        for(int iy = 0; iy < ny; iy++)
+        {
+            for(int iz = 0; iz < nz; iz++)
+            {
+                v5[ix][iy][iz] = v4[ix][iy][iz] + 0.5*dt*src[ix][iy][iz];
             }
         }
     }
     
     /*******************************************************************************************************
-     Third Step:
-     (1 - Dt*beta*D_{zz})V_{3} = V_{2}
+     Sixth Step:
+     (1 - dt/2 * beat * D_zz) v6^{n+1} = v6^{n+1/2}  with v6^{n+1/2} = v5^{n+1}
      ******************************************************************************************************/
     //Set up RHS
-    D_zz_r_ie(v2,v3);
-    //D_zz_r_cn(eq,inter,v2,v3,beta);
+    for(int ix = 0; ix < nx; ix++)
+    {
+        for(int iy = 0; iy < ny; iy++)
+        {
+            for(int iz = 0; iz < nz; iz++)
+            {
+                v6[ix][iy][iz] = v5[ix][iy][iz];
+            }
+        }
+    }
     
-    //Set up boundary conditions for UHS
-    Set_bc(eq,v3);
+    //Set up boundary conditions for v6
+    Set_bc(eq_one,v6);
     
     //Set up LHS
     az.resize(nz);
@@ -165,29 +185,98 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& bet
     {
         for(int iy = 1; iy < ny-1; iy++)
         {
-            D_zz_l(ix,iy,eq,inter,v3,beta,az,bz,cz,rz);
+            D_zz_l(ix,iy,eq_one,inter,v6,beta,az,bz,cz,rz);
             
             //Thomas Algorithm
             TDMA(az,bz,cz,rz,utz);
             
             for(int iz = 0; iz < nz; iz++)
             {
-                v3[ix][iy][iz] = utz[iz];
+                v6[ix][iy][iz] = utz[iz];
             }
         }
     }
     
     /*******************************************************************************************************
-     Fourth Step:
-     U^{n+1} = V_{3} + Dt*f^(n+1)
+     Seventh Step:
+     (1 - dt/2 * beat * D_yy) v7^{n+1} = v7^{n+1/2}  with v7^{n+1/2} = v6^{n+1}
      ******************************************************************************************************/
+    //Set up RHS
     for(int ix = 0; ix < nx; ix++)
     {
         for(int iy = 0; iy < ny; iy++)
         {
             for(int iz = 0; iz < nz; iz++)
             {
-                uh1[ix][iy][iz] = v3[ix][iy][iz] + dt*src[ix][iy][iz];
+                v7[ix][iy][iz] = v6[ix][iy][iz];
+            }
+        }
+    }
+    
+    //Set up boundary conditions for v7
+    Set_bc(eq_one,v7);
+    
+    //Set up LHS
+    ay.resize(ny);
+    by.resize(ny);
+    cy.resize(ny);
+    ry.resize(ny);
+    uty.resize(ny);
+    
+    for(int ix = 1; ix < nx-1; ix++)
+    {
+        for(int iz = 1; iz < nz-1; iz++)
+        {
+            D_yy_l(ix,iz,eq_one,inter,v7,beta,ay,by,cy,ry);
+            
+            //Thomas Algorithm
+            TDMA(ay,by,cy,ry,uty);
+            
+            for(int iy = 0; iy < ny; iy++)
+            {
+                v7[ix][iy][iz] = uty[iy];
+            }
+        }
+    }
+    
+    /*******************************************************************************************************
+     Eighth Step:
+     (1 - dt/2 * beat * D_xx) v8^{n+1} = v8^{n+1/2}  with v8^{n+1/2} = v7^{n+1}
+     ******************************************************************************************************/
+    //Set up RHS
+    for(int ix = 0; ix < nx; ix++)
+    {
+        for(int iy = 0; iy < ny; iy++)
+        {
+            for(int iz = 0; iz < nz; iz++)
+            {
+                v8[ix][iy][iz] = v7[ix][iy][iz];
+            }
+        }
+    }
+    
+    //Set up boundary conditions for v8
+    Set_bc(eq_one,v8);
+    
+    //Set up LHS
+    ax.resize(nx);
+    bx.resize(nx);
+    cx.resize(nx);
+    rx.resize(nx);
+    utx.resize(nx);
+    
+    for(int iy = 1; iy < ny-1; iy++)
+    {
+        for(int iz = 1; iz < nz-1; iz++)
+        {
+            D_xx_l(iy,iz,eq_one,inter,v8,beta,ax,bx,cx,rx);
+            
+            //Thomas Algorithm
+            TDMA(ax,bx,cx,rx,utx);
+            
+            for(int ix = 0; ix < nx; ix++)
+            {
+                v8[ix][iy][iz] = utx[ix];
             }
         }
     }
@@ -201,7 +290,7 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& bet
         {
             for(int iz = 0; iz < nz; iz++)
             {
-                uh[ix][iy][iz] = uh1[ix][iy][iz];
+                uh[ix][iy][iz] = v8[ix][iy][iz];
             }
         }
     }
@@ -214,9 +303,9 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, Beta& bet
  eq    : equation object at current time step
  
  OUTPUT
- uc    : cubic matrix 
-*********************************************************************************/
-void LOD::Set_bc(Equation& eq, CubicDoub& uc)
+ uc    : cubic matrix
+ *********************************************************************************/
+void TS::Set_bc(Equation& eq, CubicDoub& uc)
 {
     //Set boundary conditions for uc
     for(int ix = 0; ix < nx; ix++)
@@ -246,75 +335,6 @@ void LOD::Set_bc(Equation& eq, CubicDoub& uc)
 }
 
 /*********************************************************************************
- D_{xx} operator for right hand side vector
- 
- INPUT
- uc1   : right hand side solution at current time step
- 
- OUTPUT
- uc2   : right hand side solution at current time step
- ********************************************************************************/
-void LOD::D_xx_r_ie(CubicDoub& uc1, CubicDoub& uc2)
-{
-    for(int ix = 0; ix < nx; ix++)
-    {
-        for(int iy = 0; iy < ny; iy++)
-        {
-            for(int iz = 0; iz < nz; iz++)
-            {
-                uc2[ix][iy][iz] = uc1[ix][iy][iz];
-            }
-        }
-    }
-}
-
-/*********************************************************************************
- D_{yy} operator for right hand side vector
- 
- INPUT
- uc1   : right hand side solution at current time step
- 
- OUTPUT
- uc2   : right hand side solution at current time step
- ********************************************************************************/
-void LOD::D_yy_r_ie(CubicDoub& uc1, CubicDoub& uc2)
-{
-    for(int ix = 0; ix < nx; ix++)
-    {
-        for(int iy = 0; iy < ny; iy++)
-        {
-            for(int iz = 0; iz < nz; iz++)
-            {
-                uc2[ix][iy][iz] = uc1[ix][iy][iz];
-            }
-        }
-    }
-}
-
-/*********************************************************************************
- D_{zz} operator for right hand side vector
- 
- INPUT
- uc1   : right hand side solution at current time step
- 
- OUTPUT
- uc2   : right hand side solution at current time step
- ********************************************************************************/
-void LOD::D_zz_r_ie(CubicDoub& uc1, CubicDoub& uc2)
-{
-    for(int ix = 0; ix < nx; ix++)
-    {
-        for(int iy = 0; iy < ny; iy++)
-        {
-            for(int iz = 0; iz < nz; iz++)
-            {
-                uc2[ix][iy][iz] = uc1[ix][iy][iz];
-            }
-        }
-    }
-}
-
-/*********************************************************************************
  1 + 1/2*Dt*beta*D_{xx} operator for right hand side vector
  
  INPUT
@@ -328,7 +348,7 @@ void LOD::D_zz_r_ie(CubicDoub& uc1, CubicDoub& uc2)
  OUTPUT
  uc2   : right hand side solution at current time step
  ********************************************************************************/
-void LOD::D_xx_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
+void TS::D_xx_r(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
 {
     int ix, ip;
     double coef, sum;
@@ -336,8 +356,8 @@ void LOD::D_xx_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDou
     double jump_betaux, jump_betauxl, jump_betauxr;
     VecDoub vdex;
     Intersection_Data data, datal, datar;
-
-    coef = 0.5;
+    
+    coef = 0.5;           //coefficient of Dt*beta*D_{xx}
     
     vdex.resize(3);
     
@@ -525,7 +545,7 @@ void LOD::D_xx_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDou
  OUTPUT
  uc2   : right hand side solution at current time step
  ********************************************************************************/
-void LOD::D_yy_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
+void TS::D_yy_r(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
 {
     int iy, ip;
     double coef, sum;
@@ -534,7 +554,7 @@ void LOD::D_yy_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDou
     VecDoub vdey;
     Intersection_Data data, datal, datar;
     
-    coef = 0.5;
+    coef = 0.5;           //coefficient of Dt*beta*D_{yy}
     
     vdey.resize(3);
     
@@ -722,7 +742,7 @@ void LOD::D_yy_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDou
  OUTPUT
  uc2   : right hand side solution at current time step
  ********************************************************************************/
-void LOD::D_zz_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
+void TS::D_zz_r(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDoub& uc2, Beta& beta)
 {
     int iz, ip;
     double coef, sum;
@@ -731,10 +751,10 @@ void LOD::D_zz_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDou
     VecDoub vdez;
     Intersection_Data data, datal, datar;
     
-    coef = 0.5;
-
+    coef = 0.5;           //coefficient of Dt*beta*D_{zz}
+    
     vdez.resize(3);
-
+    
     //Step I: Initialize without MIB
     for(int ix = 1; ix < nx-1; ix++)
     {
@@ -905,7 +925,7 @@ void LOD::D_zz_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDou
 }
 
 /*********************************************************************************
- 1 - Dt*beta*D_{xx} operator for left hand side matrix
+ 1 - 1/2*Dt*beta*D_{xx} operator for left hand side matrix
  
  INPUT
  iy    : coordinate index on y-direction
@@ -921,7 +941,7 @@ void LOD::D_zz_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1, CubicDou
  c     : third hypotenuse of tridiagonal matrix
  r     : right hand side vector
  ********************************************************************************/
-void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
+void TS::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
 {
     int ix, ip;
     double coef;
@@ -931,10 +951,7 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
     MatrixDoub irr_row, cor_row;
     Intersection_Data data, datal, datar;
     
-    //Implicit Euler scheme
-    coef = 1;
-    //Crank-Nicolson scheme
-    //coef = 0.5;
+    coef = 0.5;            //coefficient of Dt*beta*D_{xx}
     
     vdex.resize(3);
     //set up irr_row and cor_row
@@ -1064,8 +1081,8 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
                 cor_row[0][i] -= coef*dt*vdex[2]*datal.wei.weir[0][i];
             }
             cor_row[0][5] = uc[ix][iy][iz]+coef*dt*vdex[2]*
-                            (jump_ul*datal.wei.weir[0][5]+jump_betauxl*datal.wei.weir[0][6]+
-                             jump_ur*datal.wei.weir[0][7]+jump_betauxr*datal.wei.weir[0][8]);
+            (jump_ul*datal.wei.weir[0][5]+jump_betauxl*datal.wei.weir[0][6]+
+             jump_ur*datal.wei.weir[0][7]+jump_betauxr*datal.wei.weir[0][8]);
             
             //Approximate IX+1
             ix += 1;
@@ -1077,15 +1094,15 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
                 cor_row[1][i] -= coef*dt*vdex[0]*datal.wei.weil[0][i];
             }
             cor_row[1][5] = uc[ix][iy][iz]+coef*dt*vdex[0]*
-                            (jump_ul*datal.wei.weil[0][5]+jump_betauxl*datal.wei.weil[0][6]+
-                             jump_ur*datal.wei.weil[0][7]+jump_betauxr*datal.wei.weil[0][8]);
+            (jump_ul*datal.wei.weil[0][5]+jump_betauxl*datal.wei.weil[0][6]+
+             jump_ur*datal.wei.weil[0][7]+jump_betauxr*datal.wei.weil[0][8]);
             //IX+1 cross right interface, use right interface's right FP
             for(int i = 0; i < 5; i++)
             {
                 cor_row[1][i] -= coef*dt*vdex[2]*datar.wei.weir[0][i];
             }
             cor_row[1][5] += coef*dt*vdex[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauxl*datar.wei.weir[0][6]+
-                                         jump_ur*datar.wei.weir[0][7]+jump_betauxr*datar.wei.weir[0][8]);
+                                              jump_ur*datar.wei.weir[0][7]+jump_betauxr*datar.wei.weir[0][8]);
             
             //Approximate IX+2
             ix += 1;
@@ -1098,8 +1115,8 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
                 cor_row[2][i] -= coef*dt*vdex[0]*datar.wei.weil[0][i];
             }
             cor_row[2][5] = uc[ix][iy][iz]+coef*dt*vdex[0]*
-                            (jump_ul*datar.wei.weil[0][5]+jump_betauxl*datar.wei.weil[0][6]+
-                             jump_ur*datar.wei.weil[0][7]+jump_betauxr*datar.wei.weil[0][8]);
+            (jump_ul*datar.wei.weil[0][5]+jump_betauxl*datar.wei.weil[0][6]+
+             jump_ur*datar.wei.weil[0][7]+jump_betauxr*datar.wei.weil[0][8]);
             
             Convert2Tri_cor(datal.left_loc,cor_row,a,b,c,r);
             
@@ -1109,7 +1126,7 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
 }
 
 /*********************************************************************************
- 1 - Dt*beta*D_{yy} operator for left hand side matrix
+ 1 - 1/2*Dt*beta*D_{yy} operator for left hand side matrix
  
  INPUT
  iy    : coordinate index on y-direction
@@ -1125,7 +1142,7 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter, CubicDo
  c     : third hypotenuse of tridiagonal matrix
  r     : right hand side vector
  ********************************************************************************/
-void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
+void TS::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
 {
     int iy, ip;
     double coef;
@@ -1135,10 +1152,7 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
     MatrixDoub irr_row, cor_row;
     Intersection_Data data, datal, datar;
     
-    //Implicit Euler scheme
-    coef = 1;
-    //Crank-Nicolson scheme
-    //coef = 0.5;
+    coef = 0.5;           //coefficient of Dt*beta*D_{yy}
     
     vdey.resize(3);
     //set up irr_row and cor_row
@@ -1267,8 +1281,8 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
                 cor_row[0][i] -= coef*dt*vdey[2]*datal.wei.weir[0][i];
             }
             cor_row[0][5] = uc[ix][iy][iz]+coef*dt*vdey[2]*
-                            (jump_ul*datal.wei.weir[0][5]+jump_betauyl*datal.wei.weir[0][6]+
-                             jump_ur*datal.wei.weir[0][7]+jump_betauyr*datal.wei.weir[0][8]);
+            (jump_ul*datal.wei.weir[0][5]+jump_betauyl*datal.wei.weir[0][6]+
+             jump_ur*datal.wei.weir[0][7]+jump_betauyr*datal.wei.weir[0][8]);
             
             //Approximate IY+1
             iy += 1;
@@ -1280,8 +1294,8 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
                 cor_row[1][i] -= coef*dt*vdey[0]*datal.wei.weil[0][i];
             }
             cor_row[1][5] = uc[ix][iy][iz]+coef*dt*vdey[0]*
-                            (jump_ul*datal.wei.weil[0][5]+jump_betauyl*datal.wei.weil[0][6]+
-                             jump_ur*datal.wei.weil[0][7]+jump_betauyr*datal.wei.weil[0][8]);
+            (jump_ul*datal.wei.weil[0][5]+jump_betauyl*datal.wei.weil[0][6]+
+             jump_ur*datal.wei.weil[0][7]+jump_betauyr*datal.wei.weil[0][8]);
             //IY+1 cross right interface, use right interface's right FP
             for(int i = 0; i < 5; i++)
             {
@@ -1301,8 +1315,8 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
                 cor_row[2][i] -= coef*dt*vdey[0]*datar.wei.weil[0][i];
             }
             cor_row[2][5] = uc[ix][iy][iz]+coef*dt*vdey[0]*
-                            (jump_ul*datar.wei.weil[0][5]+jump_betauyl*datar.wei.weil[0][6]+
-                             jump_ur*datar.wei.weil[0][7]+jump_betauyr*datar.wei.weil[0][8]);
+            (jump_ul*datar.wei.weil[0][5]+jump_betauyl*datar.wei.weil[0][6]+
+             jump_ur*datar.wei.weil[0][7]+jump_betauyr*datar.wei.weil[0][8]);
             
             Convert2Tri_cor(datal.left_loc,cor_row,a,b,c,r);
             
@@ -1312,7 +1326,7 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
 }
 
 /*********************************************************************************
- 1 - Dt*beta*D_{zz} operator for left hand side matrix
+ 1 - 1/2*Dt*beta*D_{zz} operator for left hand side matrix
  
  INPUT
  iy    : coordinate index on y-direction
@@ -1328,7 +1342,7 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter, CubicDo
  c     : third hypotenuse of tridiagonal matrix
  r     : right hand side vector
  ********************************************************************************/
-void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
+void TS::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
 {
     int iz, ip;
     double coef;
@@ -1338,10 +1352,7 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDo
     MatrixDoub irr_row, cor_row;
     Intersection_Data data, datal, datar;
     
-    //Implicit Euler scheme
-    coef = 1;
-    //Crank-Nicolson scheme
-    //coef = 0.5;
+    coef = 0.5;            //coefficient of Dt*beta*D_{zz}
     
     vdez.resize(3);
     //set up irr_row and cor_row
@@ -1470,8 +1481,8 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDo
                 cor_row[0][i] -= coef*dt*vdez[2]*datal.wei.weir[0][i];
             }
             cor_row[0][5] = uc[ix][iy][iz]+coef*dt*vdez[2]*
-                            (jump_ul*datal.wei.weir[0][5]+jump_betauzl*datal.wei.weir[0][6]+
-                             jump_ur*datal.wei.weir[0][7]+jump_betauzr*datal.wei.weir[0][8]);;
+            (jump_ul*datal.wei.weir[0][5]+jump_betauzl*datal.wei.weir[0][6]+
+             jump_ur*datal.wei.weir[0][7]+jump_betauzr*datal.wei.weir[0][8]);;
             
             //Approximate IZ+1
             iz += 1;
@@ -1483,15 +1494,15 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDo
                 cor_row[1][i] -= coef*dt*vdez[0]*datal.wei.weil[0][i];
             }
             cor_row[1][5] = uc[ix][iy][iz]+coef*dt*vdez[0]*
-                            (jump_ul*datal.wei.weil[0][5]+jump_betauzl*datal.wei.weil[0][6]+
-                             jump_ur*datal.wei.weil[0][7]+jump_betauzr*datal.wei.weil[0][8]);
+            (jump_ul*datal.wei.weil[0][5]+jump_betauzl*datal.wei.weil[0][6]+
+             jump_ur*datal.wei.weil[0][7]+jump_betauzr*datal.wei.weil[0][8]);
             //IZ+1 cross right interface, use right interface's right FP
             for(int i = 0; i < 5; i++)
             {
                 cor_row[1][i] -= coef*dt*vdez[2]*datar.wei.weir[0][i];
             }
             cor_row[1][5] += coef*dt*vdez[2]*(jump_ul*datar.wei.weir[0][5]+jump_betauzl*datar.wei.weir[0][6]+
-                                         jump_ur*datar.wei.weir[0][7]+jump_betauzr*datar.wei.weir[0][8]);
+                                              jump_ur*datar.wei.weir[0][7]+jump_betauzr*datar.wei.weir[0][8]);
             
             //Approximate IZ+2
             iz += 1;
@@ -1504,8 +1515,8 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDo
                 cor_row[2][i] -= coef*dt*vdez[0]*datar.wei.weil[0][i];
             }
             cor_row[2][5] = uc[ix][iy][iz]+coef*dt*vdez[0]*
-                            (jump_ul*datar.wei.weil[0][5]+jump_betauzl*datar.wei.weil[0][6]+
-                             jump_ur*datar.wei.weil[0][7]+jump_betauzr*datar.wei.weil[0][8]);
+            (jump_ul*datar.wei.weil[0][5]+jump_betauzl*datar.wei.weil[0][6]+
+             jump_ur*datar.wei.weil[0][7]+jump_betauzr*datar.wei.weil[0][8]);
             
             Convert2Tri_cor(datal.left_loc,cor_row,a,b,c,r);
             
@@ -1524,7 +1535,7 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter, CubicDo
  OUTPUT
  Update Source terms in Douglas ADI at each time step
  ********************************************************************************/
-void LOD::Src_2nd(Equation& eq, Intersections& inter, CubicDoub& src)
+void TS::Src_2nd(Equation& eq, Intersections& inter, CubicDoub& src)
 {
     int indx;
     
@@ -1569,7 +1580,7 @@ void LOD::Src_2nd(Equation& eq, Intersections& inter, CubicDoub& src)
  OUTPUT
  vdex : weights for 2nd order 3-point stencil
  **********************************************************************************************************/
-void LOD::Operator_weights_x(Beta& beta, VecDoub_O& vdex, Int_I ix, Int_I iy, Int_I iz, Doub_I dx)
+void TS::Operator_weights_x(Beta& beta, VecDoub_O& vdex, Int_I ix, Int_I iy, Int_I iz, Doub_I dx)
 {
     int indx;
     double beta1, beta2;
@@ -1607,7 +1618,7 @@ void LOD::Operator_weights_x(Beta& beta, VecDoub_O& vdex, Int_I ix, Int_I iy, In
  OUTPUT
  vdey : weights for 2nd order 3-point stencil
  **********************************************************************************************************/
-void LOD::Operator_weights_y(Beta& beta, VecDoub_O& vdey, Int_I ix, Int_I iy, Int_I iz, Doub_I dy)
+void TS::Operator_weights_y(Beta& beta, VecDoub_O& vdey, Int_I ix, Int_I iy, Int_I iz, Doub_I dy)
 {
     int indx;
     double beta1, beta2;
@@ -1645,7 +1656,7 @@ void LOD::Operator_weights_y(Beta& beta, VecDoub_O& vdey, Int_I ix, Int_I iy, In
  OUTPUT
  vdez : weights for 2nd order 3-point stencil
  **********************************************************************************************************/
-void LOD::Operator_weights_z(Beta& beta, VecDoub_O& vdez, Int_I ix, Int_I iy, Int_I iz, Doub_I dz)
+void TS::Operator_weights_z(Beta& beta, VecDoub_O& vdez, Int_I ix, Int_I iy, Int_I iz, Doub_I dz)
 {
     int indx;
     double beta1, beta2;
@@ -1683,7 +1694,7 @@ void LOD::Operator_weights_z(Beta& beta, VecDoub_O& vdez, Int_I ix, Int_I iy, In
  c   : third hypotenuse of tridiagonal matrix
  r   : right hand side vector
  **********************************************************************************************************/
-void LOD::Convert2Tri_irr(Int_I ix, MatrixDoub_I& row, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
+void TS::Convert2Tri_irr(Int_I ix, MatrixDoub_I& row, VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
 {
     double rate;
     
@@ -1722,7 +1733,7 @@ void LOD::Convert2Tri_irr(Int_I ix, MatrixDoub_I& row, VecDoub_O& a, VecDoub_O& 
  c   : third hypotenuse of tridiagonal matrix
  r   : right hand side vector
  **********************************************************************************************************/
-void LOD::Convert2Tri_cor(Int_I ix, MatrixDoub_I& row,  VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
+void TS::Convert2Tri_cor(Int_I ix, MatrixDoub_I& row,  VecDoub_O& a, VecDoub_O& b, VecDoub_O& c, VecDoub_O& r)
 {
     double rate[3];
     
@@ -1779,7 +1790,7 @@ void LOD::Convert2Tri_cor(Int_I ix, MatrixDoub_I& row,  VecDoub_O& a, VecDoub_O&
  OUTPUT
  u : solution of tridiagonal matrix system, Ax = b
  *********************************************************************/
-void LOD::TDMA(VecDoub_I& a, VecDoub_I& b, VecDoub_I& c, VecDoub_I& r, VecDoub_O& u)
+void TS::TDMA(VecDoub_I& a, VecDoub_I& b, VecDoub_I& c, VecDoub_I& r, VecDoub_O& u)
 {
     int n=(int)a.size();
     double bet;
@@ -1818,7 +1829,7 @@ void LOD::TDMA(VecDoub_I& a, VecDoub_I& b, VecDoub_I& c, VecDoub_I& r, VecDoub_O
  OUTPUT
  c: c(0:n-1,0:m) weights at grid locations x(n) for derivatives of order 0:m
  ******************************************************************************/
-void LOD::Weights(Doub_I z, VecDoub_I& x, Int_I n, Int_I m, MatrixDoub_O& c)
+void TS::Weights(Doub_I z, VecDoub_I& x, Int_I n, Int_I m, MatrixDoub_O& c)
 {
     double c1,c2,c3,c4,c5;
     int mn;
@@ -1875,7 +1886,7 @@ void LOD::Weights(Doub_I z, VecDoub_I& x, Int_I n, Int_I m, MatrixDoub_O& c)
  OUTPUT
  1D coefficients converted from 3D
  **********************************************************/
-int LOD::To1d(Int_I ix, Int_I iy, Int_I iz)
+int TS::To1d(Int_I ix, Int_I iy, Int_I iz)
 {
     int temp;
     
@@ -1891,7 +1902,7 @@ int LOD::To1d(Int_I ix, Int_I iy, Int_I iz)
  eq : equation object
  uh : three-dimensional analytical solution
  ************************************************************************/
-void LOD::Initialization(Equation &eq, CubicDoub &uh)
+void TS::Initialization(Equation &eq, CubicDoub &uh)
 {
     int indx;
     
@@ -1940,7 +1951,7 @@ void LOD::Initialization(Equation &eq, CubicDoub &uh)
  eq : equation object
  uh : three-dimensional analytical solution
  ************************************************************************/
-void LOD::Error(Equation &eq, CubicDoub &uh, ofstream& out_file)
+void TS::Error(Equation &eq, CubicDoub &uh, ofstream& out_file)
 {
     int indx;
     double l2, lmax, temp;

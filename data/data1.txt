@@ -1,9 +1,9 @@
-xl = -3.99
-xr = 3.99
-yl = -3.99
-yr = 3.99
-zl = -4.99
-zr = 4.99
+xl = -4
+xr = 4
+yl = -2
+yr = 2
+zl = -2
+zr = 2
 
 nx = 40
 ny = 40
@@ -13,10 +13,10 @@ t_start = 0
 t_finish = 1
 t_step = 0.001
 
-surface = T
-method = A
+surface = E
+method = T
 equation = 3
-beta = 3
+beta = 1
 
 mib_method = 1
 

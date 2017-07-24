@@ -397,24 +397,6 @@ void Douglas_ADI::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh, B
             uhs[nx-1][iy][iz] = eq.Outer_u(xi[nx-1],yi[iy],zi[iz]);
         }
     }
-    
-    /*
-    for(int ix = 0; ix < nx; ix++)
-    {
-        for(int iy = 0; iy < ny; iy++)
-        {
-            for(int iz = 0; iz < nz; iz++)
-            {
-                if(abs(uhs[ix][iy][iz]-80)>0.1)
-                {
-                    cout << "Flag: " << uhs[ix][iy][iz] << endl;
-                    cout << "ix: " << ix << " iy: " << iy << " iz: " << iz << endl;
-                    exit(0);
-                }
-            }
-        }
-    }
-     */
 
     //Generate LHS
     a.resize(nx);

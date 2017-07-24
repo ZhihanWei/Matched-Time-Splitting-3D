@@ -38,6 +38,7 @@
 		B60AFC9C1F1E83550037A976 /* Surface_Tanglecube.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B60AFC7C1F1E83550037A976 /* Surface_Tanglecube.cpp */; };
 		B60AFC9D1F1E83550037A976 /* Surface_Torus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B60AFC7E1F1E83550037A976 /* Surface_Torus.cpp */; };
 		B60AFCA01F1E98280037A976 /* Beta_3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B60AFC9E1F1E98270037A976 /* Beta_3.cpp */; };
+		B66AD72D1F2150A5004495A1 /* TS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B66AD72B1F2150A5004495A1 /* TS.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -122,6 +123,8 @@
 		B60AFC7F1F1E83550037A976 /* Surface_Torus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Surface_Torus.h; sourceTree = "<group>"; };
 		B60AFC9E1F1E98270037A976 /* Beta_3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Beta_3.cpp; sourceTree = "<group>"; };
 		B60AFC9F1F1E98270037A976 /* Beta_3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Beta_3.h; sourceTree = "<group>"; };
+		B66AD72B1F2150A5004495A1 /* TS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TS.cpp; sourceTree = "<group>"; };
+		B66AD72C1F2150A5004495A1 /* TS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TS.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,6 +169,9 @@
 		B60AFC411F1E83540037A976 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B66AD72A1F214FD7004495A1 /* Diffusion Coefficient */,
+				B66AD7291F214FA1004495A1 /* Surface */,
+				B66AD7281F214F7E004495A1 /* Equation */,
 				B60AFC661F1E83540037A976 /* main.cpp */,
 				B60AFC691F1E83540037A976 /* New_Data_Type.h */,
 				B60AFC491F1E83540037A976 /* Constant.h */,
@@ -175,19 +181,26 @@
 				B60AFC681F1E83540037A976 /* Mesh.h */,
 				B60AFC601F1E83540037A976 /* Intersections.cpp */,
 				B60AFC611F1E83540037A976 /* Intersections.h */,
-				B60AFC421F1E83540037A976 /* Beta.h */,
-				B60AFC431F1E83540037A976 /* Beta_0.cpp */,
-				B60AFC441F1E83540037A976 /* Beta_0.h */,
-				B60AFC451F1E83540037A976 /* Beta_1.cpp */,
-				B60AFC461F1E83540037A976 /* Beta_1.h */,
-				B60AFC471F1E83540037A976 /* Beta_2.cpp */,
-				B60AFC481F1E83540037A976 /* Beta_2.h */,
-				B60AFC9E1F1E98270037A976 /* Beta_3.cpp */,
-				B60AFC9F1F1E98270037A976 /* Beta_3.h */,
 				B60AFC4C1F1E83540037A976 /* Douglas_ADI.cpp */,
 				B60AFC4D1F1E83540037A976 /* Douglas_ADI.h */,
 				B60AFC621F1E83540037A976 /* LOD.cpp */,
 				B60AFC631F1E83540037A976 /* LOD.h */,
+				B66AD72B1F2150A5004495A1 /* TS.cpp */,
+				B66AD72C1F2150A5004495A1 /* TS.h */,
+				B60AFC421F1E83540037A976 /* Beta.h */,
+				B60AFC5E1F1E83540037A976 /* Equation.cpp */,
+				B60AFC5F1F1E83540037A976 /* Equation.h */,
+				B60AFC6A1F1E83540037A976 /* Surface_Cartesian.cpp */,
+				B60AFC6B1F1E83540037A976 /* Surface_Cartesian.h */,
+				B60AFC641F1E83540037A976 /* LU.cpp */,
+				B60AFC651F1E83540037A976 /* LU.h */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		B66AD7281F214F7E004495A1 /* Equation */ = {
+			isa = PBXGroup;
+			children = (
 				B60AFC4E1F1E83540037A976 /* Eq_0.cpp */,
 				B60AFC4F1F1E83540037A976 /* Eq_0.h */,
 				B60AFC501F1E83540037A976 /* Eq_1.cpp */,
@@ -204,12 +217,13 @@
 				B60AFC5B1F1E83540037A976 /* Eq_6.h */,
 				B60AFC5C1F1E83540037A976 /* Eq_7.cpp */,
 				B60AFC5D1F1E83540037A976 /* Eq_7.h */,
-				B60AFC5E1F1E83540037A976 /* Equation.cpp */,
-				B60AFC5F1F1E83540037A976 /* Equation.h */,
-				B60AFC641F1E83540037A976 /* LU.cpp */,
-				B60AFC651F1E83540037A976 /* LU.h */,
-				B60AFC6A1F1E83540037A976 /* Surface_Cartesian.cpp */,
-				B60AFC6B1F1E83540037A976 /* Surface_Cartesian.h */,
+			);
+			name = Equation;
+			sourceTree = "<group>";
+		};
+		B66AD7291F214FA1004495A1 /* Surface */ = {
+			isa = PBXGroup;
+			children = (
 				B60AFC6C1F1E83540037A976 /* Surface_Cone.cpp */,
 				B60AFC6D1F1E83540037A976 /* Surface_Cone.h */,
 				B60AFC6E1F1E83540037A976 /* Surface_Cube.cpp */,
@@ -231,7 +245,22 @@
 				B60AFC7E1F1E83550037A976 /* Surface_Torus.cpp */,
 				B60AFC7F1F1E83550037A976 /* Surface_Torus.h */,
 			);
-			path = src;
+			name = Surface;
+			sourceTree = "<group>";
+		};
+		B66AD72A1F214FD7004495A1 /* Diffusion Coefficient */ = {
+			isa = PBXGroup;
+			children = (
+				B60AFC431F1E83540037A976 /* Beta_0.cpp */,
+				B60AFC441F1E83540037A976 /* Beta_0.h */,
+				B60AFC451F1E83540037A976 /* Beta_1.cpp */,
+				B60AFC461F1E83540037A976 /* Beta_1.h */,
+				B60AFC471F1E83540037A976 /* Beta_2.cpp */,
+				B60AFC481F1E83540037A976 /* Beta_2.h */,
+				B60AFC9E1F1E98270037A976 /* Beta_3.cpp */,
+				B60AFC9F1F1E98270037A976 /* Beta_3.h */,
+			);
+			name = "Diffusion Coefficient";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -320,6 +349,7 @@
 				B60AFC861F1E83550037A976 /* Eq_1.cpp in Sources */,
 				B60AFC881F1E83550037A976 /* Eq_3.cpp in Sources */,
 				B60AFC991F1E83550037A976 /* Surface_Heart.cpp in Sources */,
+				B66AD72D1F2150A5004495A1 /* TS.cpp in Sources */,
 				B60AFC961F1E83550037A976 /* Surface_Cylinder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
