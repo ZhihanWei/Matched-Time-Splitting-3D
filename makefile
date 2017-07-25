@@ -6,7 +6,7 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #COMPILER  = clang++
-COMPILER	 = g++
+COMPILER   = g++
 CFLAGS     = -c -Wall -std=c++11 -O3
 VPATH      = ./src
 SOURCES    = main.cpp Data.cpp Mesh.cpp Intersections.cpp Douglas_ADI.cpp LOD.cpp TS.cpp Surface_Cartesian.cpp \
