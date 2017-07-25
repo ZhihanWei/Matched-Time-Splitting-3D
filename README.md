@@ -1,7 +1,7 @@
 # README
 
 ## Project Name
-Matched ADI method for parabolic interface problem in 3D space
+Algorithm based on finite difference for parabolic interface problem in 3D
 
 ## Project Description
 A parabolic PDE solver for interface problem in 3D space based on finite difference method. The solver handles interface jump conditions by involving fictitious points. A new developed numerical method - Matched Interface and Boundary method has been applied to smooth the solutions along the interfaces. Taking the advantage of the tridiagonal matrix structure and TDMA algorithm, the solver is able to achieve unconditional stable for various complicated interfaces and jump conditions. Meanwhile, the high dimensional problem are deducted to several one dimensional problems and achieves a flop count of O(N). This solver contains two spacial methods: MIB-L1 and MIB-L2 and four temporal methods: Douglas-ADI, LOD-IE, LOD-CN, Trapezoidal Splitting. 
