@@ -26,4 +26,6 @@ Step 4: If you want to compile with a set of new parameters, type "make clean" t
 
 • All the "Surface" files specifies the shape of the surface defined by a implicit function in a Cartesian coordinate.
 
+
+
 • User-specified data in the same format as files in "data" folder.
