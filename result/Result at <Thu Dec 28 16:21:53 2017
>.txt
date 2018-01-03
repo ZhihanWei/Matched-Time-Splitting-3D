@@ -1,0 +1,53 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% No. 1 file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+------------------------- Basic Info. ------------------------
+Mesh Size         : NX = 20    NY = 20    NZ = 20   
+Time Step         : 1.0e+00
+Jump              : a
+Surface           : E
+Method            : A
+MIB Method        : L1
+Beta No.          : 0
+Equation No.      : 2
+Accuracy          : 2
+
+Z-direction computation: 
+
+Y-direction computation: 
+
+X-direction computation: 
+
+-------------------- Error of Douglas-ADI with MIB --------------------
+T = 1.0e+00
+------------------------ Error of FPs ------------------------
+Lmax = 5.964e-01
+L2   = 1.511e-01
+
+------------------------ Error of Jumps ------------------------
+Lmax = 8.207e-01
+L2   = 2.660e-01
+
+[Xmax,Ymax,Zmax] = [11,14,10]
+ Lmax = 4.455e-01;  L2 = 8.762e-02
+
+
+CPU time cost: 0.0 seconds
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% No. 2 file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+------------------------- Basic Info. ------------------------
+Mesh Size         : NX = 160   NY = 160   NZ = 160  
+Time Step         : 5.0e-02
+Jump              : a
+Surface           : E
+Method            : A
+MIB Method        : L1
+Beta No.          : 0
+Equation No.      : 2
+Accuracy          : 2
+
+Z-direction computation: 
+
+Y-direction computation: 
+
+X-direction computation: 
+
+-------------------- Error of Douglas-ADI with MIB --------------------

@@ -8,9 +8,8 @@
  INPUT
  mesh     : mesh object
  inter    : object of all intersections
- in_beta  : vector of 2 double values represent beta^{-} and beta^{+}
- time     : vector of 3 double values represent beginning time, finishing time
- and time step
+ beta     : object of variable coefficient
+ time     : vector of 3 double values represent beginning time, finishing time and time step
  accuracy : accuracy of scheme
  *******************************************************************************************/
 LOD::LOD(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time) {
@@ -36,7 +35,7 @@ LOD::LOD(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time) {
  INPUT
  eq    : equation object at next time step
  inter : object of all intersections
- beta  : object of variable coefficient
+ beta  : object of variable coefficients
 
  OUTPUT
  uh : three-dimensional solution at current time step to next time step
@@ -1261,8 +1260,8 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter,
  1 - Dt*beta*D_{zz} operator for left hand side matrix
 
  INPUT
+ ix    : coordinate index on x-direction
  iy    : coordinate index on y-direction
- iz    : coordinate index on z-direction
  eq    : equation object at current time step
  inter : object of all intersections
  uc    : right han side solution at current time step

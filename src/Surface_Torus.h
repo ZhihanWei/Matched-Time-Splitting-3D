@@ -6,7 +6,10 @@
 #include "Surface_Cartesian.h"
 
 /************************************************************
- Torus Surface with parameter: [1.5,0.7]
+ Torus Surface with parameter: [a, b]
+ 
+ Equation : (a - sqrt(x^2 + y^2))^2 + z^2 - b^2 = 0
+ 
  Suggested domain: [-4,4;-4,4;-4,4] for grid (20,40,80,160)
  ************************************************************/
 class Surface_Torus : public Surface_Cartesian {

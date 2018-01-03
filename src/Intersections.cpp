@@ -14,9 +14,9 @@ using namespace std;
  INPUT
  ex          : cartesian surface object
  mesh        : mesh object (at least contains: nx, dx, grids location xi[n] and grid indicator mesh_value[i])
- beta        : diffusion coefficient object representing beta^{-} and beta^{+}
+ beta        : variable coefficients object
  mib_method  : MIB method (either L1 or L2)
- accuracy    : accuracy of scheme order
+ in_accuracy : order of accuracy
  **************************************************************************************************************/
 Intersections::Intersections(Surface_Cartesian& ex, Mesh& mesh, Beta& beta,
                              Int_I in_accuracy, Int_I mib_method,
@@ -72,7 +72,8 @@ int Intersections::To1d(Int_I ix, Int_I iy, Int_I iz) {
  Setup initial values for the interseciton node
 
  INPUT
- ex : cartesian surface object
+ ex    : cartesian surface object
+ beta  : variable coefficients object
  **********************************************************/
 void Intersections::Setup_Intersections(Surface_Cartesian& ex, Beta& beta,
                                         ofstream& out_file) {
@@ -289,8 +290,7 @@ void Intersections::Setup_Intersections(Surface_Cartesian& ex, Beta& beta,
 }
 
 /*************************************************************************************************
- Initialize irregular interface node on xy plane in z-direction without MIB
- weights and error
+ Initialize irregular interface node on xy plane in z-direction without MIB weights and error
 
  INPUT
  ix         : index of grid node on x-axis
@@ -346,8 +346,7 @@ void Intersections::Getdata_irr_z(Int_I ix, Int_I iy, Int_I iz,
 }
 
 /*************************************************************************************************
- Initialize irregular interface node on xz plane in y-direction without MIB
- weights and error
+ Initialize irregular interface node on xz plane in y-direction without MIB weights and error
 
  INPUT
  ix         : index of grid node on x-axis
@@ -403,8 +402,7 @@ void Intersections::Getdata_irr_y(Int_I ix, Int_I iy, Int_I iz,
 }
 
 /*************************************************************************************************
- Initialize irregular interface node on yz plane in x-direction without MIB
- weights and error
+ Initialize irregular interface node on yz plane in x-direction without MIB weights and error
 
  INPUT
  ix         : index of closest left grid node on x-axis
@@ -460,8 +458,7 @@ void Intersections::Getdata_irr_x(Int_I ix, Int_I iy, Int_I iz,
 }
 
 /*************************************************************************************************
- Initialize corner interface nodes on xy plane in z-direction without MIB
- weights and error
+ Initialize corner interface nodes on xy plane in z-direction without MIB weights and error
 
  INPUT
  ix               : index of grid node on x-axis
@@ -566,8 +563,7 @@ void Intersections::Getdata_cor_z(Int_I ix, Int_I iy, Int_I iz,
 }
 
 /*************************************************************************************************
- Initialize corner interface nodes on xz plane in y-direction without MIB
- weights and error
+ Initialize corner interface nodes on xz plane in y-direction without MIB weights and error
 
  INPUT
  ix               : index of grid node on x-axis
@@ -672,8 +668,7 @@ void Intersections::Getdata_cor_y(Int_I ix, Int_I iy, Int_I iz,
 }
 
 /*************************************************************************************************
- Initialize corner interface nodes on yz plane in x-direction without MIB
- weights and error
+ Initialize corner interface nodes on yz plane in x-direction without MIB weights and error
 
  INPUT
  ix               : index of closest left grid node on x-axis
@@ -778,8 +773,10 @@ void Intersections::Getdata_cor_x(Int_I ix, Int_I iy, Int_I iz,
 }
 
 /*************************************************************************************************
- Initialize intersection nodes(both irregular and corner) calculated fictitious
- points' weights
+ Initialize intersection nodes(both irregular and corner) calculated fictitious points' weights
+ 
+ INPUT
+ beta  : variable coefficients object
  *************************************************************************************************/
 void Intersections::Setup_MIB_L2(Beta& beta) {
   Intersection_Data inter_node;
@@ -844,8 +841,10 @@ void Intersections::Setup_MIB_L2(Beta& beta) {
 }
 
 /*************************************************************************************************
- Initialize intersection nodes(both irregular and corner) calculated fictitious
- points' weights
+ Initialize intersection nodes calculated fictitious points' weights
+ 
+ INPUT
+ beta  : variable coefficients object
  *************************************************************************************************/
 void Intersections::Setup_MIB_L1(Beta& beta) {
   Intersection_Data inter_node;
@@ -921,7 +920,7 @@ void Intersections::Setup_MIB_L1(Beta& beta) {
  x : vector of weights for a pair of fictitious points
  ****************************************************************************************/
 void Intersections::MIB_L1(Intersection_Data& inter_node, Beta& beta, Doub_I dv,
-                           VecDoub_I& x) {
+                           VecDoub_O& x) {
   MatrixDoub A, wei, temp;
   VecDoub B, v;
   int order, dev_order, oneside_pts, total_unknowns, onefp_unknowns;
@@ -1115,6 +1114,7 @@ void Intersections::Irregular_MIB_L1(Intersection_Data& inter_node, Beta& beta,
  INPUT
  inter_node_left  : left interseciton node
  inter_node_right : right intersection node
+ beta             : variable coefficients object
  dv               : grid mesh size
  ******************************************************************************/
 void Intersections::Corner_MIB_L1(Intersection_Data& inter_node_left,
@@ -1193,6 +1193,7 @@ void Intersections::Corner_MIB_L1(Intersection_Data& inter_node_left,
 
  INPUT
  inter_node : intersection node struct
+ beta       : variable coefficients object
  dv         : grid mesh size at given direction
  ***************************************************************************/
 void Intersections::Irregular_MIB_L2(Intersection_Data& inter_node, Beta& beta,
@@ -1255,8 +1256,7 @@ void Intersections::Irregular_MIB_L2_Recursive(Intersection_Data& inter_node,
   double coefl, coefr;  // diffusion coefficients along interface
 
   total_unknowns = 2 * onefp_unknowns;  // total unknowns need to be solved
-  oneside_pts = accuracy;  // numbers of real points used for one fictitous
-                           // point
+  oneside_pts = accuracy;  // numbers of real points used for one fictitous point
   dev_order = 1;  // highest order of derivative in two equations
 
   B.resize(total_unknowns);
@@ -1390,8 +1390,9 @@ void Intersections::Irregular_MIB_L2_Recursive(Intersection_Data& inter_node,
  Calculating irregular weights for MIB scheme
 
  INPUT
- gamma : distance between intersection node with its left neighbor grid point
- dv    : grid mesh size
+ gamma        : distance between intersection node with its left neighbor grid point
+ dv           : grid mesh size
+ oneside_pts  : number of nodes on oneside
 
  OUTPUT
  weil : finite difference weights for left fictitious point
@@ -1465,6 +1466,7 @@ void Intersections::Get_irr_weights(Doub_I gamma, Doub_I dv, Int_I oneside_pts,
  INPUT
  inter_node_left  : left interseciton node
  inter_node_right : right intersection node
+ beta             : variable coefficients object
  dv               : grid mesh size
  ******************************************************************************/
 void Intersections::Corner_MIB_L2_2nd(Intersection_Data& inter_node_left,
@@ -1510,8 +1512,7 @@ void Intersections::Corner_MIB_L2_2nd(Intersection_Data& inter_node_left,
   Get_cor_weights(inter_node_left.gamma, inter_node_right.gamma, dv,
                   left_wei_out, left_wei_in, right_wei_out, right_wei_in);
 
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Left Interface
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //~~~~~~~~~~~~~~~~ Left Interface ~~~~~~~~~~~~~~~~~~~
   // Zero order: U^{-} = U^{+} - [U]
   order = 0;
   B[0] = -left_wei_out[order][0];  // GP at ix-1
@@ -1577,8 +1578,7 @@ void Intersections::Corner_MIB_L2_2nd(Intersection_Data& inter_node_left,
     B[oneside_unknowns + 6] = 1;
   }
 
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Right Interface
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //~~~~~~~~~~~~~~~~~~~ Right Interface ~~~~~~~~~~~~~~~~~~~~~~~
   // Zero order: U^{-} = U^{+} - [U]
   order = 0;
   B[oneside_unknowns * 2 + 1] = -right_wei_out[order][0];  // GP at ix
@@ -2277,8 +2277,9 @@ void Intersections::Refresh_Fp(Equation& eq) {
  Calculate approximated jumps at current time w.r.t given equation object
 
  INPUT
- eq : equation object
- uh : solution at current time
+ eq    : equation object
+ uh    : solution at current time
+ beta  : variable coefficients object
 
  OUTPUT
  inter_node.jump : accurate jumps at current time
@@ -2336,11 +2337,14 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh, Beta& beta) {
 
         LU lu_inv(p);
         lu_inv.inverse(p);
-
-        // ifpz[ix][iy][ip].jump.u_dir = p[2][0]*jumpbeta_xi;
-        ifpz[ix][iy][ip].jump.u_dir = p[2][0] * jumpbeta_xi +
-                                      p[2][1] * jumpbeta_eta +
-                                      p[2][2] * jumpbeta_tau;
+				
+				
+				// ***************************** Change to GFM here ********************************
+				// ********* make sure give paramter mib_method == 1 in data.txt file **************
+				// ifpz[ix][iy][ip].jump.u_dir = p[2][0] * jumpbeta_xi;
+				
+				// ************************* Change to MIB here *****************************
+				ifpz[ix][iy][ip].jump.u_dir = p[2][0] * jumpbeta_xi + p[2][1] * jumpbeta_eta + p[2][2] * jumpbeta_tau;
 
         ifpz[ix][iy][ip].jump.err =
             abs(ifpz[ix][iy][ip].jump.u_dir -
@@ -2392,11 +2396,13 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh, Beta& beta) {
 
         LU lu_inv(p);
         lu_inv.inverse(p);
-
-        // ifpy[ix][iz][ip].jump.u_dir = p[1][0]*jumpbeta_xi;
-        ifpy[ix][iz][ip].jump.u_dir = p[1][0] * jumpbeta_xi +
-                                      p[1][1] * jumpbeta_eta +
-                                      p[1][2] * jumpbeta_tau;
+				
+				// ***************************** Change to GFM here ********************************
+				// ********* make sure give paramter mib_method == 1 in data.txt file **************
+			  //ifpy[ix][iz][ip].jump.u_dir = p[1][0] * jumpbeta_xi;
+				
+				// ************************* Change to MIB here *****************************
+        ifpy[ix][iz][ip].jump.u_dir = p[1][0] * jumpbeta_xi + p[1][1] * jumpbeta_eta + p[1][2] * jumpbeta_tau;
 
         ifpy[ix][iz][ip].jump.err =
             abs(ifpy[ix][iz][ip].jump.u_dir -
@@ -2448,11 +2454,13 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh, Beta& beta) {
 
         LU lu_inv(p);
         lu_inv.inverse(p);
-
-        // ifpx[iy][iz][ip].jump.u_dir = p[0][0]*jumpbeta_xi;
-        ifpx[iy][iz][ip].jump.u_dir = p[0][0] * jumpbeta_xi +
-                                      p[0][1] * jumpbeta_eta +
-                                      p[0][2] * jumpbeta_tau;
+				
+				// ***************************** Change to GFM here ********************************
+				// ********* make sure give paramter mib_method == 1 in data.txt file **************
+				//ifpx[iy][iz][ip].jump.u_dir = p[0][0] * jumpbeta_xi;
+				
+				// ************************* Change to MIB here *****************************
+        ifpx[iy][iz][ip].jump.u_dir = p[0][0] * jumpbeta_xi + p[0][1] * jumpbeta_eta + p[0][2] * jumpbeta_tau;
 
         ifpx[iy][iz][ip].jump.err =
             abs(ifpx[iy][iz][ip].jump.u_dir -
@@ -2543,8 +2551,7 @@ void Intersections::Pmatrix_Setup_y(Intersection_Data& inter_node) {
  inter_node : given intersection node
 
  OUTPUT
- inter_node.p : local coordinate transformation matrix for given intersection
- node
+ inter_node.p : local coordinate transformation matrix for given intersection node
  ************************************************************************************************************************/
 void Intersections::Pmatrix_Setup_z(Intersection_Data& inter_node) {
   VecDoub a;
@@ -2719,15 +2726,18 @@ void Intersections::Search_indx(Char_I axis, Int_I ix, Int_I iy, Int_I iz,
  ******************************************************************************************************************/
 void Intersections::Auxiliary_eta_x(Intersection_Data& inter_node) {
   bool flag_outside, flag_inside;
-  int ix, iz, iy;    // index of left node of intersection
-  int upper, lower;  // left index of upper and lower auxiliary points
-  double outside_distance,
-      inside_distance;  // distance for comparing outside and inside
-  double x0, z0;        // x and z coordinate of intersections
-  double a[3];          // normalized normal direction for current intersection
-  VecInt upper_outside, upper_inside, lower_outside,
-      lower_inside;  // indices of each three nodes for auxiliary points on
-                     // outside and inside
+	// index of left node of intersection
+	int ix, iz, iy;
+	// left index of upper and lower auxiliary points
+  int upper, lower;
+	// distance for comparing outside and inside
+  double outside_distance, inside_distance;
+	// x and z coordinate of intersections
+  double x0, z0;
+	// normalized normal direction for current intersection
+  double a[3];
+	// indices of each three nodes for auxiliary points on outside and inside
+  VecInt upper_outside, upper_inside, lower_outside, lower_inside;
 
   // int x_upper, x_lower;
   int z_upper, z_lower;
@@ -2759,17 +2769,6 @@ void Intersections::Auxiliary_eta_x(Intersection_Data& inter_node) {
     a[i] = inter_node.local.normal[i];
   }
 
-  /*
-   for(int i = 0; i < nx; i++)
-   {
-   if((x0>xi[i]) && (x0<xi[i+1]))
-   {
-   x_upper = i+1;
-   x_lower = i;
-   }
-   }
-   */
-
   z_upper = iz + 1;
   z_lower = iz - 1;
 
@@ -2789,8 +2788,7 @@ void Intersections::Auxiliary_eta_x(Intersection_Data& inter_node) {
   // z_distance = sqrt(4*dz*dz+abs(z_upper_auxl-z_lower_auxl));
 
   // Choose direction which has a smaller distance
-  // if(z_distance < x_distance)
-  //{
+  // if(z_distance < x_distance) {
   inter_node.eta.auxl[0] = z_upper_auxl;
   inter_node.eta.auxl[1] = z_lower_auxl;
 
@@ -2876,24 +2874,23 @@ void Intersections::Auxiliary_eta_x(Intersection_Data& inter_node) {
   inside_distance = 0;
   outside_distance = 0;
 
-  // Flags for four different cases when using outside or inside nodes for
-  // auxiliary points
+  // Flags for four different cases when using outside or inside nodes for auxiliary points
   flag_inside = (upper_inside[0] >= 0) && (lower_inside[0] >= 0);
   flag_outside = (upper_outside[0] >= 0) && (lower_outside[0] >= 0);
 
-  // Case 1, cannot find three nodes on same side for both upper and lower
-  // auxiliary points, approximation fails
+  // Case 1, cannot find three nodes on same side for both upper and
+  // lower auxiliary points, approximation fails
   if (!flag_inside && !flag_outside) {
     cout << "Eta approximation fails" << endl;
     exit(0);
   }
-  // Case 2, find six nodes available on outside Omega^{+} domain only, use all
-  // outside nodes for auxiliary points approximation
+  // Case 2, find six nodes available on outside Omega^{+} domain only,
+  // use all outside nodes for auxiliary points approximation
   else if (!flag_inside && flag_outside) {
     inter_node.eta.region = 'o';
   }
-  // Case 3, find six nodes available on inside Omega^{-} domain only, use all
-  // inside nodes for auxiliary points approximation
+  // Case 3, find six nodes available on inside Omega^{-} domain only,
+  // use all inside nodes for auxiliary points approximation
   else if (flag_inside && !flag_outside) {
     inter_node.eta.region = 'i';
   }
@@ -2916,13 +2913,13 @@ void Intersections::Auxiliary_eta_x(Intersection_Data& inter_node) {
       }
     }
 
-    // Find six nodes available on outside Omega^{+} domain only, use all
-    // outside nodes for auxiliary points approximation
+    // Find six nodes available on outside Omega^{+} domain only,
+    // use all outside nodes for auxiliary points approximation
     if (outside_distance < inside_distance) {
       inter_node.eta.region = 'o';
     }
-    // Find six nodes available on inside Omega^{-} domain, use all inside nodes
-    // for auxiliary points approximation
+    // Find six nodes available on inside Omega^{-} domain,
+    // use all inside nodes for auxiliary points approximation
     else {
       inter_node.eta.region = 'i';
     }
@@ -2947,17 +2944,19 @@ void Intersections::Auxiliary_eta_x(Intersection_Data& inter_node) {
  inter_node.region         : approximation region (Omega^{+} or Omega^{-})
  ******************************************************************************************************************/
 void Intersections::Auxiliary_tau_x(Intersection_Data& inter_node) {
-  bool flag_outside, flag_inside;
-  int ix, iz, iy;          // index of left node of intersection
-  int ix_upper, ix_lower;  // left index of upper and lower auxiliary points
-  double outside_distance,
-      inside_distance;  // distance for comparing outside and inside
-  double x0,
-      y0;  // x and z coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
-  double a[3];  // normalized normal direction for current intersection
-  VecInt upper_outside, upper_inside, lower_outside,
-      lower_inside;  // indices of each three nodes for auxiliary points on
-                     // outside and inside
+	bool flag_outside, flag_inside;
+	// index of left node of intersection
+  int ix, iz, iy;
+	// left index of upper and lower auxiliary points
+  int ix_upper, ix_lower;
+	// distance for comparing outside and inside
+  double outside_distance, inside_distance;
+	// x and z coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
+  double x0, y0;
+	// normalized normal direction for current intersection
+  double a[3];
+	// indices of each three nodes for auxiliary points on outside and inside
+  VecInt upper_outside, upper_inside, lower_outside, lower_inside;
 
   upper_outside.resize(3);
   upper_inside.resize(3);
@@ -3026,24 +3025,24 @@ void Intersections::Auxiliary_tau_x(Intersection_Data& inter_node) {
   inside_distance = 0;
   outside_distance = 0;
 
-  // Flags for four different cases when using outside or inside nodes for
-  // auxiliary points
+  // Flags for four different cases when using outside or
+  // inside nodes for auxiliary points
   flag_inside = (upper_inside[0] >= 0) && (lower_inside[0] >= 0);
   flag_outside = (upper_outside[0] >= 0) && (lower_outside[0] >= 0);
 
-  // Case 1, cannot find three nodes on same side for both upper and lower
-  // auxiliary points, approximation fails
+  // Case 1, cannot find three nodes on same side for both upper and
+  // lower auxiliary points, approximation fails
   if (!flag_inside && !flag_outside) {
     cout << "Tau approximation fails" << endl;
     exit(0);
   }
-  // Case 2, find six nodes available on outside Omega^{+} domain only, use all
-  // outside nodes for auxiliary points approximation
+  // Case 2, find six nodes available on outside Omega^{+} domain only,
+  // use all outside nodes for auxiliary points approximation
   else if (!flag_inside && flag_outside) {
     inter_node.tau.region = 'o';
   }
-  // Case 3, find six nodes available on inside Omega^{-} domain only, use all
-  // inside nodes for auxiliary points approximation
+  // Case 3, find six nodes available on inside Omega^{-} domain only,
+  // use all inside nodes for auxiliary points approximation
   else if (flag_inside && !flag_outside) {
     inter_node.tau.region = 'i';
   }
@@ -3057,13 +3056,13 @@ void Intersections::Auxiliary_tau_x(Intersection_Data& inter_node) {
                          abs(xi[lower_inside[i]] - inter_node.tau.auxl[1]);
     }
 
-    // Find six nodes available on outside Omega^{+} domain only, use all
-    // outside nodes for auxiliary points approximation
+    // Find six nodes available on outside Omega^{+} domain only,
+    // use all outside nodes for auxiliary points approximation
     if (outside_distance < inside_distance) {
       inter_node.tau.region = 'o';
     }
-    // Find six nodes available on inside Omega^{-} domain, use all inside nodes
-    // for auxiliary points approximation
+    // Find six nodes available on inside Omega^{-} domain,
+    // use all inside nodes for auxiliary points approximation
     else {
       inter_node.tau.region = 'i';
     }
@@ -3089,16 +3088,18 @@ void Intersections::Auxiliary_tau_x(Intersection_Data& inter_node) {
  ******************************************************************************************************************/
 void Intersections::Auxiliary_eta_y(Intersection_Data& inter_node) {
   bool flag_outside, flag_inside;
-  int ix, iz, iy;          // index of left node of intersection
-  int iy_upper, iy_lower;  // left index of upper and lower auxiliary points
-  double outside_distance,
-      inside_distance;  // distance for comparing outside and inside
-  double y0,
-      z0;  // y and z coordinate of intersections; u_{eta}^{+} or u_{eta}^{-}
-  double a[3];  // normalized normal direction for current intersection
-  VecInt upper_outside, upper_inside, lower_outside,
-      lower_inside;  // indices of each three nodes for auxiliary points on
-                     // outside and inside
+	// index of left node of intersection
+  int ix, iz, iy;
+	// left index of upper and lower auxiliary points
+  int iy_upper, iy_lower;
+	// distance for comparing outside and inside
+  double outside_distance, inside_distance;
+	// y and z coordinate of intersections; u_{eta}^{+} or u_{eta}^{-}
+  double y0, z0;
+	// normalized normal direction for current intersection
+  double a[3];
+	// indices of each three nodes for auxiliary points on outside and inside
+  VecInt upper_outside, upper_inside, lower_outside, lower_inside;
 
   upper_outside.resize(3);
   upper_inside.resize(3);
@@ -3167,24 +3168,24 @@ void Intersections::Auxiliary_eta_y(Intersection_Data& inter_node) {
   inside_distance = 0;
   outside_distance = 0;
 
-  // Flags for four different cases when using outside or inside nodes for
-  // auxiliary points
+  // Flags for four different cases when using outside or
+  // inside nodes for auxiliary points
   flag_inside = (upper_inside[0] >= 0) && (lower_inside[0] >= 0);
   flag_outside = (upper_outside[0] >= 0) && (lower_outside[0] >= 0);
 
-  // Case 1, cannot find three nodes on same side for both upper and lower
-  // auxiliary points, approximation fails
+  // Case 1, cannot find three nodes on same side for both upper and
+  // lower auxiliary points, approximation fails
   if (!flag_inside && !flag_outside) {
     cout << "Eta approximation fails" << endl;
     exit(0);
   }
-  // Case 2, find six nodes available on outside Omega^{+} domain only, use all
-  // outside nodes for auxiliary points approximation
+  // Case 2, find six nodes available on outside Omega^{+} domain only,
+  // use all outside nodes for auxiliary points approximation
   else if (!flag_inside && flag_outside) {
     inter_node.eta.region = 'o';
   }
-  // Case 3, find six nodes available on inside Omega^{-} domain only, use all
-  // inside nodes for auxiliary points approximation
+  // Case 3, find six nodes available on inside Omega^{-} domain only,
+  // use all inside nodes for auxiliary points approximation
   else if (flag_inside && !flag_outside) {
     inter_node.eta.region = 'i';
   }
@@ -3198,13 +3199,13 @@ void Intersections::Auxiliary_eta_y(Intersection_Data& inter_node) {
                          abs(yi[lower_inside[i]] - inter_node.eta.auxl[1]);
     }
 
-    // Find six nodes available on outside Omega^{+} domain only, use all
-    // outside nodes for auxiliary points approximation
+    // Find six nodes available on outside Omega^{+} domain only,
+    // use all outside nodes for auxiliary points approximation
     if (outside_distance < inside_distance) {
       inter_node.eta.region = 'o';
     }
-    // Find six nodes available on inside Omega^{-} domain, use all inside nodes
-    // for auxiliary points approximation
+    // Find six nodes available on inside Omega^{-} domain,
+    // use all inside nodes for auxiliary points approximation
     else {
       inter_node.eta.region = 'i';
     }
@@ -3212,8 +3213,8 @@ void Intersections::Auxiliary_eta_y(Intersection_Data& inter_node) {
 }
 
 /******************************************************************************************************************
- Initialize informations of auxiliary nodes on the Plane Z=IZ with intersecting
- line of Z=IZ Plane and Tangent Plane
+ Initialize informations of auxiliary nodes on the Plane Z=IZ 
+ with intersecting line of Z=IZ Plane and Tangent Plane
 
  INPUT
  inter_node : given intersection node
@@ -3230,17 +3231,19 @@ void Intersections::Auxiliary_eta_y(Intersection_Data& inter_node) {
  ******************************************************************************************************************/
 void Intersections::Auxiliary_tau_y(Intersection_Data& inter_node) {
   bool flag_outside, flag_inside;
-  int ix, iz, iy;          // index of left node of intersection
-  int iy_upper, iy_lower;  // left index of upper and lower auxiliary points
-  double outside_distance,
-      inside_distance;  // distance for comparing outside and inside
-  double y0,
-      x0;  // y and x coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
-  double a[3];  // normalized normal direction for current intersection
-  VecInt upper_outside, upper_inside, lower_outside,
-      lower_inside;  // indices of each three nodes for auxiliary points on
-                     // outside and inside
-
+	// index of left node of intersection
+  int ix, iz, iy;
+	// left index of upper and lower auxiliary points
+  int iy_upper, iy_lower;
+	// distance for comparing outside and inside
+  double outside_distance, inside_distance;
+	// y and x coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
+  double y0, x0;
+	// normalized normal direction for current intersection
+  double a[3];
+	// indices of each three nodes for auxiliary points on outside and inside
+  VecInt upper_outside, upper_inside, lower_outside, lower_inside;
+	
   upper_outside.resize(3);
   upper_inside.resize(3);
   lower_outside.resize(3);
@@ -3308,24 +3311,22 @@ void Intersections::Auxiliary_tau_y(Intersection_Data& inter_node) {
   inside_distance = 0;
   outside_distance = 0;
 
-  // Flags for four different cases when using outside or inside nodes for
-  // auxiliary points
+  // Flags for four different cases when using outside or inside nodes for auxiliary points
   flag_inside = (upper_inside[0] >= 0) && (lower_inside[0] >= 0);
   flag_outside = (upper_outside[0] >= 0) && (lower_outside[0] >= 0);
 
-  // Case 1, cannot find three nodes on same side for both upper and lower
-  // auxiliary points, approximation fails
+  // Case 1, cannot find three nodes on same side for both upper and lower auxiliary points, approximation fails
   if (!flag_inside && !flag_outside) {
     cout << "Tau approximation fails" << endl;
     exit(0);
   }
-  // Case 2, find six nodes available on outside Omega^{+} domain only, use all
-  // outside nodes for auxiliary points approximation
+  // Case 2, find six nodes available on outside Omega^{+} domain only,
+	// use all outside nodes for auxiliary points approximation
   else if (!flag_inside && flag_outside) {
     inter_node.tau.region = 'o';
   }
-  // Case 3, find six nodes available on inside Omega^{-} domain only, use all
-  // inside nodes for auxiliary points approximation
+  // Case 3, find six nodes available on inside Omega^{-} domain only,
+  // use all inside nodes for auxiliary points approximation
   else if (flag_inside && !flag_outside) {
     inter_node.tau.region = 'i';
   }
@@ -3339,13 +3340,13 @@ void Intersections::Auxiliary_tau_y(Intersection_Data& inter_node) {
                          abs(yi[lower_inside[i]] - inter_node.tau.auxl[1]);
     }
 
-    // Find six nodes available on outside Omega^{+} domain only, use all
-    // outside nodes for auxiliary points approximation
+    // Find six nodes available on outside Omega^{+} domain only,
+    // use all outside nodes for auxiliary points approximation
     if (outside_distance < inside_distance) {
       inter_node.tau.region = 'o';
     }
-    // Find six nodes available on inside Omega^{-} domain, use all inside nodes
-    // for auxiliary points approximation
+    // Find six nodes available on inside Omega^{-} domain,
+    // use all inside nodes for auxiliary points approximation
     else {
       inter_node.tau.region = 'i';
     }
@@ -3371,16 +3372,18 @@ void Intersections::Auxiliary_tau_y(Intersection_Data& inter_node) {
  ******************************************************************************************************************/
 void Intersections::Auxiliary_eta_z(Intersection_Data& inter_node) {
   bool flag_outside, flag_inside;
-  int ix, iz, iy;          // index of left node of intersection
-  int iz_upper, iz_lower;  // left index of upper and lower auxiliary points
-  double outside_distance,
-      inside_distance;  // distance for comparing outside and inside
-  double y0,
-      z0;  // y and z coordinate of intersections; u_{eta}^{+} or u_{eta}^{-}
-  double a[3];  // normalized normal direction for current intersection
-  VecInt upper_outside, upper_inside, lower_outside,
-      lower_inside;  // indices of each three nodes for auxiliary points on
-                     // outside and inside
+	// index of left node of intersection
+  int ix, iz, iy;
+	// left index of upper and lower auxiliary points
+  int iz_upper, iz_lower;
+	// distance for comparing outside and inside
+  double outside_distance, inside_distance;
+	// y and z coordinate of intersections; u_{eta}^{+} or u_{eta}^{-}
+  double y0, z0;
+	// normalized normal direction for current intersection
+  double a[3];
+	// indices of each three nodes for auxiliary points on outside and inside
+  VecInt upper_outside, upper_inside, lower_outside, lower_inside;
 
   upper_outside.resize(3);
   upper_inside.resize(3);
@@ -3449,24 +3452,24 @@ void Intersections::Auxiliary_eta_z(Intersection_Data& inter_node) {
   inside_distance = 0;
   outside_distance = 0;
 
-  // Flags for four different cases when using outside or inside nodes for
-  // auxiliary points
+  // Flags for four different cases when using outside or
+  // inside nodes for auxiliary points
   flag_inside = (upper_inside[0] >= 0) && (lower_inside[0] >= 0);
   flag_outside = (upper_outside[0] >= 0) && (lower_outside[0] >= 0);
 
-  // Case 1, cannot find three nodes on same side for both upper and lower
-  // auxiliary points, approximation fails
+  // Case 1, cannot find three nodes on same side for both upper and
+  // lower auxiliary points, approximation fails
   if (!flag_inside && !flag_outside) {
     cout << "Eta approximation fails" << endl;
     exit(0);
   }
-  // Case 2, find six nodes available on outside Omega^{+} domain only, use all
-  // outside nodes for auxiliary points approximation
+  // Case 2, find six nodes available on outside Omega^{+} domain only,
+  // use all outside nodes for auxiliary points approximation
   else if (!flag_inside && flag_outside) {
     inter_node.eta.region = 'o';
   }
-  // Case 3, find six nodes available on inside Omega^{-} domain only, use all
-  // inside nodes for auxiliary points approximation
+  // Case 3, find six nodes available on inside Omega^{-} domain only,
+  // use all inside nodes for auxiliary points approximation
   else if (flag_inside && !flag_outside) {
     inter_node.eta.region = 'i';
   }
@@ -3480,13 +3483,13 @@ void Intersections::Auxiliary_eta_z(Intersection_Data& inter_node) {
                          abs(zi[lower_inside[i]] - inter_node.eta.auxl[1]);
     }
 
-    // Find six nodes available on outside Omega^{+} domain only, use all
-    // outside nodes for auxiliary points approximation
+    // Find six nodes available on outside Omega^{+} domain only,
+    // use all outside nodes for auxiliary points approximation
     if (outside_distance < inside_distance) {
       inter_node.eta.region = 'o';
     }
-    // Find six nodes available on inside Omega^{-} domain, use all inside nodes
-    // for auxiliary points approximation
+    // Find six nodes available on inside Omega^{-} domain,
+    // use all inside nodes for auxiliary points approximation
     else {
       inter_node.eta.region = 'i';
     }
@@ -3512,16 +3515,18 @@ void Intersections::Auxiliary_eta_z(Intersection_Data& inter_node) {
  ******************************************************************************************************************/
 void Intersections::Auxiliary_tau_z(Intersection_Data& inter_node) {
   bool flag_outside, flag_inside;
-  int ix, iz, iy;          // index of left node of intersection
-  int iz_upper, iz_lower;  // left index of upper and lower auxiliary points
-  double outside_distance,
-      inside_distance;  // distance for comparing outside and inside
-  double x0,
-      z0;  // x and z coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
-  double a[3];  // normalized normal direction for current intersection
-  VecInt upper_outside, upper_inside, lower_outside,
-      lower_inside;  // indices of each three nodes for auxiliary points on
-                     // outside and inside
+	// index of left node of intersection
+  int ix, iz, iy;
+	// left index of upper and lower auxiliary points
+  int iz_upper, iz_lower;
+	// distance for comparing outside and inside
+  double outside_distance, inside_distance;
+	// x and z coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
+  double x0, z0;
+	// normalized normal direction for current intersection
+  double a[3];
+	// indices of each three nodes for auxiliary points on outside and inside
+  VecInt upper_outside, upper_inside, lower_outside, lower_inside;
 
   upper_outside.resize(3);
   upper_inside.resize(3);
@@ -3590,24 +3595,24 @@ void Intersections::Auxiliary_tau_z(Intersection_Data& inter_node) {
   inside_distance = 0;
   outside_distance = 0;
 
-  // Flags for four different cases when using outside or inside nodes for
-  // auxiliary points
+  // Flags for four different cases when using outside or
+  // inside nodes for auxiliary points
   flag_inside = (upper_inside[0] >= 0) && (lower_inside[0] >= 0);
   flag_outside = (upper_outside[0] >= 0) && (lower_outside[0] >= 0);
 
-  // Case 1, cannot find three nodes on same side for both upper and lower
-  // auxiliary points, approximation fails
+  // Case 1, cannot find three nodes on same side for both upper and
+  // lower auxiliary points, approximation fails
   if (!flag_inside && !flag_outside) {
     cout << "Tau approximation fails" << endl;
     exit(0);
   }
-  // Case 2, find six nodes available on outside Omega^{+} domain only, use all
-  // outside nodes for auxiliary points approximation
+  // Case 2, find six nodes available on outside Omega^{+} domain only,
+  // use all outside nodes for auxiliary points approximation
   else if (!flag_inside && flag_outside) {
     inter_node.tau.region = 'o';
   }
-  // Case 3, find six nodes available on inside Omega^{-} domain only, use all
-  // inside nodes for auxiliary points approximation
+  // Case 3, find six nodes available on inside Omega^{-} domain only,
+  // use all inside nodes for auxiliary points approximation
   else if (flag_inside && !flag_outside) {
     inter_node.tau.region = 'i';
   }
@@ -3621,13 +3626,13 @@ void Intersections::Auxiliary_tau_z(Intersection_Data& inter_node) {
                          abs(zi[lower_inside[i]] - inter_node.tau.auxl[1]);
     }
 
-    // Find six nodes available on outside Omega^{+} domain only, use all
-    // outside nodes for auxiliary points approximation
+    // Find six nodes available on outside Omega^{+} domain only,
+    // use all outside nodes for auxiliary points approximation
     if (outside_distance < inside_distance) {
       inter_node.tau.region = 'o';
     }
-    // Find six nodes available on inside Omega^{-} domain, use all inside nodes
-    // for auxiliary points approximation
+    // Find six nodes available on inside Omega^{-} domain,
+    // use all inside nodes for auxiliary points approximation
     else {
       inter_node.tau.region = 'i';
     }
@@ -3648,17 +3653,18 @@ void Intersections::Auxiliary_tau_z(Intersection_Data& inter_node) {
  *******************************************************************************************/
 double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh,
                             Beta& beta) {
-  int ix, iy, iz;                         // index of left node of intersection
-  double upper_distance, lower_distance;  // distance for eta approximation;
-                                          // distance for comparing outside and
-                                          // inside
-  double x_upper, x_lower, upper_value,
-      lower_value;            // x coordinate and value of two auxiliary points
-  double x0, u_eta;           // u_{eta}^{+} or u_{eta}^{-}
-  VecDoub upper, lower, eta;  // absolute location for approximating two
-                              // auxiliary points and u_{eta}
-  MatrixDoub wei_upper, wei_lower,
-      wei_eta;  // weights for two auxiliary points and weights for u_{eta}
+	// index of left node of intersection
+  int ix, iy, iz;
+	// distance for eta approximation; distance for comparing outside and inside
+  double upper_distance, lower_distance;
+	// x coordinate and value of two auxiliary points
+	double x_upper, x_lower, upper_value, lower_value;
+	// u_{eta}^{+} or u_{eta}^{-}
+	double x0, u_eta;
+	// absolute location for approximating two auxiliary points and u_{eta}
+  VecDoub upper, lower, eta;
+	// weights for two auxiliary points and weights for u_{eta}
+  MatrixDoub wei_upper, wei_lower, wei_eta;
   double jumpbeta_eta;
 
   ix = inter_node.left_loc;
@@ -3686,8 +3692,8 @@ double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh,
    dz*dz*inter_node.p[1][2]*inter_node.p[1][2]);
    */
 
-  // Get Eta derivative along z-direction, make sure it's the same direction of
-  // given vector
+  // Get Eta derivative along z-direction,
+	// make sure it's the same direction of given vector
   if (inter_node.p[1][2] > 0) {
     eta.push_back(-lower_distance);
     eta.push_back(0.0);
@@ -3715,8 +3721,8 @@ double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh,
     wei_lower[i].resize(1);
   }
 
-  // find six nodes available on outside Omega^{+} domain only, use all outside
-  // nodes for auxiliary points approximation
+  // find six nodes available on outside Omega^{+} domain only,
+  // use all outside nodes for auxiliary points approximation
   if ((REG == 'o') || (inter_node.eta.region == 'o')) {
     for (int i = 0; i < 3; i++) {
       upper.push_back(xi[inter_node.eta.uout_auxlnodes[i]]);
@@ -3737,8 +3743,8 @@ double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh,
 
     jumpbeta_eta = Eta_Plus(inter_node, beta, u_eta);
   }
-  // find six nodes available on inside Omega^{-} domain only, use all inside
-  // nodes for auxiliary points approximation
+  // find six nodes available on inside Omega^{-} domain only,
+  // use all inside nodes for auxiliary points approximation
   else if (inter_node.eta.region == 'i') {
     for (int i = 0; i < 3; i++) {
       upper.push_back(xi[inter_node.eta.uin_auxlnodes[i]]);
@@ -3782,17 +3788,18 @@ double Intersections::Eta_x(Intersection_Data& inter_node, CubicDoub& uh,
  *******************************************************************************************/
 double Intersections::Tau_x(Intersection_Data& inter_node, CubicDoub& uh,
                             Beta& beta) {
-  int ix, iy, iz;                         // index of left node of intersection
-  double upper_distance, lower_distance;  // distance for eta approximation;
-                                          // distance for comparing outside and
-                                          // inside
-  double x_upper, x_lower, upper_value,
-      lower_value;            // x coordinate and value of two auxiliary points
-  double x0, u_tau;           // u_{tau}^{+} or u_{tau}^{-}
-  VecDoub upper, lower, tau;  // absolute location for approximating two
-                              // auxiliary points and u_{tau}
-  MatrixDoub wei_upper, wei_lower,
-      wei_tau;  // weights for two auxiliary points and weights for u_{tau}
+	// index of left node of intersection
+  int ix, iy, iz;
+	// distance for eta approximation; distance for comparing outside and inside
+  double upper_distance, lower_distance;
+	// x coordinate and value of two auxiliary points
+  double x_upper, x_lower, upper_value, lower_value;
+	// u_{tau}^{+} or u_{tau}^{-}
+	double x0, u_tau;
+	// absolute location for approximating two auxiliary points and u_{tau}
+  VecDoub upper, lower, tau;
+	// weights for two auxiliary points and weights for u_{tau}
+  MatrixDoub wei_upper, wei_lower, wei_tau;
   double jumpbeta_tau;
 
   ix = inter_node.left_loc;
@@ -3820,8 +3827,8 @@ double Intersections::Tau_x(Intersection_Data& inter_node, CubicDoub& uh,
    dy*dy*inter_node.p[2][1]*inter_node.p[2][1]);
    */
 
-  // Get Tau derivative along y-direction, make sure it's the same direction of
-  // given vector
+  // Get Tau derivative along y-direction,
+  // make sure it's the same direction of given vector
   if (inter_node.p[2][1] > 0) {
     tau.push_back(-lower_distance);
     tau.push_back(0.0);
@@ -3911,18 +3918,18 @@ double Intersections::Tau_x(Intersection_Data& inter_node, CubicDoub& uh,
  *******************************************************************************************/
 double Intersections::Eta_y(Intersection_Data& inter_node, CubicDoub& uh,
                             Beta& beta) {
-  int ix, iz, iy;                         // index of left node of intersection
-  double upper_distance, lower_distance;  // distance for eta approximation;
-                                          // distance for comparing outside and
-                                          // inside
-  double y_upper, y_lower, upper_value,
-      lower_value;   // y coordinate and value of two auxiliary points
-  double y0, u_eta;  // y coordinate of intersections; u_{eta}^{+} or
-                     // u_{eta}^{-}
-  VecDoub upper, lower, eta;  // absolute location for approximating two
-                              // auxiliary points and u_{eta}
-  MatrixDoub wei_upper, wei_lower,
-      wei_eta;  // weights for two auxiliary points and weights for u_{eta}
+	// index of left node of intersection
+  int ix, iz, iy;
+	// distance for eta approximation; distance for comparing outside and inside
+  double upper_distance, lower_distance;
+	// y coordinate and value of two auxiliary points
+  double y_upper, y_lower, upper_value, lower_value;
+	// y coordinate of intersections; u_{eta}^{+} or u_{eta}^{-}
+  double y0, u_eta;
+	// absolute location for approximating two auxiliary points and u_{eta}
+  VecDoub upper, lower, eta;
+	// weights for two auxiliary points and weights for u_{eta}
+  MatrixDoub wei_upper, wei_lower, wei_eta;
   double jumpbeta_eta;
 
   ix = inter_node.line.indx1;
@@ -3950,8 +3957,8 @@ double Intersections::Eta_y(Intersection_Data& inter_node, CubicDoub& uh,
    dz*dz*inter_node.p[1][2]*inter_node.p[1][2]);
    */
 
-  // Get Eta derivative along z-direction, make sure it's the same direction of
-  // given vector
+  // Get Eta derivative along z-direction,
+  // make sure it's the same direction of given vector
   if (inter_node.p[1][2] > 0) {
     eta.push_back(-lower_distance);
     eta.push_back(0.0);
@@ -4041,18 +4048,18 @@ double Intersections::Eta_y(Intersection_Data& inter_node, CubicDoub& uh,
  *******************************************************************************************/
 double Intersections::Tau_y(Intersection_Data& inter_node, CubicDoub& uh,
                             Beta& beta) {
-  int ix, iz, iy;                         // index of left node of intersection
-  double upper_distance, lower_distance;  // distance for eta approximation;
-                                          // distance for comparing outside and
-                                          // inside
-  double y_upper, y_lower, upper_value,
-      lower_value;   // y coordinate and value of two auxiliary points
-  double y0, u_tau;  // y coordinate of intersections; u_{tau}^{+} or
-                     // u_{tau}^{-}
-  VecDoub upper, lower, tau;  // absolute location for approximating two
-                              // auxiliary points and u_{tau}
-  MatrixDoub wei_upper, wei_lower,
-      wei_tau;  // weights for two auxiliary points and weights for u_{tau}
+	// index of left node of intersection
+  int ix, iz, iy;
+	// distance for eta approximation; distance for comparing outside and inside
+  double upper_distance, lower_distance;
+	// y coordinate and value of two auxiliary points
+	double y_upper, y_lower, upper_value, lower_value;
+	// y coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
+  double y0, u_tau;
+	// absolute location for approximating two auxiliary points and u_{tau}
+  VecDoub upper, lower, tau;
+	// weights for two auxiliary points and weights for u_{tau}
+  MatrixDoub wei_upper, wei_lower, wei_tau;
   double jumpbeta_tau;
 
   ix = inter_node.line.indx1;
@@ -4080,8 +4087,8 @@ double Intersections::Tau_y(Intersection_Data& inter_node, CubicDoub& uh,
    dx*dx*inter_node.p[2][0]*inter_node.p[2][0]);
    */
 
-  // Get Tau derivative along x-direction, make sure it's the same direction of
-  // given vector
+  // Get Tau derivative along x-direction,
+  // make sure it's the same direction of given vector
   if (inter_node.p[2][0] > 0) {
     tau.push_back(-lower_distance);
     tau.push_back(0.0);
@@ -4171,18 +4178,18 @@ double Intersections::Tau_y(Intersection_Data& inter_node, CubicDoub& uh,
  *******************************************************************************************/
 double Intersections::Eta_z(Intersection_Data& inter_node, CubicDoub& uh,
                             Beta& beta) {
-  int ix, iz, iy;                         // index of left node of intersection
-  double upper_distance, lower_distance;  // distance for eta approximation;
-                                          // distance for comparing outside and
-                                          // inside
-  double z_upper, z_lower, upper_value,
-      lower_value;   // z coordinate and value of two auxiliary points
-  double z0, u_eta;  // z coordinate of intersections; u_{eta}^{+} or
-                     // u_{eta}^{-}
-  VecDoub upper, lower, eta;  // absolute location for approximating two
-                              // auxiliary points and u_{eta}
-  MatrixDoub wei_upper, wei_lower,
-      wei_eta;  // weights for two auxiliary points and weights for u_{eta}
+	// index of left node of intersection
+	int ix, iz, iy;
+	// distance for eta approximation; distance for comparing outside and inside
+  double upper_distance, lower_distance;
+	// z coordinate and value of two auxiliary points
+  double z_upper, z_lower, upper_value, lower_value;
+	// z coordinate of intersections; u_{eta}^{+} or u_{eta}^{-}
+  double z0, u_eta;
+	// absolute location for approximating two auxiliary points and u_{eta}
+  VecDoub upper, lower, eta;
+	// weights for two auxiliary points and weights for u_{eta}
+  MatrixDoub wei_upper, wei_lower, wei_eta;
   double jumpbeta_eta;
 
   ix = inter_node.line.indx1;
@@ -4210,8 +4217,8 @@ double Intersections::Eta_z(Intersection_Data& inter_node, CubicDoub& uh,
    dy*dy*inter_node.p[1][1]*inter_node.p[1][1]);
    */
 
-  // Get Eta derivative along y-direction, make sure it's the same direction of
-  // given vector
+  // Get Eta derivative along y-direction,
+  // make sure it's the same direction of given vector
   if (inter_node.p[1][1] > 0) {
     eta.push_back(-lower_distance);
     eta.push_back(0.0);
@@ -4301,18 +4308,18 @@ double Intersections::Eta_z(Intersection_Data& inter_node, CubicDoub& uh,
  *******************************************************************************************/
 double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh,
                             Beta& beta) {
-  int ix, iz, iy;                         // index of left node of intersection
-  double upper_distance, lower_distance;  // distance for eta approximation;
-                                          // distance for comparing outside and
-                                          // inside
-  double z_upper, z_lower, upper_value,
-      lower_value;   // z coordinate and value of two auxiliary points
-  double z0, u_tau;  // z coordinate of intersections; u_{tau}^{+} or
-                     // u_{tau}^{-}
-  VecDoub upper, lower, tau;  // absolute location for approximating two
-                              // auxiliary points and u_{tau}
-  MatrixDoub wei_upper, wei_lower,
-      wei_tau;  // weights for two auxiliary points and weights for u_{tau}
+	// index of left node of intersection
+  int ix, iz, iy;
+	// distance for eta approximation; distance for comparing outside and inside
+  double upper_distance, lower_distance;
+	// z coordinate and value of two auxiliary points
+  double z_upper, z_lower, upper_value, lower_value;
+	// z coordinate of intersections; u_{tau}^{+} or u_{tau}^{-}
+  double z0, u_tau;
+	// absolute location for approximating two auxiliary points and u_{tau}
+  VecDoub upper, lower, tau;
+	// weights for two auxiliary points and weights for u_{tau}
+  MatrixDoub wei_upper, wei_lower, wei_tau;
 
   VecDoub x_vec, z_vec;
   MatrixDoub wei_x, wei_z;
@@ -4344,8 +4351,8 @@ double Intersections::Tau_z(Intersection_Data& inter_node, CubicDoub& uh,
    dx*dx*inter_node.p[2][0]*inter_node.p[2][0]);
    */
 
-  // Get Tau derivative along x-direction, make sure it's the same direction of
-  // given vector
+  // Get Tau derivative along x-direction,
+  // make sure it's the same direction of given vector
   if (inter_node.p[2][0] > 0) {
     tau.push_back(-lower_distance);
     tau.push_back(0.0);
@@ -4437,13 +4444,11 @@ double Intersections::Eta_Plus(Intersection_Data& inter_node, Beta& beta,
   double temp;
 
   temp = beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value,
-                     inter_node.coord.z_value) *
-             inter_node.jump.u_eta +
+                     inter_node.coord.z_value) * inter_node.jump.u_eta +
          (beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value,
-                       inter_node.coord.z_value) -
+											 inter_node.coord.z_value) -
           beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value,
-                      inter_node.coord.z_value)) *
-             eta_plus;
+                      inter_node.coord.z_value)) * eta_plus;
 
   return temp;
 }
@@ -4464,13 +4469,11 @@ double Intersections::Eta_Minus(Intersection_Data& inter_node, Beta& beta,
   double temp;
 
   temp = beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value,
-                      inter_node.coord.z_value) *
-             inter_node.jump.u_eta +
+                      inter_node.coord.z_value) * inter_node.jump.u_eta +
          (beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value,
                        inter_node.coord.z_value) -
           beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value,
-                      inter_node.coord.z_value)) *
-             eta_minus;
+                      inter_node.coord.z_value)) * eta_minus;
 
   return temp;
 }
@@ -4491,13 +4494,11 @@ double Intersections::Tau_Plus(Intersection_Data& inter_node, Beta& beta,
   double temp;
 
   temp = beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value,
-                     inter_node.coord.z_value) *
-             inter_node.jump.u_tau +
+                     inter_node.coord.z_value) * inter_node.jump.u_tau +
          (beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value,
                        inter_node.coord.z_value) -
           beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value,
-                      inter_node.coord.z_value)) *
-             tau_plus;
+                      inter_node.coord.z_value)) * tau_plus;
 
   return temp;
 }
@@ -4518,13 +4519,11 @@ double Intersections::Tau_Minus(Intersection_Data& inter_node, Beta& beta,
   double temp;
 
   temp = beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value,
-                      inter_node.coord.z_value) *
-             inter_node.jump.u_tau +
+                      inter_node.coord.z_value) * inter_node.jump.u_tau +
          (beta.Outside(inter_node.coord.x_value, inter_node.coord.y_value,
                        inter_node.coord.z_value) -
           beta.Inside(inter_node.coord.x_value, inter_node.coord.y_value,
-                      inter_node.coord.z_value)) *
-             tau_minus;
+                      inter_node.coord.z_value)) * tau_minus;
 
   return temp;
 }
@@ -4845,8 +4844,7 @@ void Intersections::Check_coord(Surface_Cartesian& ex) {
 }
 
 /*********************************************************************************************
- Show the smallest distance between intersection point and its left point in
- x-direction
+ Show the smallest distance between intersection point and its left point in x-direction
  *********************************************************************************************/
 void Intersections::Smallest_gamma_x() {
   double temp;

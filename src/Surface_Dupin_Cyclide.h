@@ -6,7 +6,10 @@
 #include "Surface_Cartesian.h"
 
 /****************************************************************
- Dupin Cuclide Surface with parameter [1,0.3,0.6]
+ Dupin Cuclide Surface with parameter [a ,b, c]
+ 
+ Equation : (a - sqrt(x^2 + y^2))^2 + z * z + b * x - c * c = 0
+ 
  Suggested domain: [-4,4;-4,4;-4,4] for grid (20,40,80,160)
  ****************************************************************/
 class Surface_Dupin_Cyclide : public Surface_Cartesian {

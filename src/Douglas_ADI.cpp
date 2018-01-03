@@ -8,7 +8,7 @@
  INPUT
  mesh     : mesh object
  inter    : object of all intersections
- in_beta  : vector of 2 double values represent beta^{-} and beta^{+}
+ beta     : object of variable coefficient
  time     : vector of 3 double values represent beginning time, finishing time and time step
  accuracy : accuracy of scheme
  *******************************************************************************************/
@@ -58,6 +58,7 @@ Douglas_ADI::Douglas_ADI(Intersections& inter, Mesh& mesh, Beta& beta,
  INPUT
  eq    : euqation object at next time step
  inter : object of all intersections
+ beta  : object of variable coefficient
 
  OUTPUT
  uh : three-dimensional solution at current time step to next time step

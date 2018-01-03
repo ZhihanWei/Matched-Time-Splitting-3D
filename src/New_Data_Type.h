@@ -59,17 +59,15 @@ struct Err {
 };
 // All data used to approximate Eta and Tau jumps
 struct Approximated_Jumps {
-  VecChar auxlaxis;  // on which axis to approximate auxiliary points
-  // VecInt ul_indx;                  //upper and lower indx of the axis used to
-  // do approximation; size: 2; 1st for upper, 2nd for lower
-  VecDoub auxl;  // coordinate location of auxiliary points; size: 2; 1st for
-                 // upper, 2nd for lower
+	// on which axis to approximate auxiliary points coordinate location of auxiliary points;
+  VecChar auxlaxis;
+	VecDoub auxl;           // size: 2; 1st for upper, 2nd for lower
   VecInt uin_auxlnodes;   // indices of upper inside auxiliary nodes
   VecInt uout_auxlnodes;  // indices of upper outside auxiliary nodes
   VecInt lin_auxlnodes;   // indices of lower inside auxiliary nodes
   VecInt lout_auxlnodes;  // indices of lower outside auxiliary nodes
-  char region;  // approximation region in Omega{+} or Omege{-}; 'o' for
-                // Omega{+}, 'i' for Omega{-}
+	// approximation region in Omega{+} or Omege{-};
+	char region;            // 'o' for Omega{+}, 'i' for Omega{-}
 };
 struct Intersection_Data {
   Coord coord;
@@ -82,10 +80,10 @@ struct Intersection_Data {
   MatrixDoub p;
   Approximated_Jumps eta;
   Approximated_Jumps tau;
-  char dir;
-  int ID;
-  int left_loc;
-  double gamma;
+  char dir;            // x, y or z direction
+  int ID;							 // number of intersection on the grid line 
+  int left_loc;        // index of left node of interface intersection
+  double gamma;        // distance between left node and interface intersection
 };
 
 #endif

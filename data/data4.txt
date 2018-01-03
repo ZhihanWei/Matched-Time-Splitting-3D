@@ -2,21 +2,22 @@ xl = -3.99
 xr = 3.99
 yl = -1.99
 yr = 1.99
-zl = -3.99
-zr = 3.99
+zl = -1.99
+zr = 1.99
 
-nx = 210
-ny = 210
-nz = 210
+nx = 160
+ny = 160
+nz = 160
 
 t_start = 0
 t_finish = 1
-t_step = 1
+t_step = 0.01
 
-surface = H
-equation = 5
+surface = E
+method = A
 
-beta_inside = 1
-beta_outside = 10
+equation = 2
+beta = 0
+mib_method = 1
 
 accuracy = 2

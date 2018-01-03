@@ -5,10 +5,13 @@
 #include "Constant.h"
 #include "Surface_Cartesian.h"
 
-/************************************************************
- Tanglecube Surface with parameter [1,-5,1,-5,1,-5,10]
+/**************************************************************************
+ Tanglecube Surface with parameter [a1, a2, b1, b2, c1, c2, d]
+ 
+ Equation : a1 * x^4 + a2 * x^2 + b1 * y^4 + b2 * y^2 + c1 * z^4 + c2 * z^2 + d = 0
+ 
  Suggested domain: [-4,4;-4,4;-5,5]
- ************************************************************/
+ **************************************************************************/
 class Surface_Tanglecube : public Surface_Cartesian {
  private:
   double par[7];

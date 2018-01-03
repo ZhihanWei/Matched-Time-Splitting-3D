@@ -176,8 +176,7 @@ double LU::det() {
 }
 
 /*Improves a solution vector x[0..n-1] of the linear set of equations Ax=b.
- The vectors b[0..n-1] and x[0..n-1] are input. On output, x[0..n-1] is
- modified,
+ The vectors b[0..n-1] and x[0..n-1] are input. On output, x[0..n-1] is modified,
  to an improved set of values.*/
 void LU::mprove(VecDoub_I &b, VecDoub_IO &x) {
   int i, j;

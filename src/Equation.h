@@ -17,14 +17,14 @@ class Equation {
   double t;
 
  public:
-  virtual double Outer_u(Doub_I, Doub_I, Doub_I) const = 0;  // Outer source
-                                                             // term
-  virtual double Inner_u(Doub_I, Doub_I, Doub_I) const = 0;  // Inner source
-                                                             // term
-  virtual double Outer_f(Doub_I, Doub_I, Doub_I) const = 0;  // Outer source
-                                                             // term
-  virtual double Inner_f(Doub_I, Doub_I, Doub_I) const = 0;  // Inner source
-                                                             // term
+	// Outer analytical solution
+  virtual double Outer_u(Doub_I, Doub_I, Doub_I) const = 0;
+	// Inner analytical solution
+  virtual double Inner_u(Doub_I, Doub_I, Doub_I) const = 0;
+	// Outer source term
+  virtual double Outer_f(Doub_I, Doub_I, Doub_I) const = 0;
+  // Inner source term
+  virtual double Inner_f(Doub_I, Doub_I, Doub_I) const = 0;
 
   virtual double Jump_betau_x(Doub_I, Doub_I, Doub_I) const = 0;
   virtual double Jump_betau_y(Doub_I, Doub_I, Doub_I) const = 0;

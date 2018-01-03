@@ -5,10 +5,13 @@
 #include "Constant.h"
 #include "Surface_Cartesian.h"
 
-/************************************************************
- Ellipsoid Cone Surface with parameter: [1.0,0,0,-3.0,0]
- Suggested domain: [-4,4;-4,4;-4,1] for grid (20,40,80,160)
- ************************************************************/
+/******************************************************************
+ Ellipsoid Cone Surface with parameter: [a, b, c, z_upper, z_lower]
+ 
+ Equation : (x^2 + y^2) / a^2 - (z - b)^2 - c = 0 where a,b,c are constants
+ 
+ Suggested domain : [-4,4;-4,4;-4,1] for grid (20,40,80,160)
+ *****************************************************************/
 class Surface_Cone : public Surface_Cartesian {
  private:
   double a, b, c, z_upper, z_lower;

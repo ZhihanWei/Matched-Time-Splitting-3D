@@ -1,6 +1,7 @@
 #ifndef __DATA_H__
 #define __DATA_H__
 
+#include <string>
 #include "Constant.h"
 #include "New_Data_Type.h"
 

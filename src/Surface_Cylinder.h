@@ -6,7 +6,10 @@
 #include "Surface_Cartesian.h"
 
 /************************************************************
- Cylinder Surface with parameter: [2,-3,3]
+ Cylinder Surface with parameter: [r, z_upper, z_lower]
+ 
+ Equation : (x^2 + y^2) = r^2 where r is constant
+ 
  Suggested domain: [-4,4;-4,4;-4,4] for grid (20,40,80,160)
  ************************************************************/
 class Surface_Cylinder : public Surface_Cartesian {

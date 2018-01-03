@@ -6,7 +6,10 @@
 #include "Surface_Cartesian.h"
 
 /************************************************************
- Heart Surface with parameter [1,9/4,1,-1,-1,-9/80]
+ Heart Surface with parameter [a,b,c,d,e,p]
+ 
+ Equation : (a * x^2 + b * y^2 + c * z^2 + d)^3 + e * x ^2 * z^3 + p * y^2 * z^3 = 0
+ 
  Suggested domain: [-4,4;-2,2;-4,4]
  ************************************************************/
 class Surface_Heart : public Surface_Cartesian {

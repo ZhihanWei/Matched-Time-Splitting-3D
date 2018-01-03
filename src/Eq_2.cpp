@@ -24,7 +24,7 @@ Eq_2::Eq_2(Doub_I ti, Beta& in_beta) : beta(in_beta) { t = ti; }
 double Eq_2::Inner_u(Doub_I x, Doub_I y, Doub_I z) const {
   double temp;
 
-  temp = 10 * exp(-x * x) * exp(-y * y) * exp(-z * z) + exp(a + t);
+  temp = 10 * exp(-x * x) * exp(-y * y) * exp(-z * z) - exp(a + t);
 
   return temp;
 }
@@ -63,7 +63,7 @@ double Eq_2::Inner_f(Doub_I x, Doub_I y, Doub_I z) const {
   double temp;
 
   temp = -beta.Inside(x, y, z) * 10 * (-6 + 4 * (x * x + y * y + z * z)) *
-         exp(-x * x) * exp(-y * y) * exp(-z * z) + exp(a + t) -
+         exp(-x * x) * exp(-y * y) * exp(-z * z) - exp(a + t) -
          beta.Inside_Dx(x, y, z) * Inner_dux(x, y, z) -
          beta.Inside_Dy(x, y, z) * Inner_duy(x, y, z) -
          beta.Inside_Dz(x, y, z) * Inner_duz(x, y, z);

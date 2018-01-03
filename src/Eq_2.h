@@ -7,7 +7,7 @@
 
 class Eq_2 : public Equation {
  private:
-  double a = -1;
+  double a = -2;
   Beta& beta;
 
   virtual double Inner_dux(Doub_I, Doub_I, Doub_I) const;

@@ -97,11 +97,9 @@ int main(int argc, char *argv[]) {
   current_time = asctime(timeinfo);
 
   vector<string> files = {"data/data1.txt"};
-  // vector<string> files =
-  // {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
-  // vector<string> files =
-  // {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/
-  // data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
+	// vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
+	// vector<string> files =
+	// {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt"};
 
   for (int i = 0; i < files.size(); i++) {
     out_file_name = "result/Result at <" + current_time + ">.txt";
@@ -119,7 +117,8 @@ int main(int argc, char *argv[]) {
       file_name = files[i];
 
       t_begin = clock();
-
+			
+			// Read data from file
       Data data(file_name);
 
       domain = data.Get_Domain();
@@ -216,14 +215,18 @@ int main(int argc, char *argv[]) {
         exit(0);
       }
 
-      Surface_Cartesian &ex = *ex_ptr;
-
+			// Surface construction
+			Surface_Cartesian &ex = *ex_ptr;
+			
+			// Mesh construction
       Mesh mesh(domain, size, ex);
-
+			
+			// Spatial computation
       Intersections inter(ex, mesh, beta, accuracy, mib_method, out_file);
 
       cout << "Program is running......" << endl << endl;
-
+			
+			// Temporal computation, ADI / LOD / Trapezoidal Splitting
       if (method == 'A') {
         ADI_Starting(equation, accuracy, beta, mesh, inter, running_time, uh,
                      out_file);
@@ -261,11 +264,11 @@ int main(int argc, char *argv[]) {
 
  INPUT
  equation : code of equation need to be used here
+ accuracy : order of accuracy
+ beta     : variable coefficients object
  mesh     : mesh object
- diffcoef : diffusion coefficient object representing beta^{-} and beta^{+}
  inter    : object of all intersection nodes
- time     : vector of 3 double values represent beginning time, finishing time
- and time step
+ time     : vector of 3 double values represent beginning time, finishing time and time step
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void ADI_Starting(Int_I equation, Int_I accuracy, Beta &beta, Mesh &mesh,
@@ -319,12 +322,12 @@ void ADI_Starting(Int_I equation, Int_I accuracy, Beta &beta, Mesh &mesh,
 
  INPUT
  equation : code of equation need to be used here
+ accuracy : order of accuracy
+ beta     : variable coefficients object
  mesh     : mesh object
  inter    : object of all intersection nodes
- adi      : adi object
- time     : vector of 3 double values represent beginning time, finishing time
- and time step
- beta     : vector of 2 double values represent beta^{-} and beta^{+}
+ adi      : ADI object
+ time     : vector of 3 double values represent beginning time, finishing time and time step
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void ADI_Solver(Int_I equation, Int_I accruacy, Beta &beta, Mesh &mesh,
@@ -400,11 +403,11 @@ void ADI_Solver(Int_I equation, Int_I accruacy, Beta &beta, Mesh &mesh,
 
  INPUT
  equation : code of equation need to be used here
+ accuracy : order of accuracy
+ beta     : variable coefficients object
  mesh     : mesh object
- diffcoef : diffusion coefficient object representing beta^{-} and beta^{+}
  inter    : object of all intersection nodes
- time     : vector of 3 double values represent beginning time, finishing time
- and time step
+ time     : vector of 3 double values represent beginning time, finishing time and time step
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void LOD_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
@@ -457,12 +460,12 @@ void LOD_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
 
  INPUT
  equation : code of equation need to be used here
+ accuracy : order of accuracy
+ beta     : variable coefficients object
  mesh     : mesh object
  inter    : object of all intersection nodes
- lod      : lod object
- time     : vector of 3 double values represent beginning time, finishing time
- and time step
- beta     : vector of 2 double values represent beta^{-} and beta^{+}
+ lod      : LOD object
+ time     : vector of 3 double values represent beginning time, finishing time and time step
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void LOD_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
@@ -537,11 +540,11 @@ void LOD_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
 
  INPUT
  equation : code of equation need to be used here
+ accuracy : order of accuracy
+ beta     : variable coefficients object
  mesh     : mesh object
- diffcoef : diffusion coefficient object representing beta^{-} and beta^{+}
  inter    : object of all intersection nodes
- time     : vector of 3 double values represent beginning time, finishing time
- and time step
+ time     : vector of 3 double values represent beginning time, finishing time and time step
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void TS_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
@@ -594,12 +597,12 @@ void TS_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
 
  INPUT
  equation : code of equation need to be used here
+ accuracy : order of accuracy
+ beta     : variable coefficients object
  mesh     : mesh object
  inter    : object of all intersection nodes
- ts       : ts object
- time     : vector of 3 double values represent beginning time, finishing time
- and time step
- beta     : vector of 2 double values represent beta^{-} and beta^{+}
+ ts       : Trapezoidal splitting object
+ time     : vector of 3 double values represent beginning time, finishing time and time step
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void TS_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
@@ -707,12 +710,12 @@ void TS_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
  Write the function value for closest outside node around interface
 
  INPUT
- equation : code of equation need to be used here
- mesh     : mesh object
  inter    : object of all intersection nodes
- t        : terminal time
- beta     : vector of 2 double values represent beta^{-} and beta^{+}
+ mesh     : mesh object
+ beta     : variable coefficients object
  uh       : three dimensional uninitialized solution
+ equation : code of equation need to be used here
+ t        : current time
  i        : file number
  *********************************************************************************************/
 void Write_txt(Intersections &inter, Mesh &mesh, Beta &beta, CubicDoub_I &uh,

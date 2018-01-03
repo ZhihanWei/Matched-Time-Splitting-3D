@@ -33,8 +33,8 @@ double Equation::Jump_u(Doub_I x, Doub_I y, Doub_I z) const {
  OUTPUT
  analutical of jump [beta_u_xi]
  ***************************************************************/
-double Equation::Jump_betau_xi(Doub_I x, Doub_I y, Doub_I z, Doub_I vx,
-                               Doub_I vy, Doub_I vz) const {
+double Equation::Jump_betau_xi(Doub_I x, Doub_I y, Doub_I z,
+															 Doub_I vx, Doub_I vy, Doub_I vz) const {
   double temp;
 
   temp = vx * Jump_betau_x(x, y, z) + vy * Jump_betau_y(x, y, z) +
@@ -57,8 +57,8 @@ double Equation::Jump_betau_xi(Doub_I x, Doub_I y, Doub_I z, Doub_I vx,
  OUTPUT
  analutical of jump [u_eta]
  ***************************************************************/
-double Equation::Jump_u_eta(Doub_I x, Doub_I y, Doub_I z, Doub_I vx, Doub_I vy,
-                            Doub_I vz) const {
+double Equation::Jump_u_eta(Doub_I x, Doub_I y, Doub_I z,
+                            Doub_I vx, Doub_I vy, Doub_I vz) const {
   double temp;
 
   temp = vx * (Outer_dux(x, y, z) - Inner_dux(x, y, z)) +
@@ -82,8 +82,8 @@ double Equation::Jump_u_eta(Doub_I x, Doub_I y, Doub_I z, Doub_I vx, Doub_I vy,
  OUTPUT
  analutical of jump [u_tau]
  ***************************************************************/
-double Equation::Jump_u_tau(Doub_I x, Doub_I y, Doub_I z, Doub_I vx, Doub_I vy,
-                            Doub_I vz) const {
+double Equation::Jump_u_tau(Doub_I x, Doub_I y, Doub_I z,
+                            Doub_I vx, Doub_I vy, Doub_I vz) const {
   double temp;
 
   temp = vx * (Outer_dux(x, y, z) - Inner_dux(x, y, z)) +
@@ -107,8 +107,8 @@ double Equation::Jump_u_tau(Doub_I x, Doub_I y, Doub_I z, Doub_I vx, Doub_I vy,
  OUTPUT
  analutical of jump [beta_u_eta]
  ***************************************************************/
-double Equation::Jump_betau_eta(Doub_I x, Doub_I y, Doub_I z, Doub_I vx,
-                                Doub_I vy, Doub_I vz) const {
+double Equation::Jump_betau_eta(Doub_I x, Doub_I y, Doub_I z,
+                                Doub_I vx, Doub_I vy, Doub_I vz) const {
   double temp;
 
   temp = vx * Jump_betau_x(x, y, z) + vy * Jump_betau_y(x, y, z) +
@@ -131,8 +131,8 @@ double Equation::Jump_betau_eta(Doub_I x, Doub_I y, Doub_I z, Doub_I vx,
  OUTPUT
  analutical of jump [beta_u_tau]
  ***************************************************************/
-double Equation::Jump_betau_tau(Doub_I x, Doub_I y, Doub_I z, Doub_I vx,
-                                Doub_I vy, Doub_I vz) const {
+double Equation::Jump_betau_tau(Doub_I x, Doub_I y, Doub_I z,
+                                Doub_I vx, Doub_I vy, Doub_I vz) const {
   double temp;
 
   temp = vx * Jump_betau_x(x, y, z) + vy * Jump_betau_y(x, y, z) +

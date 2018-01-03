@@ -5,6 +5,9 @@
 #include "Constant.h"
 #include "Surface_Cartesian.h"
 
+/******************************************************************
+ Cube Surface with parameter: [xl, xr, yl, yr, zl, zr]
+ *****************************************************************/
 class Surface_Cube : public Surface_Cartesian {
  private:
   double xl, xr, yl, yr, zl, zr;

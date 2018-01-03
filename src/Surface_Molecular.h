@@ -7,6 +7,9 @@
 
 /************************************************************
  Molecular Surface
+ 
+ Equation : (x^2 + y^2 + z^2 + 0.6)^2 - 3.5 * y^2 - 0.6 = 0
+ 
  Suggested domain: [-2,2;-3,3;-2,2] for grid (20,40,80,160)
  ************************************************************/
 class Surface_Molecular : public Surface_Cartesian {

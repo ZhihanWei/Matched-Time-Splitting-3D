@@ -6,7 +6,10 @@
 #include "Surface_Cartesian.h"
 
 /************************************************************
- Ellipsoid Surface with parameter: [2,1,1,1]
+ Ellipsoid Surface with parameter: [a, b, c, r]
+ 
+ Equation : x^2 / a^2 + y^2 / b^2 + z^2 / c^2 - r^2 = 0
+ 
  Suggested domain: [-4,4;-2,2;-2,2] for grid (20,40,80,160)
  ************************************************************/
 class Surface_Ellipsoid : public Surface_Cartesian {

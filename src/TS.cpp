@@ -8,7 +8,7 @@
  INPUT
  mesh     : mesh object
  inter    : object of all intersections
- in_beta  : vector of 2 double values represent beta^{-} and beta^{+}
+ beta     : object of variable coefficients
  time     : vector of 3 double values represent beginning time, finishing time
  and time step
  accuracy : accuracy of scheme
@@ -34,9 +34,11 @@ TS::TS(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time) {
  Trapezoidal Splitting solver at each time step
 
  INPUT
- eq    : equation object at next time step
- inter : object of all intersections
- beta  : object of variable coefficient
+ eq      : equation object at current time step
+ eq_half : equation object at middle time step
+ eq_one  : euqation object at next time step
+ inter   : object of all intersections
+ beta    : object of variable coefficient
 
  OUTPUT
  uh : three-dimensional solution at current time step to next time step
@@ -82,8 +84,7 @@ void TS::Solve_2nd(Equation& eq, Equation& eq_half, Equation& eq_one,
     }
   }
 
-  //----------------------First half of Trapezoidal Splitting method [n] ->
-  //[n+1/2]--------------------------------
+  //-------------- First half of Trapezoidal Splitting method [n] -> [n+1/2] --------------------
   inter.Refresh_Jump(eq_one, uh, beta);
 
   /*******************************************************************************************************
@@ -131,8 +132,7 @@ void TS::Solve_2nd(Equation& eq, Equation& eq_half, Equation& eq_one,
     }
   }
 
-  //----------------------Second half of Trapezoidal Splitting method [n+1/2] ->
-  //[n+1]--------------------------------
+  //------------ Second half of Trapezoidal Splitting method [n+1/2] -> [n+1] ---------------------
   // inter.Refresh_Jump(eq_one,v4,beta);
 
   /*******************************************************************************************************

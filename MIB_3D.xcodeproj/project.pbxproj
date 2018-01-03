@@ -142,7 +142,6 @@
 			isa = PBXGroup;
 			children = (
 				B60AFC411F1E83540037A976 /* src */,
-				B60AFC311F1E83540037A976 /* data */,
 				B60AFC281F1E83260037A976 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -163,12 +162,14 @@
 				B60AFC341F1E83540037A976 /* data3.txt */,
 				B60AFC351F1E83540037A976 /* data4.txt */,
 			);
-			path = data;
+			name = data;
+			path = ../data;
 			sourceTree = "<group>";
 		};
 		B60AFC411F1E83540037A976 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B60AFC311F1E83540037A976 /* data */,
 				B66AD72A1F214FD7004495A1 /* Diffusion Coefficient */,
 				B66AD7291F214FA1004495A1 /* Surface */,
 				B66AD7281F214F7E004495A1 /* Equation */,

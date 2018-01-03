@@ -1,9 +1,11 @@
 # README
 
 ## Project Name
+
 Algorithm based on finite difference for parabolic interface problem in 3D
 
 ## Project Description
+
 A parabolic PDE solver for interface problem in 3D space based on finite difference method. The solver handles interface jump conditions by involving fictitious points. A new developed numerical method - Matched Interface and Boundary method has been applied to smooth the solutions along the interfaces. Taking the advantage of the tridiagonal matrix structure and TDMA algorithm, the solver is able to achieve unconditional stable for various complicated interfaces and jump conditions. Meanwhile, the high dimensional problem are deducted to several one dimensional problems and achieves a flop count of O(N). This solver contains two spacial methods: MIB-L1 and MIB-L2 and four temporal methods: Douglas-ADI, LOD-IE, LOD-CN, Trapezoidal Splitting. 
 
 ## Implementation
@@ -22,11 +24,27 @@ Step 4: If you want to compile with a set of new parameters, type "make clean" t
 
 • Created a folder called "result" before running which will contain all the results in txt files.  
 
-• All "Beta" files determines the variable diffusion coefficient.
+## Classes
 
-• All "Eq" files determines the analytical solution of the parabolic interface problem.
+• Variable coefficients : "Beta"
+  1. If extra Beta class is added, include header in main.cpp
+  2. Add it to line 164 - 179 in main.cpp
+ 
+• Analytical solution : "Eq"
+	1. If extra Beta class is added, include header in main.cpp
+	2. Add it to line 183 - 216 in main.cpp
 
-• All "Surface" files specifies the shape of the surface defined by a implicit function in a Cartesian coordinate.
+• Implicit function of surface in a Cartesian coordinate : "Surface", "Surface_Cartesian"
+	1. If extra Beta class is added, include header in main.cpp
+	2. Add it to all ADI, LOD, TS starting and solver file
+
+• Mesh constraction : "Mesh"
+
+• Fictitious points and jump approximation : "Intersections"
+
+• Temporal methods : "ADI", "LOD", "TS"
+
+• LU decomposition : "LU"
 
 ## User-specified data
 
@@ -34,7 +52,7 @@ Step 4: If you want to compile with a set of new parameters, type "make clean" t
 
 • xl,xr,yl,yr,zl,zr: leftmost and rightmost domains for x-, y-, z- directions, refer to line 64-79 in "main.cpp" for details for different surface.
 
-• nx,ny,nz: numbers of nodes in x-, y-, z- directions. Due to the limitation of one-direction jump approximation, can only be 20, 40, 80, 160.
+• nx,ny,nz: numbers of nodes in x-, y-, z- directions. 
 
 • t_start: strating time, usually set to be 0.
 
@@ -52,7 +70,7 @@ Step 4: If you want to compile with a set of new parameters, type "make clean" t
 
 • mib_method: spacial method, 1: MIB-L1; 2: MIB-L2.
 
-• accuracy: 2: 2nd order; 4: 4th order.
+• accuracy: equal to 2 always
 
 ### Constant.h
 
@@ -63,4 +81,22 @@ Step 4: If you want to compile with a set of new parameters, type "make clean" t
 • JP: jump in temporal method. r: real jump: a: approximated jump;  
 
 ### main.cpp
-line 88-90: switch from running 1 input file to several input files. 
+
+line of 70 - 90  : parameters to determine shape of surfaces 
+
+line of 99 - 102 : switch from running 1 input file to several input files. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
