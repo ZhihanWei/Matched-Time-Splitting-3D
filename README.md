@@ -31,12 +31,12 @@ Step 4: If you want to compile with a set of new parameters, type "make clean" t
   2. Add it to line 164 - 179 in main.cpp
  
 • Analytical solution : "Eq"
-	1. If extra Beta class is added, include header in main.cpp
-	2. Add it to line 183 - 216 in main.cpp
+1. If extra Beta class is added, include header in main.cpp
+2. Add it to line 183 - 216 in main.cpp
 
 • Implicit function of surface in a Cartesian coordinate : "Surface", "Surface_Cartesian"
-	1. If extra Beta class is added, include header in main.cpp
-	2. Add it to all ADI, LOD, TS starting and solver file
+1. If extra Beta class is added, include header in main.cpp
+2. Add it to all ADI, LOD, TS starting and solver file
 
 • Mesh constraction : "Mesh"
 
