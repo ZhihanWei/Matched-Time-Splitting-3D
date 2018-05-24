@@ -7,7 +7,7 @@
 
 #COMPILER  = clang++
 COMPILER   = g++
-CFLAGS     = -c -Wall -std=c++11 -O3
+CXXFLAGS   = -c -Wall -std=c++11 -O3
 VPATH      = ./src
 SOURCES    = main.cpp Data.cpp Mesh.cpp Intersections.cpp Douglas_ADI.cpp LOD.cpp TS.cpp Surface_Cartesian.cpp \
 						 Surface_Cube.cpp Surface_Cylinder.cpp Surface_Ellipsoid.cpp Surface_Pile.cpp Surface_Torus.cpp \
@@ -24,7 +24,7 @@ $(EXECUTABLE): $(OBJECTS)
 	@echo ">>> compiled on `hostname -s` with $(COMPILER) <<<"
 
 %.o: %.cpp
-	$(COMPILER) $(CFLAGS) $< -o $@
+	$(COMPILER) $(CXXFLAGS) $< -o $@
 
 run:
 	./$(EXECUTABLE)

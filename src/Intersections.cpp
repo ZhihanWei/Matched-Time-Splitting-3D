@@ -2341,10 +2341,10 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh, Beta& beta) {
 				
 				// ***************************** Change to GFM here ********************************
 				// ********* make sure give paramter mib_method == 1 in data.txt file **************
-				// ifpz[ix][iy][ip].jump.u_dir = p[2][0] * jumpbeta_xi;
+				ifpz[ix][iy][ip].jump.u_dir = p[2][0] * jumpbeta_xi;
 				
 				// ************************* Change to MIB here *****************************
-				ifpz[ix][iy][ip].jump.u_dir = p[2][0] * jumpbeta_xi + p[2][1] * jumpbeta_eta + p[2][2] * jumpbeta_tau;
+				//ifpz[ix][iy][ip].jump.u_dir = p[2][0] * jumpbeta_xi + p[2][1] * jumpbeta_eta + p[2][2] * jumpbeta_tau;
 
         ifpz[ix][iy][ip].jump.err =
             abs(ifpz[ix][iy][ip].jump.u_dir -
@@ -2399,10 +2399,10 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh, Beta& beta) {
 				
 				// ***************************** Change to GFM here ********************************
 				// ********* make sure give paramter mib_method == 1 in data.txt file **************
-			  //ifpy[ix][iz][ip].jump.u_dir = p[1][0] * jumpbeta_xi;
+			  ifpy[ix][iz][ip].jump.u_dir = p[1][0] * jumpbeta_xi;
 				
 				// ************************* Change to MIB here *****************************
-        ifpy[ix][iz][ip].jump.u_dir = p[1][0] * jumpbeta_xi + p[1][1] * jumpbeta_eta + p[1][2] * jumpbeta_tau;
+        //ifpy[ix][iz][ip].jump.u_dir = p[1][0] * jumpbeta_xi + p[1][1] * jumpbeta_eta + p[1][2] * jumpbeta_tau;
 
         ifpy[ix][iz][ip].jump.err =
             abs(ifpy[ix][iz][ip].jump.u_dir -
@@ -2457,10 +2457,10 @@ void Intersections::Refresh_Jump(Equation& eq, CubicDoub& uh, Beta& beta) {
 				
 				// ***************************** Change to GFM here ********************************
 				// ********* make sure give paramter mib_method == 1 in data.txt file **************
-				//ifpx[iy][iz][ip].jump.u_dir = p[0][0] * jumpbeta_xi;
+				ifpx[iy][iz][ip].jump.u_dir = p[0][0] * jumpbeta_xi;
 				
 				// ************************* Change to MIB here *****************************
-        ifpx[iy][iz][ip].jump.u_dir = p[0][0] * jumpbeta_xi + p[0][1] * jumpbeta_eta + p[0][2] * jumpbeta_tau;
+        //ifpx[iy][iz][ip].jump.u_dir = p[0][0] * jumpbeta_xi + p[0][1] * jumpbeta_eta + p[0][2] * jumpbeta_tau;
 
         ifpx[iy][iz][ip].jump.err =
             abs(ifpx[iy][iz][ip].jump.u_dir -

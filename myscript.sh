@@ -4,6 +4,8 @@
 source /opt/asn/etc/asn-bash-profiles-special/modules.sh
 module load gcc/6.1.0
 
-make
+./set_paras.py
 
-./3D_MADI
+mkdir build && cd build && cmake .. && make && cd ..
+
+./lastpaper

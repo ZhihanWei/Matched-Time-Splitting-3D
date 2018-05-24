@@ -12,8 +12,10 @@ struct Coord {
   double y_value;
   double z_value;
 };
-// Indxes for intersects plane, X-direction: indx1 -> iy, indx2 ->iz;
-// Y-direction: indx1 -> ix, indx2 -> iz; Z-direction: indx1 -> iy, indx2 -> iz;
+// Indxes for intersects plane,
+// X-direction: indx1 -> iy, indx2 ->iz;
+// Y-direction: indx1 -> ix, indx2 -> iz;
+// Z-direction: indx1 -> ix, indx2 -> iy;
 struct Line {
   int indx1;
   int indx2;
@@ -21,10 +23,10 @@ struct Line {
 // Jumps on the interface
 struct Jump {
   double u;
-  double betau_xi;
+  double betau_xi;  // Normal direction jump
   double u_eta;
   double u_tau;
-  double u_dir;  // Jump on x or y or z direction, u_x or u_y or u_z
+  double u_dir;    // Jump on x or y or z direction, u_x or u_y or u_z
   double err;
 
   double betau_eta;

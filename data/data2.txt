@@ -5,13 +5,13 @@ yr = 1.99
 zl = -1.99
 zr = 1.99
 
-nx = 160
-ny = 160
-nz = 160
+nx = 40
+ny = 40
+nz = 40
 
 t_start = 0
 t_finish = 1
-t_step = 0.05
+t_step = 0.0001
 
 surface = E
 method = A

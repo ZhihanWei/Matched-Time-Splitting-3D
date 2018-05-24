@@ -11,7 +11,7 @@ nz = 20
 
 t_start = 0
 t_finish = 1
-t_step = 1
+t_step = 0.0001
 
 surface = E
 method = A
