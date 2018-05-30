@@ -5,19 +5,19 @@ yr = 1.99
 zl = -1.99
 zr = 1.99
 
-nx = 20
-ny = 20
-nz = 20
+nx = 160
+ny = 160
+nz = 160
 
 t_start = 0
 t_finish = 1
-t_step = 0.0001
+t_step = 0.005
 
 surface = E
-method = A
+method = C
 
 equation = 2
 beta = 0
-mib_method = 1
+mib_method = 2
 
 accuracy = 2

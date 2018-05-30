@@ -41,7 +41,7 @@ LOD::LOD(Intersections& inter, Mesh& mesh, Beta& beta, VecDoub_I time) {
  uh : three-dimensional solution at current time step to next time step
  ********************************************************************************/
 void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh,
-                    Beta& beta) {
+                    Beta& beta, char& method) {
   VecDoub ax, bx, cx, rx, utx;
   VecDoub ay, by, cy, ry, uty;
   VecDoub az, bz, cz, rz, utz;
@@ -77,9 +77,14 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh,
    (1 - Dt*beta*D_{xx})V_{1} = U^{N}
    ******************************************************************************************************/
   // Set up RHS
-  D_xx_r_ie(uh, v1);
-  // D_xx_r_cn(eq,inter,uh,v1,beta);
-
+	if (method == 'I') {
+		D_xx_r_ie(uh, v1);
+	} else if (method == 'C')  {
+		D_xx_r_cn(eq, inter, uh, v1, beta);
+	} else {
+		cout << "No such method in LOD" << endl;
+		exit(1);
+	}
   // Set up boundary conditions for V1
   Set_bc(eq, v1);
 
@@ -90,14 +95,14 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh,
   rx.resize(nx);
   utx.resize(nx);
 
-  for (int iy = 1; iy < ny - 1; iy++) {
-    for (int iz = 1; iz < nz - 1; iz++) {
-      D_xx_l(iy, iz, eq, inter, v1, beta, ax, bx, cx, rx);
-
-      // Thomas Algorithm
-      TDMA(ax, bx, cx, rx, utx);
-
-      for (int ix = 0; ix < nx; ix++) {
+	for (int iy = 1; iy < ny - 1; iy++) {
+		for (int iz = 1; iz < nz - 1; iz++) {
+			D_xx_l(iy, iz, eq, inter, v1, beta, ax, bx, cx, rx, method);
+			
+			// Thomas Algorithm
+			TDMA(ax, bx, cx, rx, utx);
+				
+			for (int ix = 0; ix < nx; ix++) {
         v1[ix][iy][iz] = utx[ix];
       }
     }
@@ -108,9 +113,14 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh,
    (1 - Dt*beta*D_{yy})V_{2} = V_{1}
    ******************************************************************************************************/
   // Set up RHS
-  D_yy_r_ie(v1, v2);
-  // D_yy_r_cn(eq,inter,v1,v2,beta);
-
+	if (method == 'I') {
+		D_yy_r_ie(v1, v2);
+	} else if (method == 'C') {
+		D_yy_r_cn(eq,inter,v1,v2,beta);
+	} else {
+		cout << "No such method in LOD" << endl;
+		exit(1);
+	}
   // Set up boundary conditions for UHS
   Set_bc(eq, v2);
 
@@ -123,7 +133,7 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh,
 
   for (int ix = 1; ix < nx - 1; ix++) {
     for (int iz = 1; iz < nz - 1; iz++) {
-      D_yy_l(ix, iz, eq, inter, v2, beta, ay, by, cy, ry);
+      D_yy_l(ix, iz, eq, inter, v2, beta, ay, by, cy, ry, method);
 
       // Thomas Algorithm
       TDMA(ay, by, cy, ry, uty);
@@ -139,9 +149,13 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh,
    (1 - Dt*beta*D_{zz})V_{3} = V_{2}
    ******************************************************************************************************/
   // Set up RHS
-  D_zz_r_ie(v2, v3);
-  // D_zz_r_cn(eq,inter,v2,v3,beta);
-
+	if (method == 'I') {
+		D_zz_r_ie(v2, v3);
+	} else if (method == 'C') {
+		D_zz_r_cn(eq,inter,v2,v3,beta);
+	} else {
+		cout << "No such method in LOD" << endl;
+	}
   // Set up boundary conditions for UHS
   Set_bc(eq, v3);
 
@@ -154,7 +168,7 @@ void LOD::Solve_2nd(Equation& eq, Intersections& inter, CubicDoub& uh,
 
   for (int ix = 1; ix < nx - 1; ix++) {
     for (int iy = 1; iy < ny - 1; iy++) {
-      D_zz_l(ix, iy, eq, inter, v3, beta, az, bz, cz, rz);
+      D_zz_l(ix, iy, eq, inter, v3, beta, az, bz, cz, rz, method);
 
       // Thomas Algorithm
       TDMA(az, bz, cz, rz, utz);
@@ -868,7 +882,7 @@ void LOD::D_zz_r_cn(Equation& eq, Intersections& inter, CubicDoub& uc1,
  ********************************************************************************/
 void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter,
                  CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b,
-                 VecDoub_O& c, VecDoub_O& r) {
+                 VecDoub_O& c, VecDoub_O& r, char& method) {
   int ix, ip;
   double coef;
   double jump_u, jump_ul, jump_ur;
@@ -877,10 +891,15 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter,
   MatrixDoub irr_row, cor_row;
   Intersection_Data data, datal, datar;
 
-  // Implicit Euler scheme
-  coef = 1;
-  // Crank-Nicolson scheme
-  // coef = 0.5;
+  // Implicit Euler scheme or Crank-Nicolson scheme
+	if (method == 'I') {
+		coef = 1;
+	}else if (method == 'C') {
+		coef = 0.5;
+	} else {
+		cout << "No such method in LOD" << endl;
+		exit(1);
+	}
 
   vdex.resize(3);
   // set up irr_row and cor_row
@@ -1072,7 +1091,7 @@ void LOD::D_xx_l(Int_I iy, Int_I iz, Equation& eq, Intersections& inter,
  ********************************************************************************/
 void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter,
                  CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b,
-                 VecDoub_O& c, VecDoub_O& r) {
+                 VecDoub_O& c, VecDoub_O& r, char& method) {
   int iy, ip;
   double coef;
   double jump_u, jump_ul, jump_ur;
@@ -1081,10 +1100,16 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter,
   MatrixDoub irr_row, cor_row;
   Intersection_Data data, datal, datar;
 
-  // Implicit Euler scheme
-  coef = 1;
-  // Crank-Nicolson scheme
-  // coef = 0.5;
+  // Implicit Euler scheme or Crank-Nicolson scheme
+	if (method == 'I') {
+		coef = 1;
+	}
+	else if (method == 'C') {
+		coef = 0.5;
+	}else {
+		cout << "No such method in LOD" << endl;
+		exit(1);
+	}
 
   vdey.resize(3);
   // set up irr_row and cor_row
@@ -1275,7 +1300,7 @@ void LOD::D_yy_l(Int_I ix, Int_I iz, Equation& eq, Intersections& inter,
  ********************************************************************************/
 void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter,
                  CubicDoub& uc, Beta& beta, VecDoub_O& a, VecDoub_O& b,
-                 VecDoub_O& c, VecDoub_O& r) {
+                 VecDoub_O& c, VecDoub_O& r, char& method) {
   int iz, ip;
   double coef;
   double jump_u, jump_ul, jump_ur;
@@ -1284,10 +1309,15 @@ void LOD::D_zz_l(Int_I ix, Int_I iy, Equation& eq, Intersections& inter,
   MatrixDoub irr_row, cor_row;
   Intersection_Data data, datal, datar;
 
-  // Implicit Euler scheme
-  coef = 1;
-  // Crank-Nicolson scheme
-  // coef = 0.5;
+  // Implicit Euler scheme or Crank-Nicolson scheme
+	if (method == 'I') {
+		coef = 1;
+	} else if (method == 'C') {
+		coef = 0.5;
+	} else {
+		cout << "No such method in LOD" << endl;
+		exit(1);
+	}
 
   vdez.resize(3);
   // set up irr_row and cor_row

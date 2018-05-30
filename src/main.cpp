@@ -45,9 +45,9 @@ void ADI_Starting(Int_I, Int_I, Beta &, Mesh &, Intersections &, VecDoub_I &,
 void ADI_Solver(Int_I, Int_I, Beta &, Mesh &, Intersections &, Douglas_ADI &,
                 VecDoub_I &, CubicDoub_I &, ofstream &);
 void LOD_Starting(Int_I, Beta &, Mesh &, Intersections &, VecDoub_I &,
-                  CubicDoub_I &, ofstream &);
+                  CubicDoub_I &, char &, ofstream &);
 void LOD_Solver(Int_I, Beta &, Mesh &, Intersections &, LOD &, VecDoub_I &,
-                CubicDoub_I &, ofstream &);
+                CubicDoub_I &, char &, ofstream &);
 void TS_Starting(Int_I, Beta &, Mesh &, Intersections &, VecDoub_I &,
                  CubicDoub_I &, ofstream &);
 void TS_Solver(Int_I, Beta &, Mesh &, Intersections &, TS &, VecDoub_I &,
@@ -96,9 +96,9 @@ int main(int argc, char *argv[]) {
   timeinfo = localtime(&rawtime);
   current_time = asctime(timeinfo);
 
-  //vector<string> files = {"data/data1.txt"};
+  vector<string> files = {"data/data1.txt"};
 	// vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
-	vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
+	// vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
 
   for (int i = 0; i < files.size(); i++) {
 		out_file_name = "result/Result_for_" + to_string(i + 1) + ".txt";
@@ -229,8 +229,8 @@ int main(int argc, char *argv[]) {
       if (method == 'A') {
         ADI_Starting(equation, accuracy, beta, mesh, inter, running_time, uh,
                      out_file);
-      } else if (method == 'L') {
-        LOD_Starting(equation, beta, mesh, inter, running_time, uh, out_file);
+			} else if (method == 'I' || method == 'C') {
+        LOD_Starting(equation, beta, mesh, inter, running_time, uh, method, out_file);
       } else if (method == 'T') {
         TS_Starting(equation, beta, mesh, inter, running_time, uh, out_file);
       } else {
@@ -410,7 +410,7 @@ void ADI_Solver(Int_I equation, Int_I accruacy, Beta &beta, Mesh &mesh,
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void LOD_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
-                  VecDoub_I &time, CubicDoub_I &uh, ofstream &out_file) {
+                  VecDoub_I &time, CubicDoub_I &uh, char &method, ofstream &out_file) {
   double t_start;
   Equation *eq_ptr;
 
@@ -451,7 +451,7 @@ void LOD_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
 
   lod.Initialization(eq, uh);
 
-  LOD_Solver(equation, beta, mesh, inter, lod, time, uh, out_file);
+  LOD_Solver(equation, beta, mesh, inter, lod, time, uh, method, out_file);
 }
 
 /*********************************************************************************************
@@ -468,7 +468,7 @@ void LOD_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
  uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void LOD_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
-                LOD &lod, VecDoub_I &time, CubicDoub_I &uh,
+                LOD &lod, VecDoub_I &time, CubicDoub_I &uh, char &method,
                 ofstream &out_file) {
   double tnow, dt;
   int loop;
@@ -516,7 +516,7 @@ void LOD_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
 
       Equation &eq_dt = *eq_dt_ptr;
 
-      lod.Solve_2nd(eq_dt, inter, uh, beta);
+      lod.Solve_2nd(eq_dt, inter, uh, beta, method);
     }
 
     out_file << setprecision(1) << scientific << "T = " << tnow << endl;

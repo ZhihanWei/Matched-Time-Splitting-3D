@@ -28,11 +28,11 @@ class LOD {
   void D_zz_r_cn(Equation &, Intersections &, CubicDoub &, CubicDoub &, Beta &);
 	
 	void D_xx_l(Int_I, Int_I, Equation &, Intersections &, CubicDoub &,
-							Beta &, VecDoub_O &, VecDoub_O &, VecDoub_O &, VecDoub_O &);
+							Beta &, VecDoub_O &, VecDoub_O &, VecDoub_O &, VecDoub_O &, char &);
   void D_yy_l(Int_I, Int_I, Equation &, Intersections &, CubicDoub &,
-							Beta &, VecDoub_O &, VecDoub_O &, VecDoub_O &, VecDoub_O &);
+							Beta &, VecDoub_O &, VecDoub_O &, VecDoub_O &, VecDoub_O &, char &);
   void D_zz_l(Int_I, Int_I, Equation &, Intersections &, CubicDoub &,
-							Beta &, VecDoub_O &, VecDoub_O &, VecDoub_O &, VecDoub_O &);
+							Beta &, VecDoub_O &, VecDoub_O &, VecDoub_O &, VecDoub_O &, char &);
 	
 	void Convert2Tri_irr(Int_I, MatrixDoub_I &, VecDoub_O &,
 											 VecDoub_O &, VecDoub_O &, VecDoub_O &);
@@ -52,7 +52,7 @@ class LOD {
  public:
   LOD(Intersections &, Mesh &, Beta &, VecDoub_I);
 	
-	void Solve_2nd(Equation &, Intersections &, CubicDoub_I &, Beta &);
+	void Solve_2nd(Equation &, Intersections &, CubicDoub_I &, Beta &, char&);
   void Initialization(Equation &, CubicDoub_I &);
   void Error(Equation &, CubicDoub_I &, ofstream &);
 };
