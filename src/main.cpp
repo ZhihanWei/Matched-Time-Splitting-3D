@@ -96,9 +96,9 @@ int main(int argc, char *argv[]) {
   timeinfo = localtime(&rawtime);
   current_time = asctime(timeinfo);
 
-  vector<string> files = {"data/data1.txt"};
-	// vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
-	// vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
+  //vector<string> files = {"data/data1.txt"};
+	//vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
+	vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
 
   for (int i = 0; i < files.size(); i++) {
 		out_file_name = "result/Result_for_" + to_string(i + 1) + ".txt";
