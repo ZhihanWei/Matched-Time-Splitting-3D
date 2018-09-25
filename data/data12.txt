@@ -17,7 +17,7 @@ surface = E
 method = A
 
 equation = 2
-beta = 4
-mib_method = 1
+beta = 0
+mib_method = 2
 
 accuracy = 2
