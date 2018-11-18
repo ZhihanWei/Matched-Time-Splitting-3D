@@ -1,4 +1,4 @@
-# README
+# MIB + Fast Time Splitting Algorithm
 
 ## Project Name
 
