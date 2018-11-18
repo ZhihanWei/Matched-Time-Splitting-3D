@@ -28,6 +28,7 @@
 #include "Beta_1.h"
 #include "Beta_2.h"
 #include "Beta_3.h"
+#include "Beta_4.h"
 // Users-defined functions
 #include "Eq_0.h"
 #include "Eq_1.h"
@@ -96,9 +97,9 @@ int main(int argc, char *argv[]) {
   timeinfo = localtime(&rawtime);
   current_time = asctime(timeinfo);
 
-  //vector<string> files = {"data/data1.txt"};
+  vector<string> files = {"data/data1.txt"};
 	//vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
-	vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
+	//vector<string> files = {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
 
   for (int i = 0; i < files.size(); i++) {
 		out_file_name = "result/Result_for_" + to_string(i + 1) + ".txt";
@@ -172,7 +173,10 @@ int main(int argc, char *argv[]) {
       } else if (beta_code == 3) {
         Beta_3 beta3;
         beta_ptr = &beta3;
-      } else {
+			} else if (beta_code == 4) {
+				Beta_4 beta4;
+				beta_ptr = &beta4;
+			} else {
         cout << "Beta is not found!" << endl;
         exit(0);
       }
