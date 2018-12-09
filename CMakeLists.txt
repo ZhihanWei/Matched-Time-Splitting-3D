@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0)
-project(Matched-TS CXX)
+project(Chestnut CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -18,11 +18,14 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 #Default build in release mode
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE RELEASE)
+	set(CMAKE_BUILD_TYPE RELEASE CACHE STRING "set build type" FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+
+set(CMAKE_CXX_FLAGS_DEBUG "-O2 -g")
+set(CMAKE_C_FLAGS_DEBUG "-O2 -g")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
