@@ -13,107 +13,99 @@ using namespace std;
  INPUT
  file_name : name of txt file
  **********************************************************************/
-Data::Data(const string &file_name) {
-  ifstream read_file;
+Data::Data(const string &file) {
+  ifstream read_stream;
 
-  read_file.open(file_name, ios::in);
-  if (read_file.good()) {
-    char tmp;  // for '=' in configuration file
-    string config;
-
-    while (read_file >> config >> tmp) {
-      int parameter_value_1;
-      double parameter_value_2;
-      char parameter_value_3;
-
-      switch (translate(config)) {
-        case MAX_X:
-          read_file >> parameter_value_2;
-          xl = parameter_value_2;
-          break;
-        case MIN_X:
-          read_file >> parameter_value_2;
-          xr = parameter_value_2;
-          break;
-        case MAX_Y:
-          read_file >> parameter_value_2;
-          yl = parameter_value_2;
-          break;
-        case MIN_Y:
-          read_file >> parameter_value_2;
-          yr = parameter_value_2;
-          break;
-        case MAX_Z:
-          read_file >> parameter_value_2;
-          zl = parameter_value_2;
-          break;
-        case MIN_Z:
-          read_file >> parameter_value_2;
-          zr = parameter_value_2;
-          break;
-        case TIME_START:
-          read_file >> parameter_value_2;
-          t_start = parameter_value_2;
-          break;
-        case TIME_TERMINATE:
-          read_file >> parameter_value_2;
-          t_finish = parameter_value_2;
-          break;
-        case TIME_STEP:
-          read_file >> parameter_value_2;
-          t_step = parameter_value_2;
-          break;
-        case NX:
-          read_file >> parameter_value_1;
-          nx = parameter_value_1;
-          break;
-        case NY:
-          read_file >> parameter_value_1;
-          ny = parameter_value_1;
-          break;
-        case NZ:
-          read_file >> parameter_value_1;
-          nz = parameter_value_1;
-          break;
-        case SURFACE:
-          read_file >> parameter_value_3;
-          surface = parameter_value_3;
-          break;
-        case TEMPORAL_METHOD:
-          read_file >> parameter_value_3;
-          method = parameter_value_3;
-          break;
-        case EQUATION:
-          read_file >> parameter_value_1;
-          equation = parameter_value_1;
-          break;
-        case SPATIAL_METHOD:
-          read_file >> parameter_value_1;
-          mib_method = parameter_value_1;
-          break;
-        case DIFFUSION_COEFFICIENT:
-          read_file >> parameter_value_1;
-          beta = parameter_value_1;
-          break;
-        case SPATIAL_ACCURACY:
-          read_file >> parameter_value_1;
-          accuracy = parameter_value_1;
-          break;
-          if (accuracy % 2 == 1) {
-            LOG_FATAL("[ERROR]: currently only support 2nd or 4th order of spatial accuracy");
-          }
-          break;
-        case COMMENT:
-          break;
-        default:
-          LOG_FATAL("[ERROR]: bad element in configuration file, check configuration file example at \"example/config.txt\"");
-      }
-    }
-  } else {
-    cout << "Data file is not opened!";
-    exit(0);
+  read_stream.open(file_name, ios::in);
+  if (!read_stream.good()) {
+    LOG_FATAL("read configuration file failed, check path of " + file);
   }
-  read_file.close();
+
+  char tmp;  // for '=' in configuration file
+  string config;
+
+  while (read_stream >> config >> tmp) {
+    string e;
+
+    switch (Translate(config)) {
+      case MAX_X:
+        read_stream >> e;
+        x_max = atoi(e);
+        break;
+      case MIN_X:
+        read_stream >> e;
+        x_min = atoi(e);
+        break;
+      case MAX_Y:
+        read_stream >> e;
+        y_max = atoi(e);
+        break;
+      case MIN_Y:
+        read_stream >> e;
+        y_min = atoi(e);
+        break;
+      case MAX_Z:
+        read_stream >> e;
+        z_max = atoi(e);
+        break;
+      case MIN_Z:
+        read_stream >> e;
+        z_min = atoi(e);
+        break;
+      case TIME_START:
+        read_stream >> e;
+        t_start = atod(e);
+        break;
+      case TIME_TERMINATE:
+        read_stream >> e;
+        t_terminate = atod(e);
+        break;
+      case TIME_STEP:
+        read_stream >> e;
+        t_step = atod(e);
+        break;
+      case NX:
+        read_stream >> e;
+        nx = atoi(e);
+        break;
+      case NY:
+        read_stream >> e;
+        ny = atoi(e);
+        break;
+      case NZ:
+        read_stream >> e;
+        nz = atoi(e);
+        break;
+      case SURFACE:
+        read_stream >> e;
+        surface = ParseSurface(e);
+        break;
+      case TEMPORAL_METHOD:
+        read_stream >> e;
+        temporal_method = ParseTemporalMethod(e);
+        break;
+      case EQUATION:
+        read_stream >> e;
+        equation = ParseEquationMethod(e);
+        break;
+      case SPATIAL_METHOD:
+        read_stream >> e;
+        spatial_method = ParseTemporalMethod(e);
+        break;
+      case DIFFUSION_COEFFICIENT:
+        read_stream >> e;
+        diffusion_coef = ParseDiffusionCoefficient(e);
+        break;
+      case SPATIAL_ACCURACY:
+        read_stream >> e;
+        accuracy = ParseSpatialAccuracy(e);
+        break;
+      case COMMENT:
+        break;
+    }
+  }
+
+  read_stream.close();
 }
 
 /***********************************************************************************************
@@ -121,86 +113,103 @@ Data::Data(const string &file_name) {
                                         called by Constructor
 
  INPUT
- in_string : string name
+ arg : string name
 
  OUTPUT
  enumeration member
  ***********************************************************************************************/
-Data::Config Data::translate(const string &in_string) {
-  if (in_string == "x-max") {
+Data::Config Data::Translate(const string &arg) {
+  if (arg == "x-max") {
     return MAX_X;
-  } else if (in_string == "x-min") {
+  } else if (arg == "x-min") {
     return MIN_X;
-  } else if (in_string == "y-max") {
+  } else if (arg == "y-max") {
     return MAX_Y;
-  } else if (in_string == "y-min") {
+  } else if (arg == "y-min") {
     return MIN_Y;
-  } else if (in_string == "z-max") {
+  } else if (arg == "z-max") {
     return MAX_Z;
-  } else if (in_string == "z-min") {
+  } else if (arg == "z-min") {
     return MIN_Z;
-  } else if (in_string == "time-start") {
+  } else if (arg == "time-start") {
     return TIME_START;
-  } else if (in_string == "time-finish") {
+  } else if (arg == "time-finish") {
     return TIME_TERMINATE;
-  } else if (in_string == "time-step") {
+  } else if (arg == "time-step") {
     return TIME_STEP;
-  } else if (in_string == "x-grid") {
+  } else if (arg == "x-grid") {
     return NX;
-  } else if (in_string == "y-grid") {
+  } else if (arg == "y-grid") {
     return NY;
-  } else if (in_string == "z-grid") {
+  } else if (arg == "z-grid") {
     return NZ;
-  } else if (in_string == "surface") {
+  } else if (arg == "surface") {
     return SURFACE;
-  } else if (in_string == "temporal-method") {
+  } else if (arg == "temporal-method") {
     return TEMPORAL_METHOD;
-  } else if (in_string == "spatial-method") {
+  } else if (arg == "spatial-method") {
     return SPATIAL_METHOD;
-  } else if (in_string == "equation") {
+  } else if (arg == "equation") {
     return EQUATION;
-  } else if (in_string == "beta") {
+  } else if (arg == "beta") {
     return DIFFUSION_COEFFICIENT;
-  } else if (in_string == "spatial-accuracy") {
+  } else if (arg == "spatial-accuracy") {
     return SPATIAL_ACCURACY;
-  } else if (in_string.find("#") == 0) {
+  } else if (arg.find("#") == 0) {
     return COMMENT;
   } else {
-    LOG_FATAL("[ERROR]: bad element in configuration file, check configuration file example at \"example/config.txt\"");
+    LOG_FATAL("bad element in configuration file, check configuration file example at \"example/config.txt\"");
   }
 }
 
-/***********************************************************************************************
-                                    Print data
- ***********************************************************************************************/
-void Data::Display() {
-  cout << "xl = " << xl << " xr = " << xr << " yl = " << yl << " yr = " << yr
-       << " zl = " << zl << " zr = " << zr << endl;
-  cout << "t_start = " << t_start << " t_finish = " << t_finish
-       << " t_step = " << t_step << endl;
-  cout << "nx = " << nx << " ny = " << ny << " nz = " << nz << endl;
+string ParseTemporalMethod(const string &in_str) {
+  return in_str;
+}
+
+string ParseSurface(const string &in_str) {
+  return in_str;
+}
+
+string ParseSpatialMethod(const string &in_str) {
+  return in_str;
+}
+
+int ParseDiffusionCoefficient(const string &in_str) {
+  return atoi(in_str);
+}
+
+int ParseEquationMethod(const string &in_str) {
+  return atoi(in_str);
+}
+
+int ParseSpatialMethod(const string &in_str) {
+  return atoi(in_str);
 }
 
 /***********************************************************************************************
-                        Get data given by order [xl,xr,yl,yr,zl,zr]
- ***********************************************************************************************/
-VecDoub Data::Get_Domain() const {
+                              Display part of configuration parameters
+***********************************************************************************************/
+void Data::Display(){
+    cout << "X boundary: [" << x_min << ", " << x_max << "] \n"
+         << "Y boundary: [" << y_min << ", " << y_max << "] \n"
+         << "Z boundary: [" << z_min << ", " << z_max << "] \n"
+         << "Mesh size: [" << nx << ", " << ny << ", " << nz << "] \n"
+         << "Time info: [" << t_start << ", " << t_terminate << ", " << t_step << "] \n"}
+
+VecDoub Data::GetDomain() const {
   VecDoub domain;
 
-  domain.push_back(xl);
-  domain.push_back(xr);
-  domain.push_back(yl);
-  domain.push_back(yr);
-  domain.push_back(zl);
-  domain.push_back(zr);
+  domain.push_back(x_max);
+  domain.push_back(x_min);
+  domain.push_back(y_max);
+  domain.push_back(y_min);
+  domain.push_back(z_max);
+  domain.push_back(z_min);
 
   return domain;
 }
 
-/***********************************************************************************************
-                                Get data given by order [nx,ny,nz]
- ***********************************************************************************************/
-VecInt Data::Get_Size() const {
+VecInt Data::GetMesh() const {
   VecInt size;
 
   size.push_back(nx);
@@ -210,45 +219,36 @@ VecInt Data::Get_Size() const {
   return size;
 }
 
-/***********************************************************************************************
-                            Get data given by order [t_start,t_finish,t_step]
- ***********************************************************************************************/
-VecDoub Data::Get_Time() const {
+VecDoub Data::GetTime() const {
   VecDoub time;
 
   time.push_back(t_start);
-  time.push_back(t_finish);
+  time.push_back(t_terminate);
   time.push_back(t_step);
 
   return time;
 }
 
-/***********************************************************************************************
-                                    Get data Surface
- ***********************************************************************************************/
-char Data::Get_Surface() const { return surface; }
+string &Data::GetSurface() const {
+  return surface;
+}
 
-/***********************************************************************************************
-                                    Get data Method
- ***********************************************************************************************/
-char Data::Get_Method() const { return method; }
+string &Data::GetTemporalMethod() const {
+  return temporal_method;
+}
 
-/***********************************************************************************************
-                                    Get data Beta
- ***********************************************************************************************/
-int Data::Get_Beta() const { return beta; }
+int Data::GetDiffusionCoeff() const {
+  return diffusion_coeff;
+}
 
-/***********************************************************************************************
-                                   Get data Accuracy
- ***********************************************************************************************/
-int Data::Get_Accuracy() const { return accuracy; }
+int Data::GetSpatialAccuracy() const {
+  return accuracy;
+}
 
-/***********************************************************************************************
-                                    Get data Equation
- ***********************************************************************************************/
-int Data::Get_Equation() const { return equation; }
+int Data::GetEquation() const {
+  return equation;
+}
 
-/***********************************************************************************************
-                                    Get data MIB method
- ***********************************************************************************************/
-int Data::Get_MIB_method() const { return mib_method; }
+string &Data::GetSpatialmethod() const {
+  return spatial_method;
+}

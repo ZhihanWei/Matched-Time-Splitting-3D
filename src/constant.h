@@ -28,3 +28,25 @@ typedef vector<vector<double>> MatrixDoub, MatrixDoub_I, MatrixDoub_O,
     MatrixDoub_IO;
 typedef vector<vector<vector<double>>> CubicDoub, CubicDoub_I, CubicDoub_O,
     CubicDoub_IO;
+
+enum Config {
+  MAX_X,
+  MIN_X,
+  MAX_Y,
+  MIN_Y,
+  MAX_Z,
+  MIN_Z,
+  TIME_START,
+  TIME_TERMINATE,
+  TIME_STEP,
+  NX,
+  NY,
+  NZ,
+  SURFACE,
+  EQUATION,
+  TEMPORAL_METHOD,
+  SPATIAL_METHOD,
+  SPATIAL_ACCURACY,
+  DIFFUSION_COEFFICIENT,
+  COMMENT,
+};

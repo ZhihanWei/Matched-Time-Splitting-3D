@@ -6,53 +6,31 @@
 
 class Data {
 private:
-  enum Config {
-    MAX_X,
-    MIN_X,
-    MAX_Y,
-    MIN_Y,
-    MAX_Z,
-    MIN_Z,
-    TIME_START,
-    TIME_TERMINATE,
-    TIME_STEP,
-    NX,
-    NY,
-    NZ,
-    SURFACE,
-    EQUATION,
-    TEMPORAL_METHOD,
-    SPATIAL_METHOD,
-    SPATIAL_ACCURACY,
-    DIFFUSION_COEFFICIENT,
-    COMMENT,
-  };
-
-  double xl, xr, yl, yr, zl, zr;
-  double t_start, t_finish, t_step;
+  double x_max, x_min, y_max, y_min, z_max, z_min;
+  double t_start, t_terminate, t_step;
   int nx, ny, nz;
-  char surface;
-  char method;
-  int mib_method;
-  int equation;
-  int accuracy;
-  int beta;
+  string surface, temporal_method, spatial_method;
+  int spatial_accuracy, equation, diffusion_coef;
 
-  Config translate(const string &in_string);
+  Config Translate(const string &);
+  string ParseSurface(const string &);
+  string ParseTemporalMethod(const string &);
+  string ParseSpatialMethod(const string &);
+  int ParseEquationMethod(const string &);
+  int ParseDiffusionCoefficient(const string &);
+  int ParseSpatialAccuracy(const string &);
 
 public:
   Data(const string &file_name);
 
   void Display();
-
-  VecDoub Get_Domain() const;
-  VecInt Get_Size() const;
-  VecDoub Get_Time() const;
-  char Get_Method() const;
-  char Get_Surface() const;
-  int Get_Beta() const;
-  int Get_Accuracy() const;
-  int Get_MIB_method() const;
-  int Get_Equation() const;
-  double Get_Tol() const;
+  VecDoub GetDomain() const;
+  VecInt GetMesh() const;
+  VecDoub GetTime() const;
+  char GetTemporalMethod() const;
+  char GetSurface() const;
+  int GetDiffusionCoeff() const;
+  int GetSpatialAccuracy() const;
+  int GetSpatialMethod() const;
+  int GetEquation() const;
 };

@@ -57,25 +57,12 @@ void TS_Solver(Int_I, Beta &, Mesh &, Intersections &, TS &, VecDoub_I &,
 void Write_txt(Intersections &, Mesh &, Beta &, CubicDoub_I &, Int_I, Doub_I,
                Int_I);
 
-void print_help(char *binary_name) {
-  cout << "Usage: " << binary_name << " -i input [-o output] \n \n";
-  cout << "-i, --input [required] \n"
-          "      input configuration file, sample can be found in directory \"example\" \n"
-          "-o, --output [optional] \n"
-          "      default: results.txt \n"
-          "      output file \n \n";
-}
-
 int main(int argc, char *argv[]) {
   string current_time;
-  VecDoub domain, running_time;
   CubicDoub uh;
-  VecInt size;
   Surface_Cartesian *ex_ptr;
   Beta *beta_ptr;
   double t_begin, t_end, t;
-  char surface, method;
-  int equation, beta_code, accuracy, mib_method;
 
   // Arguments for a Cube, choose domain [-2,2;-2,2;-2,2], 'C'
   VecDoub arg_cube = {-1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
@@ -142,7 +129,7 @@ int main(int argc, char *argv[]) {
 
   ofstream out_stream(output_file, ios::out | ios::app);
   if (!out_stream.good()) {
-    LOG_FATAL("[ERROR]: I/O failure when opening " + output_file);
+    LOG_FATAL("I/O failure when opening " + output_file);
   }
 
   cout << "Program start running ... \n";
@@ -152,42 +139,15 @@ int main(int argc, char *argv[]) {
   // Read data from file
   Data data(input_file);
 
-  domain = data.Get_Domain();
-  size = data.Get_Size();
-  running_time = data.Get_Time();
-  beta_code = data.Get_Beta();
-  accuracy = data.Get_Accuracy();
-  surface = data.Get_Surface();
-  method = data.Get_Method();
-  mib_method = data.Get_MIB_method();
-  equation = data.Get_Equation();
-
-  out_stream << "------------ Configuration informations ------------" << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Mesh Size"
-             << ": " << setw(5) << "NX = " << setiosflags(ios::left)
-             << setw(5) << size[0] << setw(5)
-             << " NY = " << setiosflags(ios::left) << setw(5) << size[1]
-             << setw(5) << " NZ = " << setiosflags(ios::left) << setw(5)
-             << size[2] << endl;
-  out_stream << setprecision(1) << scientific;
-  out_stream << setiosflags(ios::left) << setw(18) << "Time Step"
-             << ": " << running_time[2] << endl;
-  out_stream << fixed;
-  out_stream << setiosflags(ios::left) << setw(18) << "Jump"
-             << ": " << JP << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Surface"
-             << ": " << surface << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Method"
-             << ": " << method << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "MIB Method"
-             << ": L" << mib_method << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Beta No."
-             << ": " << beta_code << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Equation No."
-             << ": " << equation << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Accuracy"
-             << ": " << accuracy << endl
-             << endl;
+  VecDoub domain = data.GetDomain();
+  VecDoub size = data.GetSize();
+  VecInt time_info = data.GetTime();
+  int beta_code = data.GetDiffusionCeff();
+  int accuracy = data.GetSpatialAccuracy();
+  string surface = data.GetSurface();
+  string temporal_method = data.GetTemporalMethod();
+  string spatial_method = data.GetSpatialmethod();
+  int equation = data.GetEquation();
 
   // Diffusion coefficients initialization
   if (beta_code == 0) {
@@ -257,14 +217,14 @@ int main(int argc, char *argv[]) {
   Intersections inter(ex, mesh, beta, accuracy, mib_method, out_stream);
 
   // Temporal computation, ADI / LOD / Trapezoidal Splitting
-  if (method == 'A') {
-    ADI_Starting(equation, accuracy, beta, mesh, inter, running_time, uh,
+  if (temporal_method == 'A') {
+    ADI_Starting(equation, accuracy, beta, mesh, inter, time_info, uh,
                  out_stream);
-  } else if (method == 'I' || method == 'C') {
-    LOD_Starting(equation, beta, mesh, inter, running_time, uh, method,
-                 out_stream);
-  } else if (method == 'T') {
-    TS_Starting(equation, beta, mesh, inter, running_time, uh, out_stream);
+  } else if (temporal_method == 'I' || temporal_method == 'C') {
+    char method = (temporal_method == "lod-ie") ? 'I' : 'C';
+    LOD_Starting(equation, beta, mesh, inter, time_info, uh, method, out_stream);
+  } else if (temporal_method == 'T') {
+    TS_Starting(equation, beta, mesh, inter, time_info, uh, out_stream);
   } else {
     cout << "Currently, only LOD and Douglas-ADI are applied" << endl;
     exit(1);
@@ -277,7 +237,7 @@ int main(int argc, char *argv[]) {
   out_stream << "CPU time cost: " << t << " seconds" << endl
              << endl;
 
-  // Write_txt(inter,mesh,beta,uh,equation,running_time[1],i);
+  // Write_txt(inter, mesh, beta, uh, equation, time_info[1]);
 
   out_stream.close();
 
