@@ -1,10 +1,9 @@
-#ifndef __Mesh_Initial_H__
-#define __Mesh_Initial_H__
+#pragma once
 
-#include "constant.h"
-#include "surface/surface_cartesian.h"
 #include <string>
 #include <vector>
+#include "constant.h"
+#include "surface/surface_cartesian.h"
 
 using namespace std;
 
@@ -24,5 +23,3 @@ public:
 
   void display();
 };
-
-#endif

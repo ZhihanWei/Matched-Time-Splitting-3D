@@ -1,3 +1,4 @@
+#include <getopt.h>
 #include <cmath>
 #include <ctime>
 #include <fstream>
@@ -5,9 +6,9 @@
 #include <iostream>
 #include <string>
 #include "constant.h"
-#include "mesh/mesh.h"
 #include "data/data.h"
 #include "data/data_type.h"
+#include "mesh/mesh.h"
 #include "spatial/intersection.h"
 #include "temporal/douglas_adi.h"
 #include "temporal/lod.h"
@@ -38,7 +39,7 @@
 #include "equation/eq_5.h"
 #include "equation/eq_6.h"
 #include "equation/eq_7.h"
-
+#include "helper.h"
 using namespace std;
 
 void ADI_Starting(Int_I, Int_I, Beta &, Mesh &, Intersections &, VecDoub_I &,
@@ -56,9 +57,17 @@ void TS_Solver(Int_I, Beta &, Mesh &, Intersections &, TS &, VecDoub_I &,
 void Write_txt(Intersections &, Mesh &, Beta &, CubicDoub_I &, Int_I, Doub_I,
                Int_I);
 
+void print_help(char *binary_name) {
+  cout << "Usage: " << binary_name << " -i input [-o output] \n \n";
+  cout << "-i, --input [required] \n"
+          "      input configuration file, sample can be found in directory \"example\" \n"
+          "-o, --output [optional] \n"
+          "      default: results.txt \n"
+          "      output file \n \n";
+}
+
 int main(int argc, char *argv[]) {
-  ofstream out_file;
-  string file_name, current_time, out_file_name;
+  string current_time;
   VecDoub domain, running_time;
   CubicDoub uh;
   VecInt size;
@@ -97,172 +106,184 @@ int main(int argc, char *argv[]) {
   timeinfo = localtime(&rawtime);
   current_time = asctime(timeinfo);
 
-  vector<string> files = {"data/data1.txt"};
-  // vector<string> files =
-  // {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt"};
-  // vector<string> files =
-  // {"data/data1.txt","data/data2.txt","data/data3.txt","data/data4.txt","data/data5.txt","data/data6.txt","data/data7.txt","data/data8.txt","data/data9.txt","data/data10.txt","data/data11.txt","data/data12.txt"};
+  string output_file = "results.txt";
+  string input_file;
+  const char *short_opts = "i:o::h";
+  static struct option long_opts[] = {
+      {"input", required_argument, nullptr, 'i'},
+      {"output", required_argument, nullptr, 'o'},
+      {"help", no_argument, nullptr, 'h'},
+      {nullptr, no_argument, nullptr, 0},
+  };
 
-  for (size_t i = 0; i < files.size(); i++) {
-    out_file_name = "result/Result_for_" + to_string(i + 1) + ".txt";
-
-    out_file.open(out_file_name, ios::out | ios::app);
-
-    if (out_file.good()) {
-      cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% No. " << i + 1
-           << " file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-      cout << endl;
-
-      out_file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% No. " << i + 1
-               << " file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-
-      file_name = files[i];
-
-      t_begin = clock();
-
-      // Read data from file
-      Data data(file_name);
-
-      domain = data.Get_Domain();
-      size = data.Get_Size();
-      running_time = data.Get_Time();
-      beta_code = data.Get_Beta();
-      accuracy = data.Get_Accuracy();
-      surface = data.Get_Surface();
-      method = data.Get_Method();
-      mib_method = data.Get_MIB_method();
-      equation = data.Get_Equation();
-
-      out_file
-          << "------------------------- Basic Info. ------------------------"
-          << endl;
-      out_file << setiosflags(ios::left) << setw(18) << "Mesh Size"
-               << ": " << setw(5) << "NX = " << setiosflags(ios::left)
-               << setw(5) << size[0] << setw(5)
-               << " NY = " << setiosflags(ios::left) << setw(5) << size[1]
-               << setw(5) << " NZ = " << setiosflags(ios::left) << setw(5)
-               << size[2] << endl;
-      out_file << setprecision(1) << scientific;
-      out_file << setiosflags(ios::left) << setw(18) << "Time Step"
-               << ": " << running_time[2] << endl;
-      out_file << fixed;
-      out_file << setiosflags(ios::left) << setw(18) << "Jump"
-               << ": " << JP << endl;
-      out_file << setiosflags(ios::left) << setw(18) << "Surface"
-               << ": " << surface << endl;
-      out_file << setiosflags(ios::left) << setw(18) << "Method"
-               << ": " << method << endl;
-      out_file << setiosflags(ios::left) << setw(18) << "MIB Method"
-               << ": L" << mib_method << endl;
-      out_file << setiosflags(ios::left) << setw(18) << "Beta No."
-               << ": " << beta_code << endl;
-      out_file << setiosflags(ios::left) << setw(18) << "Equation No."
-               << ": " << equation << endl;
-      out_file << setiosflags(ios::left) << setw(18) << "Accuracy"
-               << ": " << accuracy << endl
-               << endl;
-
-      // Diffusion coefficients initialization
-      if (beta_code == 0) {
-        Beta_0 beta0;
-        beta_ptr = &beta0;
-      } else if (beta_code == 1) {
-        Beta_1 beta1;
-        beta_ptr = &beta1;
-      } else if (beta_code == 2) {
-        Beta_2 beta2;
-        beta_ptr = &beta2;
-      } else if (beta_code == 3) {
-        Beta_3 beta3;
-        beta_ptr = &beta3;
-      } else if (beta_code == 4) {
-        Beta_4 beta4;
-        beta_ptr = &beta4;
-      } else {
-        cout << "Beta is not found!" << endl;
-        exit(0);
-      }
-      Beta &beta = *beta_ptr;
-
-      // Surface initialization
-      if (surface == 'C') {
-        Surface_Cube ex_cube(arg_cube);
-        ex_ptr = &ex_cube;
-      } else if (surface == 'L') {
-        Surface_Cylinder ex_cylinder(arg_cylinder);
-        ex_ptr = &ex_cylinder;
-      } else if (surface == 'E') {
-        Surface_Ellipsoid ex_ellipsoid(arg_ellipsoid);
-        ex_ptr = &ex_ellipsoid;
-      } else if (surface == 'O') {
-        Surface_Cone ex_cone(arg_cone);
-        ex_ptr = &ex_cone;
-      } else if (surface == 'P') {
-        Surface_Pile ex_pile;
-        ex_ptr = &ex_pile;
-      } else if (surface == 'R') {
-        Surface_Torus ex_torus(arg_torus);
-        ex_ptr = &ex_torus;
-      } else if (surface == 'D') {
-        Surface_Dupin_Cyclide ex_dupin_cyclide(arg_dupin_cyclide);
-        ex_ptr = &ex_dupin_cyclide;
-      } else if (surface == 'M') {
-        Surface_Molecular ex_molecular;
-        ex_ptr = &ex_molecular;
-      } else if (surface == 'H') {
-        Surface_Heart ex_heart(arg_heart);
-        ex_ptr = &ex_heart;
-      } else if (surface == 'T') {
-        Surface_Tanglecube ex_tanglecube(arg_tanglecube);
-        ex_ptr = &ex_tanglecube;
-      } else {
-        cout << "Surface is not found!" << endl;
-        exit(0);
-      }
-
-      // Surface construction
-      Surface_Cartesian &ex = *ex_ptr;
-
-      // Mesh construction
-      Mesh mesh(domain, size, ex);
-
-      // Spatial computation
-      Intersections inter(ex, mesh, beta, accuracy, mib_method, out_file);
-
-      cout << "Program is running......" << endl << endl;
-
-      // Temporal computation, ADI / LOD / Trapezoidal Splitting
-      if (method == 'A') {
-        ADI_Starting(equation, accuracy, beta, mesh, inter, running_time, uh,
-                     out_file);
-      } else if (method == 'I' || method == 'C') {
-        LOD_Starting(equation, beta, mesh, inter, running_time, uh, method,
-                     out_file);
-      } else if (method == 'T') {
-        TS_Starting(equation, beta, mesh, inter, running_time, uh, out_file);
-      } else {
-        cout << "Currently, only LOD and Douglas-ADI are applied" << endl;
-        exit(0);
-      }
-
-      t_end = clock();
-      t = ((double)(t_end - t_begin)) / CLOCKS_PER_SEC;
-
-      out_file << setprecision(1) << endl;
-      out_file << "CPU time cost: " << t << " seconds" << endl << endl;
-
-      // Write_txt(inter,mesh,beta,uh,equation,running_time[1],i);
-    } else {
-      cout << "No such file is found!";
-      exit(0);
+  int opts;
+  while ((opts = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {
+    switch (opts) {
+      case 'i':
+        input_file = static_cast<string>(optarg);
+        break;
+      case 'o':
+        output_file = static_cast<string>(optarg);
+        cout << output_file << endl;
+        break;
+      case 'h':
+        print_help(argv[0]);
+        return EXIT_SUCCESS;
+      default:
+        print_help(argv[0]);
+        return EXIT_FAILURE;
     }
-
-    out_file.close();
   }
+
+  if (input_file.empty() || output_file.empty()) {
+    print_help(argv[0]);
+    return EXIT_FAILURE;
+  }
+
+  ofstream out_stream(output_file, ios::out | ios::app);
+  if (!out_stream.good()) {
+    LOG_FATAL("[ERROR]: I/O failure when opening " + output_file);
+  }
+
+  cout << "Program start running ... \n";
+
+  t_begin = clock();
+
+  // Read data from file
+  Data data(input_file);
+
+  domain = data.Get_Domain();
+  size = data.Get_Size();
+  running_time = data.Get_Time();
+  beta_code = data.Get_Beta();
+  accuracy = data.Get_Accuracy();
+  surface = data.Get_Surface();
+  method = data.Get_Method();
+  mib_method = data.Get_MIB_method();
+  equation = data.Get_Equation();
+
+  out_stream << "------------ Configuration informations ------------" << endl;
+  out_stream << setiosflags(ios::left) << setw(18) << "Mesh Size"
+             << ": " << setw(5) << "NX = " << setiosflags(ios::left)
+             << setw(5) << size[0] << setw(5)
+             << " NY = " << setiosflags(ios::left) << setw(5) << size[1]
+             << setw(5) << " NZ = " << setiosflags(ios::left) << setw(5)
+             << size[2] << endl;
+  out_stream << setprecision(1) << scientific;
+  out_stream << setiosflags(ios::left) << setw(18) << "Time Step"
+             << ": " << running_time[2] << endl;
+  out_stream << fixed;
+  out_stream << setiosflags(ios::left) << setw(18) << "Jump"
+             << ": " << JP << endl;
+  out_stream << setiosflags(ios::left) << setw(18) << "Surface"
+             << ": " << surface << endl;
+  out_stream << setiosflags(ios::left) << setw(18) << "Method"
+             << ": " << method << endl;
+  out_stream << setiosflags(ios::left) << setw(18) << "MIB Method"
+             << ": L" << mib_method << endl;
+  out_stream << setiosflags(ios::left) << setw(18) << "Beta No."
+             << ": " << beta_code << endl;
+  out_stream << setiosflags(ios::left) << setw(18) << "Equation No."
+             << ": " << equation << endl;
+  out_stream << setiosflags(ios::left) << setw(18) << "Accuracy"
+             << ": " << accuracy << endl
+             << endl;
+
+  // Diffusion coefficients initialization
+  if (beta_code == 0) {
+    Beta_0 beta0;
+    beta_ptr = &beta0;
+  } else if (beta_code == 1) {
+    Beta_1 beta1;
+    beta_ptr = &beta1;
+  } else if (beta_code == 2) {
+    Beta_2 beta2;
+    beta_ptr = &beta2;
+  } else if (beta_code == 3) {
+    Beta_3 beta3;
+    beta_ptr = &beta3;
+  } else if (beta_code == 4) {
+    Beta_4 beta4;
+    beta_ptr = &beta4;
+  } else {
+    cout << "Beta is not found!" << endl;
+    exit(1);
+  }
+  Beta &beta = *beta_ptr;
+
+  // Surface initialization
+  if (surface == 'C') {
+    Surface_Cube ex_cube(arg_cube);
+    ex_ptr = &ex_cube;
+  } else if (surface == 'L') {
+    Surface_Cylinder ex_cylinder(arg_cylinder);
+    ex_ptr = &ex_cylinder;
+  } else if (surface == 'E') {
+    Surface_Ellipsoid ex_ellipsoid(arg_ellipsoid);
+    ex_ptr = &ex_ellipsoid;
+  } else if (surface == 'O') {
+    Surface_Cone ex_cone(arg_cone);
+    ex_ptr = &ex_cone;
+  } else if (surface == 'P') {
+    Surface_Pile ex_pile;
+    ex_ptr = &ex_pile;
+  } else if (surface == 'R') {
+    Surface_Torus ex_torus(arg_torus);
+    ex_ptr = &ex_torus;
+  } else if (surface == 'D') {
+    Surface_Dupin_Cyclide ex_dupin_cyclide(arg_dupin_cyclide);
+    ex_ptr = &ex_dupin_cyclide;
+  } else if (surface == 'M') {
+    Surface_Molecular ex_molecular;
+    ex_ptr = &ex_molecular;
+  } else if (surface == 'H') {
+    Surface_Heart ex_heart(arg_heart);
+    ex_ptr = &ex_heart;
+  } else if (surface == 'T') {
+    Surface_Tanglecube ex_tanglecube(arg_tanglecube);
+    ex_ptr = &ex_tanglecube;
+  } else {
+    cout << "Surface is not found!" << endl;
+    exit(1);
+  }
+
+  // Surface construction
+  Surface_Cartesian &ex = *ex_ptr;
+
+  // Mesh construction
+  Mesh mesh(domain, size, ex);
+
+  // Spatial computation
+  Intersections inter(ex, mesh, beta, accuracy, mib_method, out_stream);
+
+  // Temporal computation, ADI / LOD / Trapezoidal Splitting
+  if (method == 'A') {
+    ADI_Starting(equation, accuracy, beta, mesh, inter, running_time, uh,
+                 out_stream);
+  } else if (method == 'I' || method == 'C') {
+    LOD_Starting(equation, beta, mesh, inter, running_time, uh, method,
+                 out_stream);
+  } else if (method == 'T') {
+    TS_Starting(equation, beta, mesh, inter, running_time, uh, out_stream);
+  } else {
+    cout << "Currently, only LOD and Douglas-ADI are applied" << endl;
+    exit(1);
+  }
+
+  t_end = clock();
+  t = ((double)(t_end - t_begin)) / CLOCKS_PER_SEC;
+
+  out_stream << setprecision(1) << endl;
+  out_stream << "CPU time cost: " << t << " seconds" << endl
+             << endl;
+
+  // Write_txt(inter,mesh,beta,uh,equation,running_time[1],i);
+
+  out_stream.close();
 
   cout << "PROGRAM COMPLETED!" << endl;
 
-  return 1;
+  return EXIT_SUCCESS;
 }
 
 /*********************************************************************************************
@@ -279,7 +300,7 @@ int main(int argc, char *argv[]) {
  *********************************************************************************************/
 void ADI_Starting(Int_I equation, Int_I accuracy, Beta &beta, Mesh &mesh,
                   Intersections &inter, VecDoub_I &time, CubicDoub_I &uh,
-                  ofstream &out_file) {
+                  ofstream &out_stream) {
   double t_start;
   Equation *eq_ptr;
 
@@ -320,7 +341,7 @@ void ADI_Starting(Int_I equation, Int_I accuracy, Beta &beta, Mesh &mesh,
 
   adi.Initialization(eq, uh);
 
-  ADI_Solver(equation, accuracy, beta, mesh, inter, adi, time, uh, out_file);
+  ADI_Solver(equation, accuracy, beta, mesh, inter, adi, time, uh, out_stream);
 }
 
 /*********************************************************************************************
@@ -338,14 +359,14 @@ void ADI_Starting(Int_I equation, Int_I accuracy, Beta &beta, Mesh &mesh,
  *********************************************************************************************/
 void ADI_Solver(Int_I equation, Int_I accruacy, Beta &beta, Mesh &mesh,
                 Intersections &inter, Douglas_ADI &adi, VecDoub_I &time,
-                CubicDoub_I &uh, ofstream &out_file) {
+                CubicDoub_I &uh, ofstream &out_stream) {
   double tnow, dt;
   int loop;
   Equation *eq_dt_ptr;
 
-  out_file << "-------------------- Error of Douglas-ADI with MIB "
-              "--------------------"
-           << endl;
+  out_stream << "-------------------- Error of Douglas-ADI with MIB "
+                "--------------------"
+             << endl;
   tnow = time[0];
   dt = time[2];
 
@@ -389,18 +410,18 @@ void ADI_Solver(Int_I equation, Int_I accruacy, Beta &beta, Mesh &mesh,
       adi.Solve_2nd(eq_dt, inter, uh, beta);
     }
 
-    out_file << setprecision(1) << scientific << "T = " << tnow << endl;
-    out_file << fixed;
+    out_stream << setprecision(1) << scientific << "T = " << tnow << endl;
+    out_stream << fixed;
 
     Equation &eq_now = *eq_dt_ptr;
 
     inter.Refresh_Fp(eq_now);
-    inter.Error_Fp(out_file);
+    inter.Error_Fp(out_stream);
 
     inter.Refresh_Jump(eq_now, uh, beta);
-    inter.Error_Jump(out_file);
+    inter.Error_Jump(out_stream);
 
-    adi.Error(eq_now, uh, out_file);
+    adi.Error(eq_now, uh, out_stream);
   }
 }
 
@@ -418,7 +439,7 @@ void ADI_Solver(Int_I equation, Int_I accruacy, Beta &beta, Mesh &mesh,
  *********************************************************************************************/
 void LOD_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
                   VecDoub_I &time, CubicDoub_I &uh, char &method,
-                  ofstream &out_file) {
+                  ofstream &out_stream) {
   double t_start;
   Equation *eq_ptr;
 
@@ -459,7 +480,7 @@ void LOD_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
 
   lod.Initialization(eq, uh);
 
-  LOD_Solver(equation, beta, mesh, inter, lod, time, uh, method, out_file);
+  LOD_Solver(equation, beta, mesh, inter, lod, time, uh, method, out_stream);
 }
 
 /*********************************************************************************************
@@ -477,13 +498,13 @@ void LOD_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
  *********************************************************************************************/
 void LOD_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
                 LOD &lod, VecDoub_I &time, CubicDoub_I &uh, char &method,
-                ofstream &out_file) {
+                ofstream &out_stream) {
   double tnow, dt;
   int loop;
   Equation *eq_dt_ptr;
 
-  out_file << "-------------------- Error of LOD with MIB--------------------"
-           << endl;
+  out_stream << "-------------------- Error of LOD with MIB--------------------"
+             << endl;
   tnow = time[0];
   dt = time[2];
 
@@ -527,18 +548,18 @@ void LOD_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
       lod.Solve_2nd(eq_dt, inter, uh, beta, method);
     }
 
-    out_file << setprecision(1) << scientific << "T = " << tnow << endl;
-    out_file << fixed;
+    out_stream << setprecision(1) << scientific << "T = " << tnow << endl;
+    out_stream << fixed;
 
     Equation &eq_now = *eq_dt_ptr;
 
     inter.Refresh_Fp(eq_now);
-    inter.Error_Fp(out_file);
+    inter.Error_Fp(out_stream);
 
     inter.Refresh_Jump(eq_now, uh, beta);
-    inter.Error_Jump(out_file);
+    inter.Error_Jump(out_stream);
 
-    lod.Error(eq_now, uh, out_file);
+    lod.Error(eq_now, uh, out_stream);
   }
 }
 
@@ -555,7 +576,7 @@ void LOD_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
  and time step uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void TS_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
-                 VecDoub_I &time, CubicDoub_I &uh, ofstream &out_file) {
+                 VecDoub_I &time, CubicDoub_I &uh, ofstream &out_stream) {
   double t_start;
   Equation *eq_ptr;
 
@@ -596,7 +617,7 @@ void TS_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
 
   ts.Initialization(eq, uh);
 
-  TS_Solver(equation, beta, mesh, inter, ts, time, uh, out_file);
+  TS_Solver(equation, beta, mesh, inter, ts, time, uh, out_stream);
 }
 
 /*********************************************************************************************
@@ -613,14 +634,14 @@ void TS_Starting(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
  and time step uh       : three dimensional uninitialized solution
  *********************************************************************************************/
 void TS_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
-               TS &ts, VecDoub_I &time, CubicDoub_I &uh, ofstream &out_file) {
+               TS &ts, VecDoub_I &time, CubicDoub_I &uh, ofstream &out_stream) {
   double tnow, dt;
   int loop;
   Equation *eq_ptr, *eq_half_dt_ptr, *eq_dt_ptr;
 
-  out_file << "-------------------- Error of Trapezoidal Splitting with MIB "
-              "--------------------"
-           << endl;
+  out_stream << "-------------------- Error of Trapezoidal Splitting with MIB "
+                "--------------------"
+             << endl;
   tnow = time[0];
   dt = time[2];
 
@@ -698,18 +719,18 @@ void TS_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter,
       ts.Solve_2nd(eq, eq_half_dt, eq_dt, inter, uh, beta);
     }
 
-    out_file << setprecision(1) << scientific << "T = " << tnow << endl;
-    out_file << fixed;
+    out_stream << setprecision(1) << scientific << "T = " << tnow << endl;
+    out_stream << fixed;
 
     Equation &eq_now = *eq_dt_ptr;
 
     inter.Refresh_Fp(eq_now);
-    inter.Error_Fp(out_file);
+    inter.Error_Fp(out_stream);
 
     inter.Refresh_Jump(eq_now, uh, beta);
-    inter.Error_Jump(out_file);
+    inter.Error_Jump(out_stream);
 
-    ts.Error(eq_now, uh, out_file);
+    ts.Error(eq_now, uh, out_stream);
   }
 }
 
