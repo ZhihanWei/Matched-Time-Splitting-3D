@@ -1,0 +1,53 @@
+# upper boundary in x-axis
+x-max = -4
+# lower boundary in x-axis
+x-min = 4
+# upper boundary in y-axis
+y-max = -4
+# lower boundary in y-axis
+y-min = 4
+# upper boundary in z-axis
+z-max = -5
+# lower boundary in z-axis
+z-min = 5
+
+# number of grid nodes along x direction
+x-grid = 20
+# number of grid nodes along y direction
+y-grid = 20
+# number of grid nodes along z direction
+z-grid = 20
+
+# starting time
+time-start = 0
+# terminating time
+time-finish = 1
+# time step
+time-step = 0.001
+
+# surface under Cartesian coordinate system
+# current support: tanglecube, cube, cylinder, ellipsoid, cone, pile, torus, dupin_cyclide, molecular, heart
+# check configuration class and surface class for details
+surface = T
+
+# time splitting method
+# current support: adi(Douglas-ADI), lod-ie(implicit Euler LOD), lod-cn(Crank-Nicolson LOD), ts(Trapezoidal splitting)
+# check classes under 'temporal' directory for details
+temporal-method = A
+
+# equation type
+# check classes under 'equation' directory for details
+equation = 4
+
+# diffusion coefficient type
+# check classes under 'diffusion' directory for details
+beta = 0
+
+# spatial method handle interface discontinuity
+# current support: 1(MIB-V1) or 2(MIB-V2)
+spatial-method = 1
+
+# spatial accuracy
+# generally 2nd order convergence rate
+# support 4th order of convergence rate only for surface type 'cube'
+spatial-accuracy = 2
