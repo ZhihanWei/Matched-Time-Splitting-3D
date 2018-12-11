@@ -50,3 +50,28 @@ enum Config {
   DIFFUSION_COEFFICIENT,
   COMMENT,
 };
+
+enum class Temporal_Method_Type {
+  ADI,
+  LOD_IE,
+  LOD_CN,
+  TS,
+};
+
+enum class Surface_Type {
+  TANGLECUBE,
+  CUBE,
+  CYLINDER,
+  ELLIPSOID,
+  CONE,
+  PILE,
+  TORUS,
+  DUPIN_CYCLIDE,
+  MOLECULAR,
+  HEART,
+};
+
+enum class Spatial_Method_Type {
+  MIB_V1,
+  MIB_V2
+};

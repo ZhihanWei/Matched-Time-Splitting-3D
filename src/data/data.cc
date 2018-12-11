@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <set>
 
 #include "data/data.h"
 #include "helper.h"
@@ -18,7 +19,7 @@ Data::Data(const string &file) {
 
   read_stream.open(file_name, ios::in);
   if (!read_stream.good()) {
-    LOG_FATAL("read configuration file failed, check path of " + file);
+    LOG_FATAL("Read configuration file failed, check path of " + file);
   }
 
   char tmp;  // for '=' in configuration file
@@ -90,7 +91,7 @@ Data::Data(const string &file) {
         break;
       case SPATIAL_METHOD:
         read_stream >> e;
-        spatial_method = ParseTemporalMethod(e);
+        spatial_method = ParseSpatialMethod(e);
         break;
       case DIFFUSION_COEFFICIENT:
         read_stream >> e;
@@ -103,6 +104,10 @@ Data::Data(const string &file) {
       case COMMENT:
         break;
     }
+  }
+
+  if ((spatial_method == Spatial_Method_Type::4) && (surface != Surface_Type::CUBE)) {
+    LOG_FATAL("Currently, 4th order of spatial convergence rate only suppport surface \"cube\", please modify configuration");
   }
 
   read_stream.close();
@@ -158,32 +163,90 @@ Data::Config Data::Translate(const string &arg) {
   } else if (arg.find("#") == 0) {
     return COMMENT;
   } else {
-    LOG_FATAL("bad element in configuration file, check configuration file example at \"example/config.txt\"");
+    LOG_FATAL("Bad element in configuration file, check configuration file example at \"example/config.txt\"");
   }
 }
 
-string ParseTemporalMethod(const string &in_str) {
-  return in_str;
+Temporal_Method_Type ParseTemporalMethod(const string &in_str) {
+  if (in_str.compare("adi")) {
+    return Temporal_Method_Type::ADI;
+  } else if (in_str.compare("lod-ie")) {
+    return Temporal_Method_Type::LOD_IE;
+  } else if (in_str.compare("lod-cn")) {
+    return Temporal_Method_Type::LOD_CN;
+  } else if (in_str.comprae("ts")) {
+    return Temporal_Method_Type::TS;
+  } else {
+    LOG_FATAL("Temporal-method type not found! Currently support: \"adi\", \"lod-ie\", \"lod-cn\", \"ts\", check configuration file");
+  }
 }
 
-string ParseSurface(const string &in_str) {
-  return in_str;
+Surface_Type ParseSurface(const string &in_str) {
+  if (in_str.compare("tanglecube")) {
+    return Surface_Type::TANGLECUBE;
+  } else if (in_str.compare("cube")) {
+    return Surface_Type::CUBE;
+  } else if (in_str.compare("cylinder")) {
+    return Surface_Type::CYLINDER;
+  } else if (in_str.compare("ellipsoid")) {
+    return Surface_Type::ELLIPSOID;
+  } else if (in_str.compare("cone")) {
+    return Surface_Type::CONE;
+  } else if (in_str.compare("pile")) {
+    return Surface_Type::PILE;
+  } else if (in_str.compare("torus")) {
+    return Surface_Type::TORUS;
+  } else if (in_str.compare("dupin_cyclide")) {
+    return Surface_Type::DUPIN_CYCLIDE;
+  } else if (in_str.compare("molecular")) {
+    return Surface_Type::MOLECULAR;
+  } else if (in_str.compare("heart")) {
+    return Surface_Type::HEART;
+  } else {
+    LOG_FATAL(
+        "Surface type not found! Currently support: \"tanglecube\", \"cube\", \"cylinder\", \"ellipsoid\", \"cone\", \"pile\", \
+        \"torus\", \"dupin_cylide\", \"molecular\", \"heart\", check configuration file");
+  }
 }
 
-string ParseSpatialMethod(const string &in_str) {
-  return in_str;
+Spatial_Method_Type ParseSpatialMethod(const string &in_str) {
+  if (in_str.compare("mib-v1")) {
+    return Spatial_Method_Type::MIB_V1;
+  } else if (in_str.compare("mib-v2")) {
+    return Spatial_Method_Type::MIB_V2;
+  } else {
+    LOG_FATAL("Spatial method type not found! Currently support: \"mib-v1\", \"mib-v2\", check configuration file");
+  }
 }
 
 int ParseDiffusionCoefficient(const string &in_str) {
-  return atoi(in_str);
+  int v = atoi(in_str);
+  std::set<int> set_of_diffusion_coeff_type = {0, 1, 2, 3, 4};
+  auto search set_of_diffusion_coeff_type.find(v);
+  if (search == set_of_diffusion_coeff_type.end()) {
+    LOG_FATAL("Diffusion coefficient type not found! Currently support: 0 - 4, check configuration file");
+  }
+  return v;
 }
 
 int ParseEquationMethod(const string &in_str) {
-  return atoi(in_str);
+  int v = atoi(in_str);
+  std::set<int> set_of_diffusion_coeff_type = {0, 1, 2, 3, 4, 5, 6, 7};
+  auto search set_of_diffusion_coeff_type.find(v);
+  if (search == set_of_diffusion_coeff_type.end()) {
+    LOG_FATAL("Equation type not found! Currently support: 0 - 7, check configuration file");
+  }
+  return v;
 }
 
-int ParseSpatialMethod(const string &in_str) {
-  return atoi(in_str);
+int ParseSpatialAccuracy(const string &in_str) {
+  int v = atoi(in_str);
+  std::set<int> set_of_diffusion_coeff_type = {2, 4};
+  auto search set_of_diffusion_coeff_type.find(v);
+  if (search == set_of_diffusion_coeff_type.end()) {
+    LOG_FATAL("Spatial accuracy type not found! Currently support: 2 and 4, check configuration file");
+  }
+  return v;
 }
 
 /***********************************************************************************************
