@@ -54,39 +54,39 @@ inline void print_help(char *binary_name) {
 }
 
 inline unique_ptr<Equation> find_equation(double t, int equation_type, Beta &beta) {
-  unique_ptr<Equation> eq_ptr;
+  unique_ptr<Equation> ptr;
 
   switch (equation_type) {
     case 0:
-      eq_ptr = make_unique<Eq_0>(t, beta);
+      ptr = make_unique<Eq_0>(t, beta);
       break;
     case 1:
-      eq_ptr = make_unique<Eq_1>(t, beta);
+      ptr = make_unique<Eq_1>(t, beta);
       break;
     case 2:
-      eq_ptr = make_unique<Eq_2>(t, beta);
+      ptr = make_unique<Eq_2>(t, beta);
       break;
     case 3:
-      eq_ptr = make_unique<Eq_3>(t, beta);
+      ptr = make_unique<Eq_3>(t, beta);
       break;
     case 4:
-      eq_ptr = make_unique<Eq_4>(t, beta);
+      ptr = make_unique<Eq_4>(t, beta);
       break;
     case 5:
-      eq_ptr = make_unique<Eq_5>(t, beta);
+      ptr = make_unique<Eq_5>(t, beta);
       break;
     case 6:
-      eq_ptr = make_unique<Eq_6>(t, beta);
+      ptr = make_unique<Eq_6>(t, beta);
       break;
     case 7:
-      eq_ptr = make_unique<Eq_7>(t, beta);
+      ptr = make_unique<Eq_7>(t, beta);
       break;
     default:
       LOG_FATAL("Provided equation type doesn't exist, check configuration");
       break;
   }
 
-  return nullptr;
+  return ptr;
 }
 
 inline unique_ptr<Beta> find_diffusion_coefficient(int diffusion_coeff_type) {
@@ -112,7 +112,7 @@ inline unique_ptr<Beta> find_diffusion_coefficient(int diffusion_coeff_type) {
       LOG_FATAL("Provided diffusion coefficient type doesn't exist, check configuration!");
       break;
   }
-  return nullptr;
+  return ptr;
 }
 
 inline unique_ptr<Surface_Cartesian> find_surface(Surface_Type surface) {
@@ -180,7 +180,7 @@ inline unique_ptr<Surface_Cartesian> find_surface(Surface_Type surface) {
       break;
   }
 
-  return nullptr;
+  return ptr;
 }
 
 /*********************************************************************************************
