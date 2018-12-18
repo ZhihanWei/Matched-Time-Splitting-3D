@@ -44,8 +44,8 @@ equation = 4
 beta = 0
 
 # spatial method handle interface discontinuity
-# current support: 1(MIB-V1) or 2(MIB-V2)
-spatial-method = 1
+# current support: mib-v1 or mib-v2
+spatial-method = mib-v1
 
 # spatial accuracy
 # generally 2nd order convergence rate

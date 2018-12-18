@@ -153,13 +153,13 @@ Config ReadConfig::Translate(const string &arg) {
 }
 
 Temporal_Method_Type ReadConfig::ParseTemporalMethod(const string &in_str) {
-  if (in_str.compare("adi")) {
+  if (in_str == "adi") {
     return Temporal_Method_Type::ADI;
-  } else if (in_str.compare("lod-ie")) {
+  } else if (in_str == "lod-ie") {
     return Temporal_Method_Type::LOD_IE;
-  } else if (in_str.compare("lod-cn")) {
+  } else if (in_str == "lod-cn") {
     return Temporal_Method_Type::LOD_CN;
-  } else if (in_str.compare("ts")) {
+  } else if (in_str == "ts") {
     return Temporal_Method_Type::TS;
   } else {
     LOG_FATAL("Temporal-method type not found! Currently support: \"adi\", \"lod-ie\", \"lod-cn\", \"ts\", check configuration file");
@@ -167,25 +167,25 @@ Temporal_Method_Type ReadConfig::ParseTemporalMethod(const string &in_str) {
 }
 
 Surface_Type ReadConfig::ParseSurface(const string &in_str) {
-  if (in_str.compare("tanglecube")) {
+  if (in_str == "tanglecube") {
     return Surface_Type::TANGLECUBE;
-  } else if (in_str.compare("cube")) {
+  } else if (in_str == "cube") {
     return Surface_Type::CUBE;
-  } else if (in_str.compare("cylinder")) {
+  } else if (in_str == "cylinder") {
     return Surface_Type::CYLINDER;
-  } else if (in_str.compare("ellipsoid")) {
+  } else if (in_str == "ellipsoid") {
     return Surface_Type::ELLIPSOID;
-  } else if (in_str.compare("cone")) {
+  } else if (in_str == "cone") {
     return Surface_Type::CONE;
-  } else if (in_str.compare("pile")) {
+  } else if (in_str == "pile") {
     return Surface_Type::PILE;
-  } else if (in_str.compare("torus")) {
+  } else if (in_str == "torus") {
     return Surface_Type::TORUS;
-  } else if (in_str.compare("dupin_cyclide")) {
+  } else if (in_str == "dupin_cyclide") {
     return Surface_Type::DUPIN_CYCLIDE;
-  } else if (in_str.compare("molecular")) {
+  } else if (in_str == "molecular") {
     return Surface_Type::MOLECULAR;
-  } else if (in_str.compare("heart")) {
+  } else if (in_str == "heart") {
     return Surface_Type::HEART;
   } else {
     LOG_FATAL(
@@ -195,9 +195,9 @@ Surface_Type ReadConfig::ParseSurface(const string &in_str) {
 }
 
 Spatial_Method_Type ReadConfig::ParseSpatialMethod(const string &in_str) {
-  if (in_str.compare("mib-v1")) {
+  if (in_str == "mib-v1") {
     return Spatial_Method_Type::MIB_V1;
-  } else if (in_str.compare("mib-v2")) {
+  } else if (in_str == "mib-v2") {
     return Spatial_Method_Type::MIB_V2;
   } else {
     LOG_FATAL("Spatial method type not found! Currently support: \"mib-v1\", \"mib-v2\", check configuration file");
