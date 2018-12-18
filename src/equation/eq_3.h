@@ -1,9 +1,8 @@
 #pragma once
 
 #include "constant.h"
-#include "equation/equation.h"
-#include "data/data_type.h"
 #include "diffusion/beta.h"
+#include "equation/equation.h"
 
 class Eq_3 : public Equation {
 private:
@@ -20,10 +19,10 @@ private:
 public:
   Eq_3(Doub_I, Beta &);
 
-  virtual double Outer_u(Doub_I, Doub_I, Doub_I) const; // Outer source term
-  virtual double Inner_u(Doub_I, Doub_I, Doub_I) const; // Inner source term
-  virtual double Outer_f(Doub_I, Doub_I, Doub_I) const; // Outer source term
-  virtual double Inner_f(Doub_I, Doub_I, Doub_I) const; // Inner source term
+  virtual double Outer_u(Doub_I, Doub_I, Doub_I) const;  // Outer source term
+  virtual double Inner_u(Doub_I, Doub_I, Doub_I) const;  // Inner source term
+  virtual double Outer_f(Doub_I, Doub_I, Doub_I) const;  // Outer source term
+  virtual double Inner_f(Doub_I, Doub_I, Doub_I) const;  // Inner source term
 
   virtual double Jump_betau_x(Doub_I, Doub_I, Doub_I) const;
   virtual double Jump_betau_y(Doub_I, Doub_I, Doub_I) const;

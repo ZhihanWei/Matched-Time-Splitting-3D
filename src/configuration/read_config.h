@@ -3,7 +3,7 @@
 #include <string>
 #include "constant.h"
 
-class Data {
+class ReadConfig {
 private:
   double x_max, x_min, y_max, y_min, z_max, z_min;
   double t_start, t_terminate, t_step;
@@ -22,16 +22,17 @@ private:
   int ParseSpatialAccuracy(const string &);
 
 public:
-  Data(const string &file_name);
+  ReadConfig(const string &file_name);
 
   void Display();
   VecDoub GetDomain() const;
   VecInt GetMesh() const;
   VecDoub GetTime() const;
-  char GetTemporalMethod() const;
-  char GetSurface() const;
-  int GetDiffusionCoeff() const;
-  int GetSpatialAccuracy() const;
-  int GetSpatialMethod() const;
   int GetEquation() const;
+  int GetDiffusionCoef() const;
+  int GetSpatialAccuracy() const;
+  Spatial_Method_Type GetSpatialMethod() const;
+  Temporal_Method_Type GetTemporalMethod() const;
+  Spatial_Method_Type GetSpatialmethod() const;
+  Surface_Type GetSurface() const;
 };

@@ -1,11 +1,10 @@
+#include "mesh/mesh.h"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
-#include "mesh/mesh.h"
 #include "constant.h"
-#include "data/data.h"
 #include "surface/surface_cartesian.h"
 
 using namespace std;
@@ -58,9 +57,9 @@ Mesh::Mesh(const VecDoub_I domain, const VecInt_I size, Surface_Cartesian &ex) {
         indx = To1d(ix, iy, iz);
 
         if (ex.Set_Node(xi[ix], yi[iy], zi[iz]) > TOL_SETUP) {
-          mesh_value[indx] = 1; // Outside
+          mesh_value[indx] = 1;  // Outside
         } else if (ex.Set_Node(xi[ix], yi[iy], zi[iz]) < TOL_SETUP) {
-          mesh_value[indx] = -1; // Inside
+          mesh_value[indx] = -1;  // Inside
         } else {
           cout << "Interface on grid, reset the mesh!";
           exit(0);
@@ -73,6 +72,9 @@ Mesh::Mesh(const VecDoub_I domain, const VecInt_I size, Surface_Cartesian &ex) {
 /*************************
 Mesh::~Mesh()
 {
+    delete []xi;
+    delete []yi;
+    delete []zi;
     delete []mesh_value;
 }
 ************************/

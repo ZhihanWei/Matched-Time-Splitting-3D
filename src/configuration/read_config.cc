@@ -1,8 +1,9 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <set>
 
-#include "data/data.h"
+#include "configuration/read_config.h"
 #include "helper.h"
 
 using namespace std;
@@ -14,99 +15,85 @@ using namespace std;
  INPUT
  file_name : name of txt file
  **********************************************************************/
-Data::Data(const string &file) {
+ReadConfig::ReadConfig(const string &file) {
   ifstream read_stream;
 
-  read_stream.open(file_name, ios::in);
+  read_stream.open(file, ios::in);
   if (!read_stream.good()) {
     LOG_FATAL("Read configuration file failed, check path of " + file);
   }
 
-  char tmp;  // for '=' in configuration file
-  string config;
+  string line;
 
-  while (read_stream >> config >> tmp) {
-    string e;
+  while (getline(read_stream, line)) {
+    if (line.find("#") != string::npos || line.empty()) {
+      continue;
+    }
+
+    string config = line.substr(0, line.find("=") - 1);
+    config.erase(remove(config.begin(), config.end(), ' '), config.end());
+    string e = line.substr(line.find("=") + 1);
+    e.erase(remove(e.begin(), e.end(), ' '), e.end());
 
     switch (Translate(config)) {
       case MAX_X:
-        read_stream >> e;
-        x_max = atoi(e);
+        x_max = stoi(e);
         break;
       case MIN_X:
-        read_stream >> e;
-        x_min = atoi(e);
+        x_min = stoi(e);
         break;
       case MAX_Y:
-        read_stream >> e;
-        y_max = atoi(e);
+        y_max = stoi(e);
         break;
       case MIN_Y:
-        read_stream >> e;
-        y_min = atoi(e);
+        y_min = stoi(e);
         break;
       case MAX_Z:
-        read_stream >> e;
-        z_max = atoi(e);
+        z_max = stoi(e);
         break;
       case MIN_Z:
-        read_stream >> e;
-        z_min = atoi(e);
+        z_min = stoi(e);
         break;
       case TIME_START:
-        read_stream >> e;
-        t_start = atod(e);
+        t_start = stod(e);
         break;
       case TIME_TERMINATE:
-        read_stream >> e;
-        t_terminate = atod(e);
+        t_terminate = stod(e);
         break;
       case TIME_STEP:
-        read_stream >> e;
-        t_step = atod(e);
+        t_step = stod(e);
         break;
       case NX:
-        read_stream >> e;
-        nx = atoi(e);
+        nx = stoi(e);
         break;
       case NY:
-        read_stream >> e;
-        ny = atoi(e);
+        ny = stoi(e);
         break;
       case NZ:
-        read_stream >> e;
-        nz = atoi(e);
+        nz = stoi(e);
         break;
       case SURFACE:
-        read_stream >> e;
         surface = ParseSurface(e);
         break;
       case TEMPORAL_METHOD:
-        read_stream >> e;
         temporal_method = ParseTemporalMethod(e);
         break;
       case EQUATION:
-        read_stream >> e;
         equation = ParseEquationMethod(e);
         break;
       case SPATIAL_METHOD:
-        read_stream >> e;
         spatial_method = ParseSpatialMethod(e);
         break;
       case DIFFUSION_COEFFICIENT:
-        read_stream >> e;
         diffusion_coef = ParseDiffusionCoefficient(e);
         break;
       case SPATIAL_ACCURACY:
-        read_stream >> e;
-        accuracy = ParseSpatialAccuracy(e);
-        break;
-      case COMMENT:
+        spatial_accuracy = ParseSpatialAccuracy(e);
         break;
     }
   }
 
-  if ((spatial_method == Spatial_Method_Type::4) && (surface != Surface_Type::CUBE)) {
+  if ((spatial_accuracy == 4) && (surface != Surface_Type::CUBE)) {
     LOG_FATAL("Currently, 4th order of spatial convergence rate only suppport surface \"cube\", please modify configuration");
   }
 
@@ -123,7 +110,7 @@ Data::Data(const string &file) {
  OUTPUT
  enumeration member
  ***********************************************************************************************/
-Data::Config Data::Translate(const string &arg) {
+Config ReadConfig::Translate(const string &arg) {
   if (arg == "x-max") {
     return MAX_X;
   } else if (arg == "x-min") {
@@ -160,28 +147,26 @@ Data::Config Data::Translate(const string &arg) {
     return DIFFUSION_COEFFICIENT;
   } else if (arg == "spatial-accuracy") {
     return SPATIAL_ACCURACY;
-  } else if (arg.find("#") == 0) {
-    return COMMENT;
   } else {
-    LOG_FATAL("Bad element in configuration file, check configuration file example at \"example/config.txt\"");
+    LOG_FATAL("Bad element \"" + arg + "\" in configuration file, check configuration file example at \"example/config.txt\"");
   }
 }
 
-Temporal_Method_Type ParseTemporalMethod(const string &in_str) {
+Temporal_Method_Type ReadConfig::ParseTemporalMethod(const string &in_str) {
   if (in_str.compare("adi")) {
     return Temporal_Method_Type::ADI;
   } else if (in_str.compare("lod-ie")) {
     return Temporal_Method_Type::LOD_IE;
   } else if (in_str.compare("lod-cn")) {
     return Temporal_Method_Type::LOD_CN;
-  } else if (in_str.comprae("ts")) {
+  } else if (in_str.compare("ts")) {
     return Temporal_Method_Type::TS;
   } else {
     LOG_FATAL("Temporal-method type not found! Currently support: \"adi\", \"lod-ie\", \"lod-cn\", \"ts\", check configuration file");
   }
 }
 
-Surface_Type ParseSurface(const string &in_str) {
+Surface_Type ReadConfig::ParseSurface(const string &in_str) {
   if (in_str.compare("tanglecube")) {
     return Surface_Type::TANGLECUBE;
   } else if (in_str.compare("cube")) {
@@ -209,7 +194,7 @@ Surface_Type ParseSurface(const string &in_str) {
   }
 }
 
-Spatial_Method_Type ParseSpatialMethod(const string &in_str) {
+Spatial_Method_Type ReadConfig::ParseSpatialMethod(const string &in_str) {
   if (in_str.compare("mib-v1")) {
     return Spatial_Method_Type::MIB_V1;
   } else if (in_str.compare("mib-v2")) {
@@ -219,30 +204,30 @@ Spatial_Method_Type ParseSpatialMethod(const string &in_str) {
   }
 }
 
-int ParseDiffusionCoefficient(const string &in_str) {
-  int v = atoi(in_str);
+int ReadConfig::ParseDiffusionCoefficient(const string &in_str) {
+  int v = stoi(in_str);
   std::set<int> set_of_diffusion_coeff_type = {0, 1, 2, 3, 4};
-  auto search set_of_diffusion_coeff_type.find(v);
+  auto search = set_of_diffusion_coeff_type.find(v);
   if (search == set_of_diffusion_coeff_type.end()) {
     LOG_FATAL("Diffusion coefficient type not found! Currently support: 0 - 4, check configuration file");
   }
   return v;
 }
 
-int ParseEquationMethod(const string &in_str) {
-  int v = atoi(in_str);
+int ReadConfig::ParseEquationMethod(const string &in_str) {
+  int v = stoi(in_str);
   std::set<int> set_of_diffusion_coeff_type = {0, 1, 2, 3, 4, 5, 6, 7};
-  auto search set_of_diffusion_coeff_type.find(v);
+  auto search = set_of_diffusion_coeff_type.find(v);
   if (search == set_of_diffusion_coeff_type.end()) {
     LOG_FATAL("Equation type not found! Currently support: 0 - 7, check configuration file");
   }
   return v;
 }
 
-int ParseSpatialAccuracy(const string &in_str) {
-  int v = atoi(in_str);
+int ReadConfig::ParseSpatialAccuracy(const string &in_str) {
+  int v = stoi(in_str);
   std::set<int> set_of_diffusion_coeff_type = {2, 4};
-  auto search set_of_diffusion_coeff_type.find(v);
+  auto search = set_of_diffusion_coeff_type.find(v);
   if (search == set_of_diffusion_coeff_type.end()) {
     LOG_FATAL("Spatial accuracy type not found! Currently support: 2 and 4, check configuration file");
   }
@@ -252,14 +237,15 @@ int ParseSpatialAccuracy(const string &in_str) {
 /***********************************************************************************************
                               Display part of configuration parameters
 ***********************************************************************************************/
-void Data::Display(){
-    cout << "X boundary: [" << x_min << ", " << x_max << "] \n"
-         << "Y boundary: [" << y_min << ", " << y_max << "] \n"
-         << "Z boundary: [" << z_min << ", " << z_max << "] \n"
-         << "Mesh size: [" << nx << ", " << ny << ", " << nz << "] \n"
-         << "Time info: [" << t_start << ", " << t_terminate << ", " << t_step << "] \n"}
+void ReadConfig::Display() {
+  cout << "X boundary: [" << x_min << ", " << x_max << "] \n"
+       << "Y boundary: [" << y_min << ", " << y_max << "] \n"
+       << "Z boundary: [" << z_min << ", " << z_max << "] \n"
+       << "Mesh size: [" << nx << ", " << ny << ", " << nz << "] \n"
+       << "Time info: [" << t_start << ", " << t_terminate << ", " << t_step << "] \n";
+}
 
-VecDoub Data::GetDomain() const {
+VecDoub ReadConfig::GetDomain() const {
   VecDoub domain;
 
   domain.push_back(x_max);
@@ -272,7 +258,7 @@ VecDoub Data::GetDomain() const {
   return domain;
 }
 
-VecInt Data::GetMesh() const {
+VecInt ReadConfig::GetMesh() const {
   VecInt size;
 
   size.push_back(nx);
@@ -282,7 +268,7 @@ VecInt Data::GetMesh() const {
   return size;
 }
 
-VecDoub Data::GetTime() const {
+VecDoub ReadConfig::GetTime() const {
   VecDoub time;
 
   time.push_back(t_start);
@@ -292,26 +278,26 @@ VecDoub Data::GetTime() const {
   return time;
 }
 
-string &Data::GetSurface() const {
+Surface_Type ReadConfig::GetSurface() const {
   return surface;
 }
 
-string &Data::GetTemporalMethod() const {
+Temporal_Method_Type ReadConfig::GetTemporalMethod() const {
   return temporal_method;
 }
 
-int Data::GetDiffusionCoeff() const {
-  return diffusion_coeff;
+int ReadConfig::GetDiffusionCoef() const {
+  return diffusion_coef;
 }
 
-int Data::GetSpatialAccuracy() const {
-  return accuracy;
+int ReadConfig::GetSpatialAccuracy() const {
+  return spatial_accuracy;
 }
 
-int Data::GetEquation() const {
+int ReadConfig::GetEquation() const {
   return equation;
 }
 
-string &Data::GetSpatialmethod() const {
+Spatial_Method_Type ReadConfig::GetSpatialmethod() const {
   return spatial_method;
 }

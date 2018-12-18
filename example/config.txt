@@ -28,12 +28,12 @@ time-step = 0.001
 # surface under Cartesian coordinate system
 # current support: tanglecube, cube, cylinder, ellipsoid, cone, pile, torus, dupin_cyclide, molecular, heart
 # check configuration class and surface class for details
-surface = T
+surface = tanglecube
 
 # time splitting method
 # current support: adi(Douglas-ADI), lod-ie(implicit Euler LOD), lod-cn(Crank-Nicolson LOD), ts(Trapezoidal splitting)
 # check classes under 'temporal' directory for details
-temporal-method = A
+temporal-method = adi
 
 # equation type
 # check classes under 'equation' directory for details

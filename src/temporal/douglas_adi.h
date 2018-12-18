@@ -3,12 +3,11 @@
 #include <fstream>
 #include <vector>
 
-#include "diffusion/beta.h"
 #include "constant.h"
+#include "diffusion/beta.h"
 #include "equation/equation.h"
-#include "spatial/intersection.h"
 #include "mesh/mesh.h"
-#include "data/data_type.h"
+#include "spatial/intersection.h"
 #include "surface/surface_cartesian.h"
 
 using namespace std;
