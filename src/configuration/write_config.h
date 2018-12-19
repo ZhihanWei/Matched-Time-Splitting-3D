@@ -1,7 +1,6 @@
 #pragma once
 
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <string>
 #include "configuration/read_config.h"
@@ -13,34 +12,34 @@ string write_surface(const Surface_Type s) {
 
   switch (s) {
     case Surface_Type::TANGLECUBE:
-      r = "tanglecube";
+      r = "Tanglecube";
       break;
     case Surface_Type::CUBE:
-      r = "cube";
+      r = "Cube";
       break;
     case Surface_Type::CYLINDER:
-      r = "cylinder";
+      r = "Cylinder";
       break;
     case Surface_Type::ELLIPSOID:
-      r = "ellipsoid";
+      r = "Ellipsoid";
       break;
     case Surface_Type::CONE:
-      r = "cone";
+      r = "Cone";
       break;
     case Surface_Type::PILE:
-      r = "pile";
+      r = "Pile";
       break;
     case Surface_Type::TORUS:
-      r = "torus";
+      r = "Torus";
       break;
     case Surface_Type::DUPIN_CYCLIDE:
-      r = "dupin_cyclide";
+      r = "Dupin-Cyclide";
       break;
     case Surface_Type::MOLECULAR:
-      r = "molecular";
+      r = "Molecular";
       break;
     case Surface_Type::HEART:
-      r = "heart";
+      r = "Heart";
       break;
     default:
       LOG_FATAL("Corresponding string of given surface doesn't exist, cannot be writen to stream");
@@ -55,10 +54,10 @@ string write_spatial_method(const Spatial_Method_Type s) {
 
   switch (s) {
     case Spatial_Method_Type::MIB_V1:
-      r = "mib_v1";
+      r = "MIB-V1";
       break;
     case Spatial_Method_Type::MIB_V2:
-      r = "mib_v2";
+      r = "MIB-V2";
       break;
     default:
       LOG_FATAL("Corresponding string of given spatial method doesn't exist, cannot be writen to stream");
@@ -103,30 +102,26 @@ void write_configuration(ofstream& out_stream, ReadConfig& config) {
   const Temporal_Method_Type temporal_method = config.GetTemporalMethod();
   const Spatial_Method_Type spatial_method = config.GetSpatialmethod();
 
-  out_stream << "------------ Configuration informations ------------" << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Mesh Size"
-             << ": " << setw(5) << "NX = " << setiosflags(ios::left)
-             << setw(5) << size.at(0) << setw(5)
-             << " NY = " << setiosflags(ios::left) << setw(5) << size.at(1)
-             << setw(5) << " NZ = " << setiosflags(ios::left) << setw(5)
-             << size.at(2) << endl;
-  out_stream << setprecision(1) << scientific;
-  out_stream << setiosflags(ios::left) << setw(18) << "Time Step"
-             << ": " << time_info.at(2) << endl;
-  out_stream << fixed;
-  out_stream << setiosflags(ios::left) << setw(18) << "Jump"
-             << ": " << JP << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Diffusion Coefficient Type "
-             << ": " << diffusion_coef_type << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Equation Type"
-             << ": " << equation_type << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Order of Spatial Accuracy"
-             << ": " << spatial_accuracy_type << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Surface"
-             << ": " << write_surface(surface) << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Temporal Method"
-             << ": " << write_temporal_method(temporal_method) << endl;
-  out_stream << setiosflags(ios::left) << setw(18) << "Spatial Method"
-             << ": " << write_spatial_method(spatial_method) << endl
+  out_stream << "----------------- Configuration informations -----------------" << endl;
+  out_stream << "Mesh Size                          :   "
+             << "NX = " << size.at(0) << "; NY = " << size.at(1)
+             << "; NZ = " << size.at(2) << endl;
+  out_stream << "Time Step                          :   "
+             << setprecision(1) << scientific << time_info.at(2) << endl;
+  string jump_type = JP == 'r' ? "real" : "approximate";
+  out_stream << "Jump                               :   "
+             << fixed << jump_type << endl;
+  out_stream << "Diffusion Coefficient Type         :   "
+             << diffusion_coef_type << endl;
+  out_stream << "Equation Type                      :   "
+             << equation_type << endl;
+  out_stream << "Order of Spatial Accuracy          :   "
+             << spatial_accuracy_type << endl;
+  out_stream << "Surface                            :   "
+             << write_surface(surface) << endl;
+  out_stream << "Temporal Method                    :   "
+             << write_temporal_method(temporal_method) << endl;
+  out_stream << "Spatial Method                     :   "
+             << write_spatial_method(spatial_method) << endl
              << endl;
 }

@@ -202,7 +202,8 @@ inline void ADI_Solver(Int_I equation, Int_I accruacy, Beta &beta, Mesh &mesh,
   double dt = time[2], t_now = time[0], t_finish = time[1];
   int loop;
 
-  out_stream << "----------- Error of Douglas-ADI with MIB -----------" << endl;
+  out_stream << "------------------ Error of Douglas-ADI with MIB ------------------" << endl
+             << endl;
 
   loop = (int)(t_finish / dt) / NPRINT;
 
@@ -282,7 +283,8 @@ inline void LOD_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &in
   double dt = time[2], t_now = time[0], t_finish = time[1];
   int loop;
 
-  out_stream << "------------ Error of LOD with MIB -------------" << endl;
+  out_stream << "------------------- Error of LOD with MIB --------------------" << endl
+             << endl;
 
   loop = (int)(t_finish / dt) / NPRINT;
 
@@ -361,7 +363,8 @@ inline void TS_Solver(Int_I equation, Beta &beta, Mesh &mesh, Intersections &int
   double dt = time[2], t_now = time[0], t_finish = time[1];
   int loop;
 
-  out_stream << "--------------- Error of TS with MIB ---------------" << endl;
+  out_stream << "---------------------- Error of TS with MIB ----------------------" << endl
+             << endl;
 
   loop = (int)(t_finish / dt) / NPRINT;
 

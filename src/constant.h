@@ -13,10 +13,7 @@ const double TOL_RTSAFE = 1.0e-14;
 // region of approximated jump condition ('o': for outside only; others)
 const char REG = 'i';
 // jump condition ('r': for real jump only; others)
-const char JP = 'r';
-
-const bool DEBUGFLAG = false;
-const bool WARNINGS = false;
+const char JP = 'a';
 
 typedef int Int_I, Int_O, Int_IO;
 typedef double Doub_I, Doub_O, Doub_IO;
