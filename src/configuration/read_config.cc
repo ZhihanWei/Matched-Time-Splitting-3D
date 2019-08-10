@@ -248,12 +248,12 @@ void ReadConfig::Display() {
 VecDoub ReadConfig::GetDomain() const {
   VecDoub domain;
 
-  domain.push_back(x_max);
   domain.push_back(x_min);
-  domain.push_back(y_max);
+  domain.push_back(x_max);
   domain.push_back(y_min);
-  domain.push_back(z_max);
+  domain.push_back(y_max);
   domain.push_back(z_min);
+  domain.push_back(z_max);
 
   return domain;
 }

@@ -1,15 +1,15 @@
 # upper boundary in x-axis
-x-max = -4
+x-max = 4
 # lower boundary in x-axis
-x-min = 4
+x-min = -4
 # upper boundary in y-axis
-y-max = -4
+y-max = 4
 # lower boundary in y-axis
-y-min = 4
+y-min = -4
 # upper boundary in z-axis
-z-max = -4
+z-max = 4
 # lower boundary in z-axis
-z-min = 1
+z-min = -1
 
 # number of grid nodes along x direction
 x-grid = 20
