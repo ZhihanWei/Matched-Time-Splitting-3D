@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
   out_stream << "CPU time cost: " << period.count() << " seconds" << endl
              << endl;
 
-  // Write_txt(inter, mesh, beta, uh, equation, time_info[1]);
+  Write_txt(inter, mesh, *diffusion_coef_ptr, uh, equation_type, time_info[1]);
 
   out_stream.close();
 

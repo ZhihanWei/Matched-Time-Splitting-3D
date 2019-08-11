@@ -439,9 +439,8 @@ inline void Call_TS(Int_I equation, Beta &beta, Mesh &mesh, Intersections &inter
  i        : file number
  *********************************************************************************************/
 
-/*
 inline void Write_txt(Intersections &inter, Mesh &mesh, Beta &beta, CubicDoub_I &uh,
-               Int_I equation, Doub_I t, Int_I i) {
+               Int_I equation, Doub_I t) {
   ofstream err_txt_file, sol_txt_file;
   string err_txt_file_name, sol_txt_file_name;
   Equation *eq_ptr;
@@ -449,8 +448,8 @@ inline void Write_txt(Intersections &inter, Mesh &mesh, Beta &beta, CubicDoub_I 
   int ix, iy, iz;
   double error;
 
-  sol_txt_file_name = "result/Numerical Solutions<" + to_string(i) + ">.txt";
-  err_txt_file_name = "result/Numerical Error<" + to_string(i) + ">.txt";
+  sol_txt_file_name = "Numerical Solutions.txt";
+  err_txt_file_name = "Numerical Error.txt";
 
   sol_txt_file.open(sol_txt_file_name, ios::out);
   err_txt_file.open(err_txt_file_name, ios::out);
@@ -574,4 +573,3 @@ inline void Write_txt(Intersections &inter, Mesh &mesh, Beta &beta, CubicDoub_I 
   sol_txt_file.close();
   err_txt_file.close();
 }
-*/
